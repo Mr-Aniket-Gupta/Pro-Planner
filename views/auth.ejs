@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login / Signup</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* Animated gradient */
+      background: linear-gradient(-45deg, #a1c4fd, #c2e9fb, #b2fefa, #fbc2eb);
+      background-size: 400% 400%;
+      animation: gradientBG 12s ease infinite;
+    }
+    @keyframes gradientBG {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
+    }
+    .auth-container {
+      display: flex;
+      flex-direction: column;
+      background: rgba(255,255,255,0.95);
+      border-radius: 2rem;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+      overflow: hidden;
+      width: 100%;
+      max-width: 800px;
+      min-height: 420px;
+    }
+    .auth-3d {
+      flex: 1 1 0%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #a1c4fd 60%, #c2e9fb 100%);
+      min-width: 220px;
+      padding: 2rem 1rem;
+    }
+    .auth-form {
+      flex: 1 1 0%;
+      padding: 2.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1.2rem;
+      background: transparent;
+    }
+    @media (min-width: 700px) {
+      .auth-container {
+        flex-direction: row;
+        min-height: 420px;
+      }
+      .auth-3d {
+        min-height: unset;
+        padding: 2rem 1rem;
+      }
+      .auth-form {
+        padding: 2.5rem 2rem;
+      }
+    }
+    .tab-btn.active {
+      background: #3b82f6;
+      color: #fff;
+    }
+
+    .tab-btn {
+      transition: background 0.2s, color 0.2s;
+    }
+    .loader-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(120deg, #a1c4fd 0%, #b2fefa 100%);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.4s;
+    }
+    .loader-spinner {
+      width: 70px;
+      height: 70px;
+      border: 7px solid #e0e7ef;
+      border-top: 7px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      box-shadow: 0 0 24px #60a5fa44;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loader" class="loader-overlay">
+    <div class="loader-spinner"></div>
+  </div>
+  <div class="auth-container">
+    <div class="auth-3d">
+      <model-viewer src="https://modelviewer.dev/shared-assets/models/Astronaut.glb" alt="3D Model" auto-rotate camera-controls style="width: 200px; height: 200px; margin:auto;" background="transparent"></model-viewer>
+    </div>
+    <div class="auth-form">
+      <div class="flex justify-center mb-4">
+        <button class="tab-btn px-4 py-2 rounded-l-xl font-semibold text-blue-600 bg-blue-100 active" id="loginTab"
+          onclick="showTab('login')">Login</button>
+        <button class="tab-btn px-4 py-2 rounded-r-xl font-semibold text-blue-600 bg-blue-100" id="signupTab"
+          onclick="showTab('signup')">Sign Up</button>
+      </div>
+      <!-- Login Form -->
+      <form id="loginForm" method="POST" action="/login" class="space-y-4">
+        <h2 class="text-2xl font-bold text-blue-600 mb-2 text-center">Login</h2>
+        <input name="email" type="email" placeholder="Email"
+          class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          required />
+        <div class="relative">
+          <input name="password" type="password" placeholder="Password" id="loginPassword"
+            class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 pr-10"
+            required />
+          <span onclick="togglePassword('loginPassword', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-blue-400">
+            <svg id="eyeIconLogin" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+          </span>
+        </div>
+        <div class="flex items-center justify-between">
+          <label class="flex items-center text-sm text-gray-500">
+            <input type="checkbox" name="remember" class="mr-2"> Remember me
+          </label>
+        </div>
+        <button type="submit"
+          class="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white px-4 py-2 rounded-xl font-semibold shadow hover:from-blue-500 hover:to-blue-700 transition">Login</button>
+        <div class="text-center text-sm text-gray-400 mt-2">Don't have an account?
+          <a href="#" class="text-blue-500 hover:underline" onclick="showTab('signup'); return false;">Sign Up</a>
+        </div>
+      </form>
+      <!-- Signup Form -->
+      <form id="signupForm" method="POST" action="/signup" class="space-y-4 hidden">
+        <h2 class="text-2xl font-bold text-blue-600 mb-2 text-center">Sign Up</h2>
+        <input name="name" type="text" placeholder="Full Name"
+          class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          required />
+        <input name="email" type="email" placeholder="Email"
+          class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          required />
+        <div class="relative">
+          <input name="password" type="password" placeholder="Password" id="signupPassword"
+            class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 pr-10"
+            required />
+          <span onclick="togglePassword('signupPassword', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-blue-400">
+            <svg id="eyeIconSignup" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+          </span>
+        </div>
+        <div class="relative">
+          <input name="confirmPassword" type="password" placeholder="Confirm Password" id="signupConfirmPassword"
+            class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 pr-10"
+            required />
+          <span onclick="togglePassword('signupConfirmPassword', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-blue-400">
+            <svg id="eyeIconSignupConfirm" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+          </span>
+        </div>
+        <button type="submit"
+          class="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white px-4 py-2 rounded-xl font-semibold shadow hover:from-blue-500 hover:to-blue-700 transition">Sign
+          Up</button>
+        <div class="text-center text-sm text-gray-400 mt-2">Already have an account?
+          <a href="#" class="text-blue-500 hover:underline" onclick="showTab('login'); return false;">Login</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function showTab(tab) {
+      document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('signupForm').classList.toggle('hidden', tab !== 'signup');
+      document.getElementById('loginTab').classList.toggle('active', tab === 'login');
+      document.getElementById('signupTab').classList.toggle('active', tab === 'signup');
+    }
+    function togglePassword(id, el) {
+      const input = document.getElementById(id);
+      if (input.type === 'password') {
+        input.type = 'text';
+        el.querySelector('svg').style.color = '#2563eb';
+      } else {
+        input.type = 'password';
+        el.querySelector('svg').style.color = '#60a5fa';
+      }
+    }
+    // Loader hide on page load
+    window.addEventListener('load', function() {
+      const loader = document.getElementById('loader');
+      if(loader) {
+        loader.style.opacity = 0;
+        setTimeout(() => loader.style.display = 'none', 400);
+      }
+    });
+  </script>
+</body>
+
+</html>

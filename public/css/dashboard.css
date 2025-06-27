@@ -1,0 +1,182 @@
+  body {
+      font-family: 'Inter', sans-serif;
+  }
+
+  .fc {
+      background: transparent;
+  }
+
+  /* FullCalendar custom theme */
+  .fc .fc-toolbar-title {
+      color: #2563eb;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      font-size: 1.05rem;
+  }
+
+  .fc .fc-button-primary {
+      background: linear-gradient(90deg, #3b82f6, #2563eb);
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      box-shadow: 0 2px 8px #dbeafe;
+      font-size: 0.95em;
+      padding: 0.25rem 0.7rem;
+  }
+
+  .fc .fc-button-primary:not(:disabled):hover {
+      background: linear-gradient(90deg, #2563eb, #1d4ed8);
+  }
+
+  .fc .fc-daygrid-day.fc-day-today {
+      background: #dbeafe;
+      border-radius: 0.5rem;
+      box-shadow: 0 0 0 2px #3b82f6;
+  }
+
+  .fc .fc-daygrid-day-number {
+      color: #2563eb;
+      font-weight: 700;
+      font-size: 0.95em;
+      padding: 0.1em 0.2em;
+  }
+
+  .fc .fc-daygrid-event {
+      background: linear-gradient(90deg, #3b82f6, #2563eb);
+      color: #fff;
+      border-radius: 0.5rem;
+      border: none;
+      font-size: 0.85em;
+      font-weight: 500;
+      box-shadow: 0 2px 8px #dbeafe;
+      padding: 0.1em 0.3em;
+      margin: 1px 0;
+  }
+
+  .fc .fc-col-header-cell {
+      background: #eff6ff;
+      color: #2563eb;
+      font-weight: 700;
+      border-radius: 0.5rem;
+      font-size: 0.95em;
+      letter-spacing: 0.5px;
+      padding: 0.2em 0;
+  }
+
+  .fc .fc-scrollgrid {
+      border-radius: 0.75rem;
+      overflow: hidden;
+  }
+
+  .fc .fc-daygrid-day:hover {
+      background: #bae6fd;
+      transition: background 0.2s;
+      box-shadow: 0 0 0 2px #60a5fa;
+  }
+
+  .fc .fc-highlight {
+      background: #93c5fd !important;
+  }
+
+  .fc .fc-daygrid-day-frame {
+      padding: 0.18rem 0.05rem;
+  }
+
+  .fc .fc-daygrid-day-top {
+      justify-content: center;
+  }
+
+  .fc .fc-daygrid-day {
+      font-size: 0.93em;
+  }
+
+  .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+      color: #1d4ed8;
+      font-weight: 900;
+  }
+
+  .fc .fc-daygrid-day.fc-day-today {
+      border: 2px solid #3b82f6;
+  }
+
+  .fc .fc-daygrid-day.fc-day-selected {
+      background: #2563eb22;
+      border-radius: 0.75rem;
+  }
+
+  /* Calendar focus effect */
+  #calendarContainer {
+      padding: 1.5rem 0.5rem 1rem 0.5rem;
+      box-shadow: 0 2px 16px #dbeafe;
+      border-radius: 1.25rem;
+      border: 1.5px solid #bfdbfe;
+      transition: box-shadow 0.2s, border 0.2s;
+  }
+
+  #calendarContainer:focus-within {
+      box-shadow: 0 0 0 4px #3b82f6;
+      border-color: #3b82f6;
+  }
+
+  @media (max-width: 600px) {
+      #calendarContainer {
+          padding: 0.5rem 0.1rem 0.5rem 0.1rem;
+      }
+
+      .fc .fc-toolbar-title {
+          font-size: 1rem;
+      }
+  }
+
+  /* ======= डार्क थीम ======= */
+  .dark-theme {
+      background: #18181b !important;
+  }
+  .dark-theme .bg-white,
+  .dark-theme .bg-blue-50,
+  .dark-theme .bg-blue-100 {
+      background: #23232a !important;
+      color: #e0e7ef !important;
+  }
+  .dark-theme .text-blue-600,
+  .dark-theme .text-gray-700,
+  .dark-theme .text-gray-500 {
+      color: #e0e7ef !important;
+  }
+  .dark-theme .shadow-lg,
+  .dark-theme .shadow-sm,
+  .dark-theme .border-blue-50 {
+      box-shadow: 0 2px 16px #111827 !important;
+      border-color: #27272a !important;
+  }
+  .dark-theme input,
+  .dark-theme select,
+  .dark-theme textarea {
+      background: #23232a !important;
+      color: #e0e7ef !important;
+      border-color: #27272a !important;
+  }
+  .dark-theme .rounded-xl,
+  .dark-theme .rounded-2xl {
+      background: #23232a !important;
+  }
+  .dark-theme .fc .fc-toolbar-title,
+  .dark-theme .fc .fc-daygrid-day-number,
+  .dark-theme .fc .fc-col-header-cell {
+      color: #fbbf24 !important;
+  }
+  .dark-theme .fc .fc-daygrid-day.fc-day-today {
+      background: #334155 !important;
+      border-color: #fbbf24 !important;
+  }
+  .dark-theme .fc .fc-daygrid-event {
+      background: linear-gradient(90deg, #fbbf24, #f59e42) !important;
+      color: #23232a !important;
+  }
+  .dark-theme .fc .fc-col-header-cell {
+      background: #23232a !important;
+      color: #fbbf24 !important;
+  }
+  .dark-theme .fc .fc-scrollgrid {
+      background: #18181b !important;
+  }

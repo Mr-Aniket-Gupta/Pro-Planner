@@ -1,0 +1,15 @@
+const mongoose = require('mongoose');
+
+const projectSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  desc: String,
+  basic: [String],
+  advanced: [String],
+  created: { type: Date, default: Date.now },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // if user system exists
+  completed: { type: Boolean, default: false },
+  deadline: { type: Date },
+  notes: { type: String, default: '' }
+});
+
+module.exports = mongoose.model('Project', projectSchema);

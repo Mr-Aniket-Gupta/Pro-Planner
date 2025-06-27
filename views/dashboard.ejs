@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Planner Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 to-white min-h-screen">
+    <!-- Header -->
+    <header class="flex items-center justify-between px-4 py-4 md:px-10 bg-white shadow-sm sticky top-0 z-10">
+        <div class="flex items-center gap-2">
+            <svg width="32" height="32" fill="none" viewBox="0 0 32 32">
+                <rect width="32" height="32" rx="8" fill="#3B82F6" />
+                <path d="M10 22l6-12 6 12" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" />
+            </svg>
+            <span class="text-2xl font-extrabold text-blue-600 tracking-tight">Project Planner</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="hidden md:inline text-gray-500 font-medium">Hello, User</span>
+            <img src="https://i.pravatar.cc/40?img=3" alt="User"
+                class="w-10 h-10 rounded-full border-2 border-blue-100 shadow" />
+            <!-- Dark Theme Toggle Button -->
+            <button id="themeToggleBtn" title="डार्क/लाइट थीम टॉगल करें"
+                class="ml-2 px-2 py-2 rounded-xl bg-blue-100 hover:bg-blue-200 text-blue-600 font-semibold flex items-center gap-1 transition">
+                <!-- Moon Icon (डार्क) -->
+                <svg id="moonIcon" width="20" height="20" fill="none" viewBox="0 0 24 24" style="display:block;">
+                    <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" fill="#2563eb" />
+                </svg>
+                <!-- Sun Icon (लाइट) -->
+                <svg id="sunIcon" width="20" height="20" fill="none" viewBox="0 0 24 24" style="display:none;">
+                    <circle cx="12" cy="12" r="5" fill="#fbbf24" />
+                    <g stroke="#fbbf24" stroke-width="2">
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </g>
+                </svg>
+            </button>
+            <button onclick="logoutUser()" title="Logout"
+                class="ml-2 px-3 py-2 rounded-xl bg-blue-100 hover:bg-blue-200 text-blue-600 font-semibold flex items-center gap-1 transition">
+                <svg width="18" height="18" fill="none" viewBox="0 0 18 18">
+                    <path d="M7 13l-1.5-1.5M7 5l-1.5 1.5M3 9h8m0 0l-2-2m2 2l-2 2" stroke="#2563eb" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span class="hidden md:inline">Logout</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-2 md:px-8 py-8 flex flex-col gap-8">
+        <!-- Top Section: Projects + Project Details -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Projects Card -->
+            <section class="bg-white rounded-2xl shadow-lg p-6 flex flex-col gap-4 border border-blue-50">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-lg font-bold text-blue-600 flex items-center gap-2">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
+                            <rect width="20" height="20" rx="5" fill="#DBEAFE" />
+                            <path d="M6 14l4-8 4 8" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                        Projects
+                    </h2>
+                    <button onclick="showProjectForm()"
+                        class="bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full p-2 transition"
+                        title="Add Project">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
+                            <circle cx="10" cy="10" r="9" stroke="#3B82F6" stroke-width="1.5" />
+                            <path d="M10 6v8M6 10h8" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                    </button>
+                </div>
+                <ul id="projectList" class="space-y-2 max-h-64 overflow-y-auto"></ul>
+                <div id="emptyProjectState" class="text-center text-gray-400 py-8">
+                    <svg class="mx-auto mb-2" width="40" height="40" fill="none" stroke="currentColor">
+                        <circle cx="20" cy="20" r="18" stroke-width="2" />
+                        <path d="M10 20h20M20 10v20" stroke-width="2" />
+                    </svg>
+                    <div>No projects yet</div>
+                </div>
+            </section>
+            <!-- Project Details Card -->
+            <section class="md:col-span-2 bg-white rounded-2xl shadow-lg p-6 flex flex-col gap-4 border border-blue-50"
+                id="projectDetailsCard" style="display:none;">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-lg font-bold text-blue-600 flex items-center gap-2">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
+                            <rect width="20" height="20" rx="5" fill="#DBEAFE" />
+                            <path d="M6 14l4-8 4 8" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                        <span id="projectTitle">Project Name</span>
+                    </h2>
+                    <button onclick="editProject()"
+                        class="bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full p-2 transition"
+                        title="Edit Project">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 18 18">
+                            <path d="M3 12.75V15h2.25l6.62-6.62a1.5 1.5 0 00-2.12-2.12L3 12.75z" stroke="#3B82F6"
+                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M14.25 5.25a1.5 1.5 0 00-2.12-2.12l-1.13 1.13a1.5 1.5 0 002.12 2.12l1.13-1.13z"
+                                stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="text-gray-700 mb-2" id="projectDesc">Project description...</div>
+                <div class="flex flex-wrap gap-4">
+                    <div class="bg-blue-50 rounded-xl px-4 py-2 text-blue-700 text-sm font-medium" id="projectBasic">
+                        Basic: -</div>
+                    <div class="bg-blue-50 rounded-xl px-4 py-2 text-blue-700 text-sm font-medium" id="projectAdvanced">
+                        Advanced: -</div>
+                </div>
+                <!-- New Features Start -->
+                <div class="flex flex-wrap gap-4 items-center mt-2">
+                    <button id="markCompleteBtn" onclick="markProjectComplete(projects[selectedProjectIndex]._id)"
+                        class="bg-green-100 hover:bg-green-200 text-green-700 rounded-xl px-4 py-2 font-semibold transition">Mark
+                        as Complete</button>
+                    <button id="markIncompleteBtn" onclick="markProjectIncomplete(projects[selectedProjectIndex]._id)"
+                        class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-xl px-4 py-2 font-semibold transition"
+                        style="display:none;">Mark as Incomplete</button>
+                    <button onclick="exportProjectPDF(projects[selectedProjectIndex]._id)"
+                        class="bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-xl px-4 py-2 font-semibold transition">Export
+                        as PDF</button>
+                    <div class="flex items-center gap-2">
+                        <label for="projectDeadline" class="text-blue-600 font-semibold">Deadline:</label>
+                        <input type="date" id="projectDeadline" class="border border-blue-100 rounded-xl px-2 py-1"
+                            onchange="saveProjectDeadline(projects[selectedProjectIndex]._id, this.value)" />
+                    </div>
+                </div>
+                <div class="w-full mt-4">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-blue-600 font-semibold">Progress:</span>
+                        <span id="projectProgressPercent">0%</span>
+                    </div>
+                    <div class="w-full h-3 bg-blue-100 rounded-full overflow-hidden">
+                        <div id="projectProgressBar" class="h-3 bg-blue-500 rounded-full transition-all"
+                            style="width:0%"></div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="text-blue-600 font-semibold mb-1 block">Quick Notes:</label>
+                    <textarea id="projectQuickNotes" rows="2"
+                        class="w-full border border-blue-100 p-2 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"></textarea>
+                    <button
+                        onclick="saveProjectNotes(projects[selectedProjectIndex]._id, document.getElementById('projectQuickNotes').value)"
+                        class="mt-2 bg-blue-500 text-white px-3 py-1 rounded-xl font-semibold hover:bg-blue-600 transition">Save
+                        Notes</button>
+                </div>
+                <div class="mt-4">
+                    <h3 class="text-blue-600 font-semibold mb-1">Recent Activity</h3>
+                    <ul id="recentActivityList" class="text-sm text-gray-500 space-y-1"></ul>
+                </div>
+                <!-- New Features End -->
+            </section>
+        </div>
+
+        <!-- Top Section: Task Management + Sidebar -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="mainTaskDashboard">
+            <!-- Task Management Card (Left, 2/3) -->
+            <section class="md:col-span-2 bg-white rounded-2xl shadow-lg p-6 flex flex-col gap-4 border border-blue-50"
+                id="taskSection">
+                <div class="flex flex-col md:flex-row md:items-end gap-4 mb-2 overflow-x-auto flex-wrap">
+                    <input type="text" id="taskInput" placeholder="New Task"
+                        class="border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 flex-1" />
+                    <select id="taskTag"
+                        class="border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                        <option value="General">General</option>
+                        <option value="Frontend">Frontend</option>
+                        <option value="Backend">Backend</option>
+                        <option value="Bug">Bug</option>
+                    </select>
+                    <!-- Priority Dropdown -->
+                    <select id="taskPriority"
+                        class="border border-yellow-200 p-3 rounded-xl bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-200">
+                        <option value="Low">Low Priority</option>
+                        <option value="Medium">Medium Priority</option>
+                        <option value="High">High Priority</option>
+                    </select>
+                    <input type="date" id="taskDueDate"
+                        class="border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 min-w-[140px]" placeholder="Due Date" />
+                    <button onclick="addTask()"
+                        class="bg-gradient-to-r from-blue-400 to-blue-600 text-white px-4 py-2 rounded-xl font-semibold shadow hover:from-blue-500 hover:to-blue-700 transition flex-shrink-0 w-full md:w-auto">Add
+                        Task</button>
+                </div>
+                <div class="flex gap-2 mb-2">
+                    <input type="text" id="taskSearch" placeholder="Search tasks..."
+                        class="border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 flex-1"
+                        oninput="renderTasks(this.value, document.getElementById('taskTagFilter').value)" />
+                    <select id="taskTagFilter"
+                        onchange="renderTasks(document.getElementById('taskSearch').value, this.value)"
+                        class="border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                        <option value="">All Tags</option>
+                        <option value="General">General</option>
+                        <option value="Frontend">Frontend</option>
+                        <option value="Backend">Backend</option>
+                        <option value="Bug">Bug</option>
+                    </select>
+                </div>
+                <ul id="taskList" class="space-y-2 mb-2"></ul>
+                <div id="emptyTaskState" class="text-center text-gray-400 py-8">
+                    <svg class="mx-auto mb-2" width="40" height="40" fill="none" stroke="currentColor">
+                        <rect x="8" y="16" width="24" height="12" rx="4" stroke-width="2" />
+                        <path d="M16 22h8M20 18v8" stroke-width="2" />
+                    </svg>
+                    <div>No tasks found</div>
+                </div>
+            </section>
+            <!-- Sidebar (Right, 1/3): Todo List + Notes -->
+            <aside class="bg-white rounded-2xl shadow-lg p-6 flex flex-col gap-8 border border-blue-50 h-full">
+                <!-- Todo List -->
+                <div>
+                    <h3 class="font-bold text-blue-600 mb-2 flex items-center gap-1">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 18 18">
+                            <rect width="18" height="18" rx="4" fill="#DBEAFE" />
+                            <path d="M5 13l4-8 4 8" stroke="#3B82F6" stroke-width="1.2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg> My Todos
+                    </h3>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="sidebarTodoInput" placeholder="Add todo..."
+                            class="border border-blue-100 p-2 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 flex-1" />
+                        <button onclick="addSidebarTodo()"
+                            class="bg-blue-500 text-white px-3 py-1 rounded-xl font-semibold hover:bg-blue-600 transition">Add</button>
+                    </div>
+                    <ul id="sidebarTodoList" class="space-y-2"></ul>
+                </div>
+                <!-- Notes -->
+                <div>
+                    <h3 class="font-bold text-blue-600 mb-2 flex items-center gap-1">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 18 18">
+                            <rect width="18" height="18" rx="4" fill="#DBEAFE" />
+                            <path d="M5 13l4-8 4 8" stroke="#3B82F6" stroke-width="1.2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg> Notes
+                    </h3>
+                    <textarea id="sidebarNotes" rows="6" placeholder="Write your notes here..."
+                        class="w-full border border-blue-100 p-2 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"></textarea>
+                    <button onclick="saveSidebarNotes()"
+                        class="mt-2 bg-blue-500 text-white px-3 py-1 rounded-xl font-semibold hover:bg-blue-600 transition w-full">Save
+                        Notes</button>
+                </div>
+            </aside>
+        </div>
+
+        <div id="selectProjectMsg" class="text-center text-blue-400 text-lg font-semibold py-16 hidden">
+            <svg class="mx-auto mb-4" width="48" height="48" fill="none" stroke="#3B82F6">
+                <rect x="8" y="16" width="32" height="20" rx="4" stroke-width="2" />
+                <path d="M16 24h16M24 20v8" stroke-width="2" />
+            </svg>
+            Please select a project to manage tasks.
+        </div>
+
+        <!-- Dashboard Main Section: Advanced Grid Variation & Overflow Fix for Desktop -->
+        <section class="w-full mt-10 overflow-x-hidden">
+            <div class="mx-auto max-w-7xl px-2 md:px-6">
+                <h2 class="text-2xl md:text-3xl font-extrabold text-blue-700 mb-10 tracking-tight text-center">Dashboard
+                    Overview</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                    <div
+                        class="bg-gradient-to-br from-blue-100 to-blue-300 rounded-2xl shadow-xl p-6 flex flex-col items-center transition-transform hover:scale-105 min-h-[140px]">
+                        <span class="text-3xl font-extrabold text-blue-700" id="summaryTotalProjects">0</span>
+                        <span class="text-blue-700 font-bold mt-2 tracking-wide">Total Projects</span>
+                    </div>
+                    <div
+                        class="bg-gradient-to-br from-green-100 to-green-300 rounded-2xl shadow-xl p-6 flex flex-col items-center transition-transform hover:scale-105 min-h-[140px]">
+                        <span class="text-3xl font-extrabold text-green-700" id="summaryCompletedProjects">0</span>
+                        <span class="text-green-700 font-bold mt-2 tracking-wide">Completed</span>
+                    </div>
+                    <div
+                        class="bg-gradient-to-br from-yellow-100 to-yellow-300 rounded-2xl shadow-xl p-6 flex flex-col items-center transition-transform hover:scale-105 min-h-[140px]">
+                        <span class="text-3xl font-extrabold text-yellow-700" id="summaryActiveProjects">0</span>
+                        <span class="text-yellow-700 font-bold mt-2 tracking-wide">Active</span>
+                    </div>
+                    <div
+                        class="bg-gradient-to-br from-red-100 to-red-300 rounded-2xl shadow-xl p-6 flex flex-col items-center transition-transform hover:scale-105 min-h-[140px]">
+                        <span class="text-3xl font-extrabold text-red-700" id="summaryOverdueProjects">0</span>
+                        <span class="text-red-700 font-bold mt-2 tracking-wide">Overdue</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Project Modal (hidden by default) -->
+    <div id="projectModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md relative">
+            <button onclick="closeProjectForm()" class="absolute top-3 right-3 text-gray-400 hover:text-blue-500">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path d="M6 6l12 12M6 18L18 6" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+            <h2 class="text-xl font-bold text-blue-600 mb-4" id="projectModalTitle">Add Project</h2>
+            <form id="projectFormEl" class="space-y-4">
+                <input type="text" id="projectName" placeholder="Project Name"
+                    class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    required />
+                <textarea id="projectDescInput" placeholder="Project Description"
+                    class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    required></textarea>
+                <div>
+                    <label class="block text-blue-500 font-semibold mb-1">Basic Requirements</label>
+                    <div id="basicInputs" class="space-y-2">
+                        <input type="text"
+                            class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 basic-input"
+                            placeholder="Basic Requirement" />
+                    </div>
+                    <button type="button" onclick="addBasicInput()" class="mt-2 text-xs text-blue-500 hover:underline">+
+                        Add More</button>
+                </div>
+                <div>
+                    <label class="block text-blue-500 font-semibold mb-1">Advanced Features</label>
+                    <div id="advancedInputs" class="space-y-2">
+                        <input type="text"
+                            class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 advanced-input"
+                            placeholder="Advanced Feature" />
+                    </div>
+                    <button type="button" onclick="addAdvancedInput()"
+                        class="mt-2 text-xs text-blue-500 hover:underline">+ Add More</button>
+                </div>
+                <button type="submit"
+                    class="bg-gradient-to-r from-blue-400 to-blue-600 text-white px-4 py-2 rounded-xl font-semibold shadow hover:from-blue-500 hover:to-blue-700 transition w-full">Save
+                    Project</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- jsPDF CDN (PDF export के लिए) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+
+</html>
