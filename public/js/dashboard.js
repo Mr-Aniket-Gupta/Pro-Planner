@@ -17,8 +17,18 @@ function renderProjectList() {
         projects.forEach((project, idx) => {
             const li = document.createElement('li');
             li.className = 'flex items-center justify-between bg-blue-50 rounded-xl px-4 py-2 hover:bg-blue-100 cursor-pointer transition';
-            li.innerHTML = `<span class="font-semibold text-blue-700">${project.name}</span>
-              <button onclick="selectProject(${idx})" class="ml-2 text-blue-400 hover:text-blue-600" title="Select"><svg width="18" height="18" fill="none" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" stroke="#3B82F6" stroke-width="1.5"/><path d="M6 9l2 2 4-4" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/></svg></button>`;
+            li.innerHTML = `
+                <span class="font-semibold text-blue-700">${project.name}</span>
+                <div class="flex gap-2">
+                  <button onclick="selectProject(${idx})" class="ml-2 text-blue-400 hover:text-blue-600" title="Select"><svg width="18" height="18" fill="none" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" stroke="#3B82F6" stroke-width="1.5"/><path d="M6 9l2 2 4-4" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+                  <button onclick="deleteProject(${idx})" class="ml-2 text-red-400 hover:text-red-600" title="Delete">
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                      <rect x="5" y="7" width="14" height="12" rx="2" stroke="#ef4444" stroke-width="2"/>
+                      <path d="M10 11v4M14 11v4" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="#ef4444" stroke-width="2"/>
+                    </svg>
+                  </button>
+                </div>`;
             projectListEl.appendChild(li);
         });
     }
@@ -66,7 +76,11 @@ function renderProjectDetails() {
     if (projectDeadline) projectDeadline.value = project.deadline ? new Date(project.deadline).toISOString().split('T')[0] : '';
     // Quick Notes
     const projectQuickNotes = document.getElementById('projectQuickNotes');
-    if (projectQuickNotes) projectQuickNotes.value = project.notes || '';
+    if (projectQuickNotes) {
+        projectQuickNotes.value = project.notes || '';
+        projectQuickNotes.style.height = 'auto';
+        projectQuickNotes.style.height = (projectQuickNotes.scrollHeight) + 'px';
+    }
     // Mark as Complete/Incomplete Button Toggle
     const markCompleteBtn = document.getElementById('markCompleteBtn');
     const markIncompleteBtn = document.getElementById('markIncompleteBtn');
@@ -116,8 +130,19 @@ document.getElementById('projectFormEl').addEventListener('submit', async functi
     const basic = Array.from(document.querySelectorAll('.basic-input')).map(i => i.value).filter(Boolean);
     const advanced = Array.from(document.querySelectorAll('.advanced-input')).map(i => i.value).filter(Boolean);
     if (document.getElementById('projectModalTitle').innerText === 'Edit Project' && selectedProjectIndex !== null) {
-        // Edit (not implemented here)
-        alert('Project edit API is not implemented yet!');
+        // Edit (API call)
+        const projectId = projects[selectedProjectIndex]._id;
+        try {
+            const res = await fetch(`/api/projects/${projectId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, desc, basic, advanced })
+            });
+            if (!res.ok) throw new Error('Project update failed');
+            showAlert({icon:'success',title:'Success',text:'Project updated!'});
+        } catch (err) {
+            showAlert({icon:'error',title:'Error',text:'Failed to update project!'});
+        }
     } else {
         await addProject({ name, desc, basic, advanced });
     }
@@ -754,4 +779,24 @@ if(taskInputRow && !document.getElementById('taskDueDate')) {
     dueInput.style.minWidth = '140px';
     dueInput.placeholder = 'Due Date';
     taskInputRow.insertBefore(dueInput, taskInputRow.lastElementChild);
+}
+
+async function deleteProject(idx) {
+    const project = projects[idx];
+    if (!project) return;
+    const confirmDelete = confirm(`Kya aap sach me project '${project.name}' ko delete karna chahte hain?`);
+    if (!confirmDelete) return;
+    try {
+        const res = await fetch(`/api/projects/${project._id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Project delete failed');
+        showAlert({icon:'success',title:'Success',text:'Project deleted!'});
+        await fetchProjects();
+        // Agar delete hua project selected tha toh details hata do
+        if(selectedProjectIndex === idx) {
+            selectedProjectIndex = null;
+            renderProjectDetails();
+        }
+    } catch (err) {
+        showAlert({icon:'error',title:'Error',text:'Failed to delete project!'});
+    }
 }
