@@ -800,3 +800,42 @@ async function deleteProject(idx) {
         showAlert({icon:'error',title:'Error',text:'Failed to delete project!'});
     }
 }
+
+// --- Project Search ---
+document.getElementById('projectSearch').addEventListener('input', async function() {
+    const q = this.value;
+    // UserId backend se session se milega, yahan API me nahi bhejna (server side handle ho raha hai)
+    const res = await fetch(`/api/projects/search?q=${encodeURIComponent(q)}`);
+    projects = await res.json();
+    renderProjectList();
+});
+
+// --- Task Search & Filter ---
+function getSelectedProjectId() {
+    if (selectedProjectIndex !== null && projects[selectedProjectIndex]) {
+        return projects[selectedProjectIndex]._id;
+    }
+    return null;
+}
+async function fetchAndRenderTasksWithFilters() {
+    const projectId = getSelectedProjectId();
+    if (!projectId) return;
+    const q = document.getElementById('taskSearch').value;
+    const priority = document.getElementById('filterPriority').value;
+    const status = document.getElementById('filterStatus').value;
+    const due = document.getElementById('filterDue').value;
+    const params = new URLSearchParams({ projectId, q, priority, status, due });
+    const res = await fetch(`/api/tasks/search?${params.toString()}`);
+    taskList = await res.json();
+    renderTasks();
+}
+document.getElementById('taskSearch').addEventListener('input', fetchAndRenderTasksWithFilters);
+document.getElementById('filterPriority').addEventListener('change', fetchAndRenderTasksWithFilters);
+document.getElementById('filterStatus').addEventListener('change', fetchAndRenderTasksWithFilters);
+document.getElementById('filterDue').addEventListener('change', fetchAndRenderTasksWithFilters);
+// Project select/update par bhi filter apply ho
+const origSelectProject = selectProject;
+selectProject = function(idx) {
+    origSelectProject(idx);
+    fetchAndRenderTasksWithFilters();
+}

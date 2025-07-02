@@ -85,6 +85,10 @@
                         </svg>
                     </button>
                 </div>
+                <!-- Project Search Bar -->
+                <div class="mb-2">
+                  <input type="text" id="projectSearch" placeholder="Search projects by name or tag..." class="w-full border border-blue-100 p-2 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+                </div>
                 <ul id="projectList" class="space-y-2 max-h-64 overflow-y-auto"></ul>
                 <div id="emptyProjectState" class="text-center text-gray-400 py-8">
                     <svg class="mx-auto mb-2" width="40" height="40" fill="none" stroke="currentColor">
@@ -174,6 +178,27 @@
             <!-- Task Management Card (Left, 2/3) -->
             <section class="md:col-span-2 bg-white rounded-2xl shadow-lg p-6 flex flex-col gap-4 border border-blue-50"
                 id="taskSection">
+                <!-- Task Search & Filters -->
+                <div class="flex flex-col md:flex-row md:items-end gap-4 mb-2 overflow-x-auto flex-wrap">
+                  <input type="text" id="taskSearch" placeholder="Search tasks by name or tag..." class="border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 flex-1" />
+                  <select id="filterPriority" class="border border-yellow-200 p-3 rounded-xl bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-200">
+                    <option value="">All Priorities</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                  <select id="filterStatus" class="border border-blue-200 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                    <option value="">All Status</option>
+                    <option value="completed">Completed</option>
+                    <option value="incomplete">Incomplete</option>
+                  </select>
+                  <select id="filterDue" class="border border-blue-200 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                    <option value="">All Dates</option>
+                    <option value="today">Due Today</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="overdue">Overdue</option>
+                  </select>
+                </div>
                 <div class="flex flex-col md:flex-row md:items-end gap-4 mb-2 overflow-x-auto flex-wrap">
                     <input type="text" id="taskInput" placeholder="New Task"
                         class="border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 flex-1" />
@@ -184,13 +209,6 @@
                         <option value="Backend">Backend</option>
                         <option value="Bug">Bug</option>
                     </select>
-                    <!-- Priority Dropdown -->
-                    <select id="taskPriority"
-                        class="border border-yellow-200 p-3 rounded-xl bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-200">
-                        <option value="Low">Low Priority</option>
-                        <option value="Medium">Medium Priority</option>
-                        <option value="High">High Priority</option>
-                    </select>
                     <input type="date" id="taskDueDate"
                         class="border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 min-w-[140px]"
                         placeholder="Due Date" />
@@ -199,9 +217,6 @@
                         Task</button>
                 </div>
                 <div class="flex gap-2 mb-2">
-                    <input type="text" id="taskSearch" placeholder="Search tasks..."
-                        class="border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 flex-1"
-                        oninput="renderTasks(this.value, document.getElementById('taskTagFilter').value)" />
                     <select id="taskTagFilter"
                         onchange="renderTasks(document.getElementById('taskSearch').value, this.value)"
                         class="border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200">

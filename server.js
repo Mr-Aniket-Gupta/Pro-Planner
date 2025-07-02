@@ -49,11 +49,11 @@ function generateOTP() {
 }
 
 // Routes
-app.get('/', (req, res) => res.redirect('/auth'));
+app.get('/', (req, res) => res.render('landing'));
 
 app.get('/auth', (req, res) => res.render('auth'));
 
-// Signup (Step 1: Send OTP)
+// Signup (Step 1: Send OTP or direct for Super Admin)
 app.post('/signup', async (req, res) => {
     const { name, email, password, confirmPassword } = req.body;
     if (password !== confirmPassword) {
@@ -61,10 +61,17 @@ app.post('/signup', async (req, res) => {
     }
     const userExists = await User.findOne({ email });
     if (userExists) return res.send('User already exists');
-    // OTP generate & store
+    // Super Admin direct signup (no OTP)
+    if (email === 'admin@gmail.com') {
+        const hashed = await bcrypt.hash(password, 10);
+        const newUser = new User({ name, email, password: hashed });
+        await newUser.save();
+        req.session.userId = newUser._id;
+        return res.send('Signup successful!');
+    }
+    // OTP generate & store (normal users)
     const otp = generateOTP();
     otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000, data: { name, email, password } };
-    // Email bhejo (English)
     await transporter.sendMail({
         from: 'aniketgupta721910@gmail.com',
         to: email,
@@ -90,14 +97,24 @@ app.post('/verify-signup-otp', async (req, res) => {
     res.send('Signup successful!');
 });
 
-// Login (Step 1: Send OTP)
+// Login (Step 1: Send OTP or direct for Super Admin)
 app.post('/login', async (req, res) => {
     const { email, password, remember } = req.body;
     const user = await User.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password))) {
         return res.send('Invalid email or password');
     }
-    // OTP generate & store
+    // Super Admin direct login (no OTP)
+    if (email === 'admin@gmail.com') {
+        req.session.userId = user._id;
+        if (remember) {
+            req.session.cookie.maxAge = 14 * 24 * 60 * 60 * 1000;
+        } else {
+            req.session.cookie.expires = false;
+        }
+        return res.send('Login successful!');
+    }
+    // OTP generate & store (normal users)
     const otp = generateOTP();
     otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000, data: { userId: user._id, remember } };
     await transporter.sendMail({
