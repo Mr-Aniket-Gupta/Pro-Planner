@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -22,15 +23,25 @@
       background-size: 400% 400%;
       animation: gradientBG 12s ease infinite;
     }
+
     @keyframes gradientBG {
-      0% {background-position: 0% 50%;}
-      50% {background-position: 100% 50%;}
-      100% {background-position: 0% 50%;}
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
     }
+
     .auth-container {
       display: flex;
       flex-direction: column;
-      background: rgba(255,255,255,0.95);
+      background: rgba(255, 255, 255, 0.95);
       border-radius: 2rem;
       box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
       overflow: hidden;
@@ -38,6 +49,7 @@
       max-width: 800px;
       min-height: 420px;
     }
+
     .auth-3d {
       flex: 1 1 0%;
       display: flex;
@@ -47,6 +59,7 @@
       min-width: 220px;
       padding: 2rem 1rem;
     }
+
     .auth-form {
       flex: 1 1 0%;
       padding: 2.5rem 2rem;
@@ -56,19 +69,23 @@
       gap: 1.2rem;
       background: transparent;
     }
+
     @media (min-width: 700px) {
       .auth-container {
         flex-direction: row;
         min-height: 420px;
       }
+
       .auth-3d {
         min-height: unset;
         padding: 2rem 1rem;
       }
+
       .auth-form {
         padding: 2.5rem 2rem;
       }
     }
+
     .tab-btn.active {
       background: #3b82f6;
       color: #fff;
@@ -77,9 +94,13 @@
     .tab-btn {
       transition: background 0.2s, color 0.2s;
     }
+
     .loader-overlay {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       width: 100vw;
       height: 100vh;
       background: linear-gradient(120deg, #a1c4fd 0%, #b2fefa 100%);
@@ -89,6 +110,7 @@
       justify-content: center;
       transition: opacity 0.4s;
     }
+
     .loader-spinner {
       width: 70px;
       height: 70px;
@@ -98,9 +120,15 @@
       animation: spin 1s linear infinite;
       box-shadow: 0 0 24px #60a5fa44;
     }
+
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
   </style>
 </head>
@@ -111,7 +139,8 @@
   </div>
   <div class="auth-container">
     <div class="auth-3d">
-      <model-viewer src="https://modelviewer.dev/shared-assets/models/Astronaut.glb" alt="3D Model" auto-rotate camera-controls style="width: 200px; height: 200px; margin:auto;" background="transparent"></model-viewer>
+      <model-viewer src="https://modelviewer.dev/shared-assets/models/Astronaut.glb" alt="3D Model" auto-rotate
+        camera-controls style="width: 200px; height: 200px; margin:auto;" background="transparent"></model-viewer>
     </div>
     <div class="auth-form">
       <div class="flex justify-center mb-4">
@@ -121,7 +150,7 @@
           onclick="showTab('signup')">Sign Up</button>
       </div>
       <!-- Login Form -->
-      <form id="loginForm" method="POST" action="/login" class="space-y-4">
+      <form id="loginForm" class="space-y-4">
         <h2 class="text-2xl font-bold text-blue-600 mb-2 text-center">Login</h2>
         <input name="email" type="email" placeholder="Email"
           class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
@@ -130,8 +159,15 @@
           <input name="password" type="password" placeholder="Password" id="loginPassword"
             class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 pr-10"
             required />
-          <span onclick="togglePassword('loginPassword', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-blue-400">
-            <svg id="eyeIconLogin" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+          <span onclick="togglePassword('loginPassword', this)"
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-blue-400">
+            <svg id="eyeIconLogin" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
           </span>
         </div>
         <div class="flex items-center justify-between">
@@ -145,8 +181,18 @@
           <a href="#" class="text-blue-500 hover:underline" onclick="showTab('signup'); return false;">Sign Up</a>
         </div>
       </form>
+      <!-- Login OTP Form -->
+      <form id="loginOtpForm" class="space-y-4 hidden">
+        <h2 class="text-2xl font-bold text-blue-600 mb-2 text-center">Login OTP</h2>
+        <input type="text" placeholder="Enter OTP" maxlength="6"
+          class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          required />
+        <button type="submit"
+          class="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white px-4 py-2 rounded-xl font-semibold shadow hover:from-blue-500 hover:to-blue-700 transition">Verify
+          OTP</button>
+      </form>
       <!-- Signup Form -->
-      <form id="signupForm" method="POST" action="/signup" class="space-y-4 hidden">
+      <form id="signupForm" class="space-y-4 hidden">
         <h2 class="text-2xl font-bold text-blue-600 mb-2 text-center">Sign Up</h2>
         <input name="name" type="text" placeholder="Full Name"
           class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
@@ -158,16 +204,30 @@
           <input name="password" type="password" placeholder="Password" id="signupPassword"
             class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 pr-10"
             required />
-          <span onclick="togglePassword('signupPassword', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-blue-400">
-            <svg id="eyeIconSignup" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+          <span onclick="togglePassword('signupPassword', this)"
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-blue-400">
+            <svg id="eyeIconSignup" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
           </span>
         </div>
         <div class="relative">
           <input name="confirmPassword" type="password" placeholder="Confirm Password" id="signupConfirmPassword"
             class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 pr-10"
             required />
-          <span onclick="togglePassword('signupConfirmPassword', this)" class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-blue-400">
-            <svg id="eyeIconSignupConfirm" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+          <span onclick="togglePassword('signupConfirmPassword', this)"
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-blue-400">
+            <svg id="eyeIconSignupConfirm" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
           </span>
         </div>
         <button type="submit"
@@ -176,6 +236,16 @@
         <div class="text-center text-sm text-gray-400 mt-2">Already have an account?
           <a href="#" class="text-blue-500 hover:underline" onclick="showTab('login'); return false;">Login</a>
         </div>
+      </form>
+      <!-- Signup OTP Form -->
+      <form id="signupOtpForm" class="space-y-4 hidden">
+        <h2 class="text-2xl font-bold text-blue-600 mb-2 text-center">Signup OTP</h2>
+        <input type="text" placeholder="Enter OTP" maxlength="6"
+          class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          required />
+        <button type="submit"
+          class="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white px-4 py-2 rounded-xl font-semibold shadow hover:from-blue-500 hover:to-blue-700 transition">Verify
+          OTP</button>
       </form>
     </div>
   </div>
@@ -198,11 +268,89 @@
       }
     }
     // Loader hide on page load
-    window.addEventListener('load', function() {
+    window.addEventListener('load', function () {
       const loader = document.getElementById('loader');
-      if(loader) {
+      if (loader) {
         loader.style.opacity = 0;
         setTimeout(() => loader.style.display = 'none', 400);
+      }
+    });
+    // Login Form Submit
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const email = this.querySelector('input[name="email"]').value;
+      const password = this.querySelector('input[name="password"]').value;
+      const remember = this.querySelector('input[name="remember"]').checked;
+      window._loginEmail = email;
+      window._loginRemember = remember;
+      const res = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, remember })
+      });
+      const text = await res.text();
+      if (text.includes('OTP sent')) {
+        this.classList.add('hidden');
+        document.getElementById('loginOtpForm').classList.remove('hidden');
+        Swal.fire({ icon: 'info', title: 'OTP Sent', text: 'OTP aapke email par bheja gaya hai.', background: '#f0f6ff', color: '#2563eb', confirmButtonColor: '#2563eb' });
+      } else {
+        Swal.fire({ icon: 'error', title: 'Login Failed', text: text, background: '#f0f6ff', color: '#ef4444', confirmButtonColor: '#2563eb' });
+      }
+    });
+    // Login OTP Form Submit
+    document.getElementById('loginOtpForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const otp = this.querySelector('input').value;
+      const email = window._loginEmail;
+      const res = await fetch('/verify-login-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp })
+      });
+      const text = await res.text();
+      if (text.includes('Login successful')) {
+        Swal.fire({ icon: 'success', title: 'Login Success', text: 'Login successful!', background: '#f0f6ff', color: '#2563eb', confirmButtonColor: '#2563eb' }).then(() => { window.location.href = '/dashboard'; });
+      } else {
+        Swal.fire({ icon: 'error', title: 'OTP Failed', text: text, background: '#f0f6ff', color: '#ef4444', confirmButtonColor: '#2563eb' });
+      }
+    });
+    // Signup Form Submit
+    document.getElementById('signupForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const name = this.querySelector('input[name="name"]').value;
+      const email = this.querySelector('input[name="email"]').value;
+      const password = this.querySelector('input[name="password"]').value;
+      const confirmPassword = this.querySelector('input[name="confirmPassword"]').value;
+      window._signupEmail = email;
+      const res = await fetch('/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, confirmPassword })
+      });
+      const text = await res.text();
+      if (text.includes('OTP sent')) {
+        this.classList.add('hidden');
+        document.getElementById('signupOtpForm').classList.remove('hidden');
+        Swal.fire({ icon: 'info', title: 'OTP Sent', text: 'OTP aapke email par bheja gaya hai.', background: '#f0f6ff', color: '#2563eb', confirmButtonColor: '#2563eb' });
+      } else {
+        Swal.fire({ icon: 'error', title: 'Signup Failed', text: text, background: '#f0f6ff', color: '#ef4444', confirmButtonColor: '#2563eb' });
+      }
+    });
+    // Signup OTP Form Submit
+    document.getElementById('signupOtpForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const otp = this.querySelector('input').value;
+      const email = window._signupEmail;
+      const res = await fetch('/verify-signup-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp })
+      });
+      const text = await res.text();
+      if (text.includes('Signup successful')) {
+        Swal.fire({ icon: 'success', title: 'Signup Success', text: 'Signup successful!', background: '#f0f6ff', color: '#2563eb', confirmButtonColor: '#2563eb' }).then(() => { window.location.href = '/dashboard'; });
+      } else {
+        Swal.fire({ icon: 'error', title: 'OTP Failed', text: text, background: '#f0f6ff', color: '#ef4444', confirmButtonColor: '#2563eb' });
       }
     });
   </script>
