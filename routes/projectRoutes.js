@@ -11,8 +11,8 @@ router.delete('/:projectId', deleteProject);
 // Project search/filter
 router.get('/search', async (req, res) => {
   try {
-    const { q = '', userId, tag = '' } = req.query;
-    const query = { userId };
+    const { q = '', tag = '' } = req.query;
+    const query = { userId: req.session.userId };
     if (q) {
       query.$or = [
         { name: { $regex: q, $options: 'i' } },

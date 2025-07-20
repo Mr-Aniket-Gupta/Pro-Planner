@@ -1,0 +1,119 @@
+body {
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Animated gradient */
+    background: linear-gradient(-45deg, #a1c4fd, #c2e9fb, #b2fefa, #fbc2eb);
+    background-size: 400% 400%;
+    animation: gradientBG 12s ease infinite;
+}
+
+@keyframes gradientBG {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.auth-container {
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 2rem;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+    overflow: hidden;
+    width: 100%;
+    max-width: 800px;
+    min-height: 420px;
+}
+
+.auth-3d {
+    flex: 1 1 0%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #a1c4fd 60%, #c2e9fb 100%);
+    min-width: 220px;
+    padding: 2rem 1rem;
+}
+
+.auth-form {
+    flex: 1 1 0%;
+    padding: 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.2rem;
+    background: transparent;
+}
+
+@media (min-width: 700px) {
+    .auth-container {
+        flex-direction: row;
+        min-height: 420px;
+    }
+
+    .auth-3d {
+        min-height: unset;
+        padding: 2rem 1rem;
+    }
+
+    .auth-form {
+        padding: 2.5rem 2rem;
+    }
+}
+
+.tab-btn.active {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.tab-btn {
+    transition: background 0.2s, color 0.2s;
+}
+
+.loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(120deg, #a1c4fd 0%, #b2fefa 100%);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.4s;
+}
+
+.loader-spinner {
+    width: 70px;
+    height: 70px;
+    border: 7px solid #e0e7ef;
+    border-top: 7px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 0 24px #60a5fa44;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}

@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const {
-    createTask,
-    getTasks,
-    updateTask,
-    deleteTask
+  createTask,
+  getTasks,
+  updateTask,
+  deleteTask
 } = require('../controllers/taskController');
 const Task = require('../models/task');
 
@@ -30,7 +30,7 @@ router.get('/search', async (req, res) => {
     // Date filter
     if (due) {
       const today = new Date();
-      today.setHours(0,0,0,0);
+      today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(today.getDate() + 1);
       if (due === 'today') {

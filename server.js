@@ -6,6 +6,9 @@ const path = require('path');
 const dotenv = require('dotenv');
 const nodemailer = require('nodemailer');
 const cron = require('node-cron');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+const fetch = require('node-fetch');
 
 const User = require('./models/User');
 const Project = require('./models/Project');
@@ -21,8 +24,8 @@ const app = express();
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
+    // useNewUrlParser: true,
+    // useUnifiedTopology: true
 }).then(() => console.log('MongoDB connected'))
     .catch(err => console.error(err));
 
@@ -30,6 +33,9 @@ mongoose.connect(process.env.MONGODB_URI, {
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(cookieParser());
+
+
 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'defaultsecret',
@@ -49,7 +55,20 @@ function generateOTP() {
 }
 
 // Routes
-app.get('/', (req, res) => res.render('landing'));
+app.get('/', async (req, res) => {
+    let isLoggedIn = false;
+    // Session check
+    if (req.session && req.session.userId) {
+        isLoggedIn = true;
+    } else if (req.cookies && req.cookies.proplanner_token) {
+        // JWT cookie check (agar future me set ho)
+        try {
+            const decoded = jwt.verify(req.cookies.proplanner_token, process.env.JWT_SECRET || 'supersecretjwtkey');
+            if (decoded && decoded.userId) isLoggedIn = true;
+        } catch (e) { }
+    }
+    res.render('landing', { isLoggedIn });
+});
 
 app.get('/auth', (req, res) => res.render('auth'));
 
@@ -59,16 +78,29 @@ app.post('/signup', async (req, res) => {
     if (password !== confirmPassword) {
         return res.send('Passwords do not match');
     }
-    const userExists = await User.findOne({ email });
-    if (userExists) return res.send('User already exists');
+
+    // Check if email already exists in any user
+    const existingUser = await User.findOne({ 'emails.email': email });
+    if (existingUser) return res.send('Email already exists');
+
     // Super Admin direct signup (no OTP)
     if (email === 'admin@gmail.com') {
         const hashed = await bcrypt.hash(password, 10);
-        const newUser = new User({ name, email, password: hashed });
+        const newUser = new User({
+            name,
+            password: hashed,
+            emails: [{
+                email,
+                verified: true,
+                isPrimary: true,
+                addedAt: new Date()
+            }]
+        });
         await newUser.save();
         req.session.userId = newUser._id;
         return res.send('Signup successful!');
     }
+
     // OTP generate & store (normal users)
     const otp = generateOTP();
     otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000, data: { name, email, password } };
@@ -90,7 +122,16 @@ app.post('/verify-signup-otp', async (req, res) => {
     }
     // User create karo
     const hashed = await bcrypt.hash(record.data.password, 10);
-    const newUser = new User({ name: record.data.name, email, password: hashed });
+    const newUser = new User({
+        name: record.data.name,
+        password: hashed,
+        emails: [{
+            email,
+            verified: true,
+            isPrimary: true,
+            addedAt: new Date()
+        }]
+    });
     await newUser.save();
     delete otpStore[email];
     req.session.userId = newUser._id;
@@ -100,10 +141,13 @@ app.post('/verify-signup-otp', async (req, res) => {
 // Login (Step 1: Send OTP or direct for Super Admin)
 app.post('/login', async (req, res) => {
     const { email, password, remember } = req.body;
-    const user = await User.findOne({ email });
+
+    // Find user by any of their verified emails
+    const user = await User.findOne({ 'emails.email': email, 'emails.verified': true });
     if (!user || !(await bcrypt.compare(password, user.password))) {
         return res.send('Invalid email or password');
     }
+
     // Super Admin direct login (no OTP)
     if (email === 'admin@gmail.com') {
         req.session.userId = user._id;
@@ -112,8 +156,11 @@ app.post('/login', async (req, res) => {
         } else {
             req.session.cookie.expires = false;
         }
-        return res.send('Login successful!');
+        // JWT generate karo
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'supersecretjwtkey', { expiresIn: remember ? '14d' : '1d' });
+        return res.json({ message: 'Login successful!', token });
     }
+
     // OTP generate & store (normal users)
     const otp = generateOTP();
     otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000, data: { userId: user._id, remember } };
@@ -123,7 +170,7 @@ app.post('/login', async (req, res) => {
         subject: 'ProPlanner Login OTP',
         text: `Your OTP for ProPlanner login is: ${otp}\nThis OTP is valid for 5 minutes.`
     });
-    res.send('OTP sent to your email. Please verify.');
+    res.json({ message: 'OTP sent to your email. Please verify.' });
 });
 
 // Login (Step 2: Verify OTP)
@@ -140,16 +187,36 @@ app.post('/verify-login-otp', async (req, res) => {
     } else {
         req.session.cookie.expires = false;
     }
+    // JWT generate karo
+    const token = jwt.sign({ userId: record.data.userId }, process.env.JWT_SECRET || 'supersecretjwtkey', { expiresIn: record.data.remember ? '14d' : '1d' });
     delete otpStore[email];
-    res.send('Login successful!');
+    res.json({ message: 'Login successful!', token });
 });
 
-// Dashboard view
+// Auto-login endpoint (JWT verify)
+app.post('/auto-login', async (req, res) => {
+    const { token } = req.body;
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretjwtkey');
+        const user = await User.findById(decoded.userId);
+        if (!user) return res.status(401).json({ error: 'Invalid token' });
+        req.session.userId = user._id;
+        return res.json({ message: 'Auto-login successful!' });
+    } catch (err) {
+        return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+});
+
+// Dashboard view (JWT bhi allow karo)
 app.get('/dashboard', async (req, res) => {
     if (!req.session.userId) return res.redirect('/auth');
-
     const user = await User.findById(req.session.userId);
     res.render('dashboard', { user });
+});
+
+// Voice test page
+app.get('/voice-test', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'voice-test.html'));
 });
 
 // Logout
@@ -193,7 +260,7 @@ const transporter = nodemailer.createTransport({
 cron.schedule('09 17 * * *', async () => { // 5:02 PM
     try {
         const today = new Date();
-        today.setHours(0,0,0,0);
+        today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(today.getDate() + 1);
         const nextWeek = new Date(today);
@@ -245,13 +312,23 @@ cron.schedule('09 17 * * *', async () => { // 5:02 PM
             }
             if (hasTasks || hasUpcoming) {
                 emailContent += '\n- ProPlanner Team';
-                const mailOptions = {
-                    from: 'aniketgupta721910@gmail.com',
-                    to: user.email,
-                    subject: "Today's & Upcoming Task/Project Deadline Reminder",
-                    text: emailContent
-                };
-                await transporter.sendMail(mailOptions);
+
+                // Send to all verified emails
+                const verifiedEmails = user.emails.filter(e => e.verified).map(e => e.email);
+                for (const email of verifiedEmails) {
+                    const mailOptions = {
+                        from: 'aniketgupta721910@gmail.com',
+                        to: email,
+                        subject: "Today's & Upcoming Task/Project Deadline Reminder",
+                        text: emailContent
+                    };
+                    try {
+                        await transporter.sendMail(mailOptions);
+                        console.log(`Reminder sent to ${email}`);
+                    } catch (error) {
+                        console.error(`Failed to send reminder to ${email}:`, error);
+                    }
+                }
             }
         }
         console.log('All users have been sent their project/task deadline reminders!');
@@ -260,6 +337,11 @@ cron.schedule('09 17 * * *', async () => { // 5:02 PM
     }
 });
 
+// server.js या app.js में (ऊपर require और app initialization के बाद)
+app.get('/contact', (req, res) => {
+  res.render('contact'); // contact.ejs को render करेगा
+});
+
 // Server start
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Server running at http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(` Server running at http://localhost:${PORT}`));

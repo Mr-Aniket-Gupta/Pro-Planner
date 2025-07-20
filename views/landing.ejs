@@ -2,217 +2,519 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ProPlanner - Your Project & Task Manager</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProPlanner - Smart Project & Task Management Tool</title>
+  <meta name="description"
+    content="ProPlanner helps you organize projects, manage tasks, set deadlines, and boost productivity with smart reminders. Secure, fast, and free!" />
+  <meta name="keywords"
+    content="project management, task manager, productivity, team collaboration, reminders, deadlines, secure, OTP, cloud, free, Hindi, English" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://proplanner.example.com/" />
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <!-- Open Graph -->
+  <meta property="og:title" content="ProPlanner - Smart Project & Task Management Tool" />
+  <meta property="og:description" content="Organize your projects and tasks effortlessly. Secure, fast, and free!" />
+  <meta property="og:image" content="/img/og-proplanner.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://proplanner.example.com/" />
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ProPlanner - Smart Project & Task Management Tool" />
+  <meta name="twitter:description" content="Organize your projects and tasks effortlessly. Secure, fast, and free!" />
+  <meta name="twitter:image" content="/img/og-proplanner.png" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@motionone/dom/dist/motion.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
+  <link rel="stylesheet" href="/css/landing.css">
 </head>
 
-<body
-    class="bg-gradient-to-br from-blue-50 to-white min-h-screen flex flex-col transition-colors duration-500 dark:bg-gray-900 dark:from-gray-900 dark:to-gray-800">
-    <!-- Header -->
-    <header class="w-full py-6 bg-white shadow flex justify-between items-center px-8 dark:bg-gray-800 dark:shadow-lg">
-        <div class="text-2xl font-extrabold text-blue-600 tracking-tight dark:text-blue-300">ProPlanner</div>
-        <div class="flex items-center gap-4">
-            <button id="themeToggle"
-                class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-3 py-2 rounded-xl font-semibold transition hover:bg-blue-100 dark:hover:bg-blue-900 focus:outline-none">
-                <span id="themeIcon">🌙</span>
-            </button>
-            <a href="/auth"
-                class="bg-blue-500 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-xl transition">Login /
-                Signup</a>
-        </div>
-    </header>
+<body>
+  <div id="universalLoader" class="loader-overlay" style="display:none;">
+    <div class="loader-spinner"></div>
+  </div>
+  <canvas id="stars-bg" class="fixed inset-0 w-full h-full z-0 pointer-events-none"></canvas>
+  <canvas id="matter-bg"></canvas>
+  <div class="bg-animated"></div>
+  <!-- Neon Cursor Trail -->
+  <div id="cursorTrail"></div>
+  <!-- Navbar -->
+  <nav class="navbar-glass flex justify-between items-center px-4 md:px-8 py-4 mx-auto max-w-7xl relative z-20">
+    <div class="flex items-center gap-2">
+      <svg width="32" height="32" fill="none" viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="#6366f1" />
+        <path d="M10 22l6-12 6 12" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <span class="text-2xl font-extrabold neon-text tracking-tight">ProPlanner</span>
+    </div>
+    <!-- Hamburger Button (Mobile) -->
+    <button id="navToggle"
+      class="md:hidden flex items-center justify-center p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+      aria-label="Open Menu">
+      <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+    <!-- Nav Links (Desktop) -->
+    <div id="navLinks" class="hidden md:flex items-center gap-6 text-white text-lg font-semibold">
+      <a href="#features" class="hover:text-blue-400 transition">Features</a>
+      <a href="#how" class="hover:text-blue-400 transition">How it Works</a>
+      <a href="#security" class="hover:text-blue-400 transition">Security</a>
+      <a href="/contact" class="hover:text-blue-400 transition">Contact Us</a>
+      <% if (isLoggedIn) { %>
+        <a href="/dashboard" class="glow-btn px-6 py-2 ml-4"><span>Dashboard</span></a>
+        <% } else { %>
+          <a href="/auth" class="glow-btn px-6 py-2 ml-4"><span>Login / Signup</span></a>
+          <% } %>
+    </div>
+    <!-- Mobile Nav Drawer -->
+    <div id="mobileNav" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 z-40 flex md:hidden"
+      style="display:none;">
+      <div class="bg-[#181a22] w-4/5 max-w-xs h-full p-8 flex flex-col gap-6 shadow-2xl animate-slideInLeft relative">
+        <button id="navClose"
+          class="absolute top-4 right-4 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+          aria-label="Close Menu">
+          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <a href="#features" class="text-white text-lg font-semibold py-2 border-b border-[#23294633]"
+          onclick="closeMobileNav()">Features</a>
+        <a href="#how" class="text-white text-lg font-semibold py-2 border-b border-[#23294633]"
+          onclick="closeMobileNav()">How it Works</a>
+        <a href="#security" class="text-white text-lg font-semibold py-2 border-b border-[#23294633]"
+          onclick="closeMobileNav()">Security</a>
+        <a href="/contact" class="text-white text-lg font-semibold py-2 border-b border-[#23294633]"
+          onclick="closeMobileNav()">Contact Us</a>
+        <% if (isLoggedIn) { %>
+          <a href="/dashboard" class="glow-btn px-6 py-2 mt-6" onclick="closeMobileNav()"><span>Dashboard</span></a>
+          <% } else { %>
+            <a href="/auth" class="glow-btn px-6 py-2 mt-6" onclick="closeMobileNav()"><span>Login /
+                Signup</span></a>
+            <% } %>
+      </div>
+      <div class="flex-1" onclick="closeMobileNav()"></div>
+    </div>
+  </nav>
+  <div style="height:6rem"></div>
+  <!-- Hero Section -->
+  <section
+    class="hero-section relative flex flex-col md:flex-row items-center justify-between px-4 md:px-8 py-20 md:py-28 max-w-7xl mx-auto z-10">
+    <div class="md:w-1/2 mb-10 md:mb-0 z-10 flex flex-col items-center md:items-start text-center md:text-left">
+      <h1
+        class="text-4xl md:text-5xl font-extrabold mb-6 leading-tight bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent drop-shadow-lg">
+        Organize Your Projects & Tasks Effortlessly
+      </h1>
+      <p class="text-lg md:text-xl text-blue-300 mb-6 max-w-xl">
+        ProPlanner helps you manage your projects, add tasks, set deadlines, and never miss a thing with smart reminders
+        and notifications. Perfect for students, teams, and professionals!
+      </p>
+      <ul class="mb-8 space-y-3 text-lg text-blue-200 font-medium">
+        <li class="flex items-center"><span class="text-green-400 mr-2 text-xl">&#10003;</span> Create & manage
+          unlimited projects</li>
+        <li class="flex items-center"><span class="text-green-400 mr-2 text-xl">&#10003;</span> Add tasks to each
+          project with priorities & deadlines</li>
+        <li class="flex items-center"><span class="text-green-400 mr-2 text-xl">&#10003;</span> Get daily email
+          reminders for upcoming deadlines</li>
+        <li class="flex items-center"><span class="text-green-400 mr-2 text-xl">&#10003;</span> Secure login/signup with
+          OTP verification</li>
+        <li class="flex items-center"><span class="text-green-400 mr-2 text-xl">&#10003;</span> Mark tasks & projects as
+          complete</li>
+      </ul>
+      <a href="/auth"
+        class="glow-btn px-8 py-3 text-xl font-bold rounded-full shadow-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:from-purple-600 hover:to-pink-500 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-300"
+        aria-label="Get Started Now">
+        <span>Get Started Now</span>
+      </a>
+    </div>
+    <div class="md:w-1/2 flex flex-col items-center justify-center z-10 relative mt-10 md:mt-0">
+      <model-viewer src="https://modelviewer.dev/shared-assets/models/Astronaut.glb" alt="3D Astronaut" auto-rotate
+        camera-controls
+        style="width: 420px; height: 420px; background: transparent; margin:auto; max-width:100vw; max-height:60vw; position:relative; z-index:1;"
+        background="transparent"></model-viewer>
+      <div
+        class="mt-4 text-base text-blue-300 font-semibold tracking-wide bg-blue-900 bg-opacity-40 rounded-full px-5 py-2 shadow-md"
+        style="backdrop-filter: blur(4px);">
+        Meet your AI Project Buddy!
+      </div>
+    </div>
+    <div class="section-glow" style="top:0;"></div>
+  </section>
+  <!-- Features Section -->
+  <section id="features" class="relative py-20 bg-gradient-to-b from-slate-800 to-slate-900">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Powerful Features</h2>
+        <p class="text-xl text-gray-300 max-w-3xl mx-auto">Everything you need to manage projects efficiently and
+          achieve your goals faster.</p>
+      </div>
 
-    <!-- Hero Section -->
-    <section class="flex flex-col md:flex-row items-center justify-between px-8 py-16 max-w-6xl mx-auto">
-        <div class="md:w-1/2 mb-10 md:mb-0">
-            <h1 id="heroTitle"
-                class="text-4xl md:text-5xl font-extrabold text-blue-700 mb-6 leading-tight dark:text-blue-200">Organize
-                Your Projects & Tasks Effortlessly</h1>
-            <p id="heroDesc" class="text-lg text-gray-600 mb-6 dark:text-gray-300">ProPlanner helps you manage your
-                projects, add tasks, set deadlines, and never miss a thing with smart reminders and notifications.
-                Perfect for students, teams, and professionals!</p>
-            <ul class="mb-8 space-y-3">
-                <li class="flex items-center"><span class="text-blue-500 mr-2">&#10003;</span> Create & manage unlimited
-                    projects</li>
-                <li class="flex items-center"><span class="text-blue-500 mr-2">&#10003;</span> Add tasks to each project
-                    with priorities & deadlines</li>
-                <li class="flex items-center"><span class="text-blue-500 mr-2">&#10003;</span> Get daily email reminders
-                    for upcoming deadlines</li>
-                <li class="flex items-center"><span class="text-blue-500 mr-2">&#10003;</span> Secure login/signup with
-                    OTP verification</li>
-                <li class="flex items-center"><span class="text-blue-500 mr-2">&#10003;</span> Mark tasks & projects as
-                    complete</li>
-            </ul>
-            <a id="ctaBtn" href="/auth"
-                class="inline-block bg-gradient-to-r from-blue-400 to-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow hover:from-blue-500 hover:to-blue-700 transition mb-6">Get
-                Started Now</a>
-        </div>
-        <div class="md:w-1/2 flex justify-center">
-            <model-viewer id="hero3d" src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
-                alt="3D Astronaut" auto-rotate camera-controls
-                style="width: 350px; height: 350px; background: transparent; margin:auto;" background="transparent">
-            </model-viewer>
-        </div>
-    </section>
-
-    <!-- How It Works -->
-    <section class="bg-blue-50 py-16 dark:bg-gray-800 transition-colors duration-500">
-        <div class="max-w-4xl mx-auto px-4">
-            <h2 class="text-3xl font-bold text-blue-700 mb-10 text-center dark:text-blue-200">How to Use ProPlanner?
-            </h2>
-            <div class="grid md:grid-cols-3 gap-8">
-                <div
-                    class="bg-white rounded-xl shadow p-6 flex flex-col items-center transition-transform duration-300 hover:scale-105 dark:bg-gray-900 dark:shadow-lg">
-                    <div class="bg-blue-100 text-blue-600 rounded-full p-4 mb-4 dark:bg-blue-900 dark:text-blue-300">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M9 12h6m2 0a8 8 0 11-16 0 8 8 0 0116 0z" />
-                        </svg>
-                    </div>
-                    <h3 class="font-bold text-lg mb-2 dark:text-blue-100">1. Add a Project</h3>
-                    <p class="text-gray-600 text-center dark:text-gray-300">Click on <span class="font-semibold">"Add
-                            Project"</span> in your dashboard. Give your project a name, description, and (optionally) a
-                        deadline.</p>
-                </div>
-                <div
-                    class="bg-white rounded-xl shadow p-6 flex flex-col items-center transition-transform duration-300 hover:scale-105 dark:bg-gray-900 dark:shadow-lg">
-                    <div class="bg-blue-100 text-blue-600 rounded-full p-4 mb-4 dark:bg-blue-900 dark:text-blue-300">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M12 8v4l3 3m6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <h3 class="font-bold text-lg mb-2 dark:text-blue-100">2. Add Tasks to Project</h3>
-                    <p class="text-gray-600 text-center dark:text-gray-300">Inside your project, click <span
-                            class="font-semibold">"Add Task"</span>. Set task name, priority, and due date. You can add
-                        as many tasks as you want!</p>
-                </div>
-                <div
-                    class="bg-white rounded-xl shadow p-6 flex flex-col items-center transition-transform duration-300 hover:scale-105 dark:bg-gray-900 dark:shadow-lg">
-                    <div class="bg-blue-100 text-blue-600 rounded-full p-4 mb-4 dark:bg-blue-900 dark:text-blue-300">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                    </div>
-                    <h3 class="font-bold text-lg mb-2 dark:text-blue-100">3. Stay Notified & Productive</h3>
-                    <p class="text-gray-600 text-center dark:text-gray-300">Get daily email reminders for all your
-                        upcoming deadlines. Mark tasks and projects as complete when done!</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="py-16 max-w-5xl mx-auto px-4">
-        <h2 class="text-3xl font-bold text-blue-700 mb-10 text-center dark:text-blue-200">Why Choose ProPlanner?</h2>
-        <div class="grid md:grid-cols-2 gap-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Feature Card 1 -->
+        <div
+          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20">
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          </div>
+          <div class="relative z-10">
             <div
-                class="flex items-start transition-transform duration-300 hover:scale-105 bg-white dark:bg-gray-900 rounded-xl p-4">
-                <div class="bg-blue-100 text-blue-600 rounded-full p-3 mr-4 mt-1 dark:bg-blue-900 dark:text-blue-300">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <div>
-                    <h4 class="font-bold text-lg mb-1 dark:text-blue-100">Easy to Use</h4>
-                    <p class="text-gray-600 dark:text-gray-300">Simple, clean dashboard for managing all your projects
-                        and tasks in one place.</p>
-                </div>
+              class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
             </div>
-            <div
-                class="flex items-start transition-transform duration-300 hover:scale-105 bg-white dark:bg-gray-900 rounded-xl p-4">
-                <div class="bg-blue-100 text-blue-600 rounded-full p-3 mr-4 mt-1 dark:bg-blue-900 dark:text-blue-300">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M9 17v-2a4 4 0 014-4h3m4 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <div>
-                    <h4 class="font-bold text-lg mb-1 dark:text-blue-100">Smart Reminders</h4>
-                    <p class="text-gray-600 dark:text-gray-300">Never miss a deadline! Get automatic email notifications
-                        for all your important tasks and projects.</p>
-                </div>
-            </div>
-            <div
-                class="flex items-start transition-transform duration-300 hover:scale-105 bg-white dark:bg-gray-900 rounded-xl p-4">
-                <div class="bg-blue-100 text-blue-600 rounded-full p-3 mr-4 mt-1 dark:bg-blue-900 dark:text-blue-300">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                </div>
-                <div>
-                    <h4 class="font-bold text-lg mb-1 dark:text-blue-100">Secure & Reliable</h4>
-                    <p class="text-gray-600 dark:text-gray-300">Your data is protected with secure login and OTP
-                        verification. Only you can access your projects.</p>
-                </div>
-            </div>
-            <div
-                class="flex items-start transition-transform duration-300 hover:scale-105 bg-white dark:bg-gray-900 rounded-xl p-4">
-                <div class="bg-blue-100 text-blue-600 rounded-full p-3 mr-4 mt-1 dark:bg-blue-900 dark:text-blue-300">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M3 7v4a1 1 0 001 1h3m10 0h3a1 1 0 001-1V7m-1-4H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z" />
-                    </svg>
-                </div>
-                <div>
-                    <h4 class="font-bold text-lg mb-1 dark:text-blue-100">Completely Free</h4>
-                    <p class="text-gray-600 dark:text-gray-300">No hidden charges. Use all features for free and boost
-                        your productivity!</p>
-                </div>
-            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">Smart Project Management</h3>
+            <p class="text-gray-300 leading-relaxed">Create unlimited projects with detailed requirements, deadlines,
+              and progress tracking. Our AI helps you stay organized and focused.</p>
+          </div>
         </div>
-    </section>
 
-    <!-- Footer -->
-    <footer
-        class="w-full py-6 bg-white text-center text-gray-400 text-sm mt-auto border-t border-blue-100 dark:bg-gray-800 dark:text-gray-400">
-        &copy; <%= new Date().getFullYear() %> ProPlanner. Made with ❤️ for productivity.
-    </footer>
-    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-    <script>
-        // GSAP Animations
-        gsap.from("#heroTitle", { duration: 1, y: 40, opacity: 0, ease: "power2.out" });
-        gsap.from("#heroDesc", { duration: 1, y: 40, opacity: 0, delay: 0.3, ease: "power2.out" });
-        gsap.fromTo("#ctaBtn", 
-          {scale: 0.7, opacity: 0}, 
-          {duration: 1, scale: 1, opacity: 1, delay: 0.6, ease: "back.out(1.7)"}
-        );
-        gsap.from("#hero3d", { duration: 1.2, x: 100, opacity: 0, delay: 0.5, ease: "power2.out" });
+        <!-- Feature Card 2 -->
+        <div
+          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/20">
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-green-600/20 to-blue-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          </div>
+          <div class="relative z-10">
+            <div
+              class="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">Time Tracking & Deadlines</h3>
+            <p class="text-gray-300 leading-relaxed">Set priorities, track time, and never miss deadlines. Get smart
+              notifications and reminders to keep your projects on schedule.</p>
+          </div>
+        </div>
 
-        // Dark mode toggle
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        function setDarkMode(on) {
-            if (on) {
-                document.documentElement.classList.add('dark');
-                themeIcon.textContent = '☀️';
-                localStorage.setItem('theme', 'dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-                themeIcon.textContent = '🌙';
-                localStorage.setItem('theme', 'light');
-            }
-        }
-        // Initial theme
-        if (localStorage.getItem('theme') === 'dark' || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            setDarkMode(true);
-        } else {
-            setDarkMode(false);
-        }
-        themeToggle.addEventListener('click', () => {
-            setDarkMode(!document.documentElement.classList.contains('dark'));
-        });
-    </script>
+        <!-- Feature Card 3 -->
+        <div
+          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20">
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          </div>
+          <div class="relative z-10">
+            <div
+              class="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">Analytics & Insights</h3>
+            <p class="text-gray-300 leading-relaxed">Visualize your progress with beautiful charts and analytics.
+              Understand your productivity patterns and optimize your workflow.</p>
+          </div>
+        </div>
+
+        <!-- Feature Card 4 -->
+        <div
+          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-yellow-500/20">
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-yellow-600/20 to-orange-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          </div>
+          <div class="relative z-10">
+            <div
+              class="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">AI Assistant</h3>
+            <p class="text-gray-300 leading-relaxed">Get instant help from our AI assistant. Ask questions, get
+              suggestions, and receive personalized project management advice.</p>
+          </div>
+        </div>
+
+        <!-- Feature Card 5 -->
+        <div
+          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-red-500/20">
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-red-600/20 to-pink-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          </div>
+          <div class="relative z-10">
+            <div
+              class="w-16 h-16 bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">Secure & Private</h3>
+            <p class="text-gray-300 leading-relaxed">Your data is protected with enterprise-grade security. Multiple
+              email verification and secure authentication ensure your privacy.</p>
+          </div>
+        </div>
+
+        <!-- Feature Card 6 -->
+        <div
+          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/20">
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-blue-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          </div>
+          <div class="relative z-10">
+            <div
+              class="w-16 h-16 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">User-Friendly Design</h3>
+            <p class="text-gray-300 leading-relaxed">Beautiful, intuitive interface designed for productivity. Dark mode
+              support and responsive design work perfectly on all devices.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- How It Works Section -->
+  <section id="how" class="relative py-20 max-w-6xl mx-auto px-4 z-10">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">How It Works</h2>
+      <p class="text-xl text-gray-300 max-w-3xl mx-auto">Get started with ProPlanner in just three simple steps. It's
+        designed to be intuitive and powerful.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Step 1 -->
+      <div
+        class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20">
+        <div
+          class="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        </div>
+        <div class="relative z-10 text-center">
+          <div
+            class="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-3xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-2xl">
+            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+          </div>
+          <div
+            class="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full border-4 border-white shadow-lg mx-auto mb-6 animate-pulse">
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-4">Sign Up & Create</h3>
+          <div class="font-semibold text-blue-300 mb-4 text-lg">Start your journey</div>
+          <p class="text-gray-300 leading-relaxed">Register with secure OTP verification, create your first project, and
+            set your goals in seconds. Our streamlined onboarding makes it effortless.</p>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div
+        class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/20">
+        <div
+          class="absolute inset-0 bg-gradient-to-br from-green-600/20 to-blue-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        </div>
+        <div class="relative z-10 text-center">
+          <div
+            class="w-20 h-20 bg-gradient-to-r from-green-500 to-blue-500 rounded-3xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-2xl">
+            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4" />
+            </svg>
+          </div>
+          <div
+            class="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-400 rounded-full border-4 border-white shadow-lg mx-auto mb-6 animate-pulse">
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-4">Add Tasks & Deadlines</h3>
+          <div class="font-semibold text-green-300 mb-4 text-lg">Stay on track</div>
+          <p class="text-gray-300 leading-relaxed">Add unlimited tasks with priorities, set realistic deadlines, and
+            never miss important milestones with our smart reminder system.</p>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div
+        class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20">
+        <div
+          class="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        </div>
+        <div class="relative z-10 text-center">
+          <div
+            class="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-2xl">
+            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div
+            class="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full border-4 border-white shadow-lg mx-auto mb-6 animate-pulse">
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-4">Track & Succeed</h3>
+          <div class="font-semibold text-purple-300 mb-4 text-lg">Celebrate wins</div>
+          <p class="text-gray-300 leading-relaxed">Monitor your progress with beautiful analytics, receive intelligent
+            notifications, and celebrate your achievements as you reach your goals!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Connecting Lines (Desktop Only) -->
+    <div class="hidden md:block relative mt-16">
+      <div
+        class="absolute top-1/2 left-1/4 right-1/4 h-1 bg-gradient-to-r from-blue-400 via-green-400 to-purple-400 rounded-full transform -translate-y-1/2 animate-pulse">
+      </div>
+      <div
+        class="absolute top-1/2 left-1/4 w-4 h-4 bg-blue-400 rounded-full transform -translate-y-1/2 -translate-x-1/2 animate-bounce">
+      </div>
+      <div
+        class="absolute top-1/2 right-1/4 w-4 h-4 bg-purple-400 rounded-full transform -translate-y-1/2 translate-x-1/2 animate-bounce delay-1000">
+      </div>
+    </div>
+
+    <div class="absolute inset-0 pointer-events-none" style="z-index:0;">
+      <div class="w-full h-full bg-gradient-to-br from-blue-900/10 via-purple-900/10 to-pink-900/10 blur-2xl"></div>
+    </div>
+    <div class="section-glow" style="top:80%;"></div>
+  </section>
+  <!-- Security Section -->
+  <section id="security" class="relative py-20 bg-gradient-to-b from-slate-800 to-slate-900">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Security & Privacy</h2>
+        <p class="text-xl text-gray-300 max-w-3xl mx-auto">Your data security is our top priority. We use
+          industry-leading encryption and security practices.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Security Card 1 -->
+        <div
+          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/20">
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-green-600/20 to-emerald-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          </div>
+          <div class="relative z-10">
+            <div
+              class="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">End-to-End Encryption</h3>
+            <p class="text-gray-300 leading-relaxed">All your data is encrypted using AES-256 encryption, ensuring
+              maximum security and privacy protection.</p>
+          </div>
+        </div>
+
+        <!-- Security Card 2 -->
+        <div
+          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20">
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-cyan-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          </div>
+          <div class="relative z-10">
+            <div
+              class="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">Multi-Factor Authentication</h3>
+            <p class="text-gray-300 leading-relaxed">Secure your account with OTP verification and multiple email
+              addresses for enhanced protection.</p>
+          </div>
+        </div>
+
+        <!-- Security Card 3 -->
+        <div
+          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20">
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-violet-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          </div>
+          <div class="relative z-10">
+            <div
+              class="w-16 h-16 bg-gradient-to-r from-purple-500 to-violet-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">Lightning Fast Performance</h3>
+            <p class="text-gray-300 leading-relaxed">Built with modern technologies for instant loading and seamless
+              user experience across all devices.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- Footer -->
+  <footer class="bg-[#181a22] text-gray-400 py-8 mt-10 border-t border-blue-900 text-center text-sm">
+    <div class="mb-2">&copy; <%= new Date().getFullYear() %> ProPlanner. All rights reserved.</div>
+    <div class="mb-2">Made with ❤️ for productivity. | <a href="#security"
+        class="text-blue-400 hover:underline">Security & Privacy</a></div>
+    <div>ProPlanner uses HTTPS, OTP, CSP, and privacy-first design for your safety.</div>
+  </footer>
+  <script src="/js/landing.js" defer></script>
+  <!-- Animations for timeline icons -->
+  <style>
+    @keyframes bounce-slow {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-12px);
+      }
+    }
+
+    @keyframes bounce-slow2 {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-18px);
+      }
+    }
+
+    @keyframes bounce-slow3 {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-24px);
+      }
+    }
+
+    .animate-bounce-slow {
+      animation: bounce-slow 2.2s infinite;
+    }
+
+    .animate-bounce-slow2 {
+      animation: bounce-slow2 2.5s infinite;
+    }
+
+    .animate-bounce-slow3 {
+      animation: bounce-slow3 2.8s infinite;
+    }
+
+    .animate-gradient-x {
+      background-size: 200% 100%;
+      animation: gradient-x 4s ease-in-out infinite;
+    }
+
+    @keyframes gradient-x {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      100% {
+        background-position: 100% 50%;
+      }
+    }
+  </style>
 </body>
 
 </html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact Us | ProPlanner</title>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" as="style"
+        onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    </noscript>
+    <link rel="stylesheet" href="/css/landing.css">
+    <link rel="stylesheet" href="/css/contact.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@motionone/dom/dist/motion.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <script defer src="/js/landing.js"></script>
+</head>
+
+<body class="dark-theme min-h-screen relative">
+    <canvas id="stars-bg" class="fixed inset-0 w-full h-full z-0 pointer-events-none"></canvas>
+    <!-- <canvas id="matter-bg" style="display:none;"></canvas> -->
+    <div class="bg-animated"></div>
+    <div id="cursorTrail"></div>
+    <!-- Navbar (landing style) -->
+    <nav class="navbar-glass flex justify-between items-center px-4 md:px-8 py-4 mx-auto max-w-7xl relative z-20">
+        <div class="flex items-center gap-2">
+            <svg width="32" height="32" fill="none" viewBox="0 0 32 32" aria-hidden="true">
+                <rect width="32" height="32" rx="8" fill="#6366f1" />
+                <path d="M10 22l6-12 6 12" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" />
+            </svg>
+            <span class="text-2xl font-extrabold neon-text tracking-tight">ProPlanner</span>
+        </div>
+        <button id="navToggle"
+            class="md:hidden flex items-center justify-center p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            aria-label="Open Menu">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+        <div id="navLinks" class="hidden md:flex items-center gap-6 text-white text-lg font-semibold">
+            <a href="/" class="hover:text-blue-400 transition">Home</a>
+            <a href="/contact" class="hover:text-blue-400 transition underline">Contact</a>
+        </div>
+        <div id="mobileNav" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 z-40 flex md:hidden"
+            style="display:none;">
+            <div
+                class="bg-[#181a22] w-4/5 max-w-xs h-full p-8 flex flex-col gap-6 shadow-2xl animate-slideInLeft relative">
+                <button id="navClose"
+                    class="absolute top-4 right-4 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    aria-label="Close Menu">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <a href="/" class="text-white text-lg font-semibold py-2 border-b border-[#23294633]"
+                    onclick="closeMobileNav()">Home</a>
+                <a href="/contact" class="text-white text-lg font-semibold py-2 border-b border-[#23294633] underline"
+                    onclick="closeMobileNav()">Contact</a>
+            </div>
+            <div class="flex-1" onclick="closeMobileNav()"></div>
+        </div>
+    </nav>
+    <div style="height:6rem"></div>
+    <main class="max-w-5xl mx-auto px-2 py-4 flex flex-col gap-12 relative z-10">
+        <!-- Hero Section (split layout) -->
+        <section class="flex flex-col md:flex-row items-center justify-between gap-10 modern-card mb-0">
+            <div class="flex-1 text-center md:text-left">
+                <h1 class="modern-title">Contact ProPlanner</h1>
+                <span class="gradient-underline"></span>
+                <p class="modern-sub">Have a question, suggestion, or need help with project planning and productivity?
+                    Reach out to our team and we’ll get back to you as soon as possible.</p>
+                <a href="#contactform" class="modern-btn mt-2 inline-block shadow hover:scale-105 transition">Get in
+                    Touch</a>
+            </div>
+            <div class="flex-1 flex items-center justify-center mt-8 md:mt-0">
+                <!-- Modern SVG Illustration -->
+                <svg width="240" height="160" viewBox="0 0 260 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="20" y="40" width="220" height="120" rx="24" fill="#e0e7ff" />
+                    <rect x="40" y="60" width="180" height="80" rx="16" fill="#fff" />
+                    <rect x="60" y="80" width="140" height="40" rx="8" fill="#60a5fa" />
+                    <circle cx="210" cy="70" r="10" fill="#2563eb" />
+                    <rect x="80" y="100" width="100" height="10" rx="5" fill="#dbeafe" />
+                </svg>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="modern-card">
+            <div class="modern-section-title">Why Choose ProPlanner?</div>
+            <div class="modern-feature-list">
+                <div class="modern-feature">
+                    <span class="modern-feature-icon"><svg width="28" height="28" fill="none" viewBox="0 0 24 24">
+                            <rect width="24" height="24" rx="7" fill="#2563eb" />
+                            <path d="M7 17l5-10 5 10" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg></span>
+                    <span><span class="font-bold">Project Management</span><br>Create, track, and manage all your
+                        projects in one place.</span>
+                </div>
+                <div class="modern-feature">
+                    <span class="modern-feature-icon"><svg width="28" height="28" fill="none" viewBox="0 0 24 24">
+                            <rect width="24" height="24" rx="7" fill="#10b981" />
+                            <path d="M7 17l5-10 5 10" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg></span>
+                    <span><span class="font-bold">Task Tracking</span><br>Add tasks, set deadlines, and monitor progress
+                        for every project.</span>
+                </div>
+                <div class="modern-feature">
+                    <span class="modern-feature-icon"><svg width="28" height="28" fill="none" viewBox="0 0 24 24">
+                            <rect width="24" height="24" rx="7" fill="#fbbf24" />
+                            <path d="M7 17l5-10 5 10" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg></span>
+                    <span><span class="font-bold">Dashboard Analytics</span><br>Analyze your projects, tasks, and
+                        progress with interactive dashboards.</span>
+                </div>
+                <div class="modern-feature">
+                    <span class="modern-feature-icon"><svg width="28" height="28" fill="none" viewBox="0 0 24 24">
+                            <rect width="24" height="24" rx="7" fill="#ec4899" />
+                            <path d="M7 17l5-10 5 10" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg></span>
+                    <span><span class="font-bold">AI Assistant</span><br>Get productivity tips and guidance from
+                        ProPlanner’s built-in AI Assistant.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Split Section -->
+        <section id="contactform" class="contact-split">
+            <div class="contact-info-card">
+                <div class="modern-section-title mb-4">Contact Information</div>
+                <div class="contact-info-list">
+                    <div class="contact-info-item"><span class="contact-info-icon"><svg width="22" height="22"
+                                fill="none" viewBox="0 0 24 24">
+                                <rect width="24" height="24" rx="7" fill="#6366f1" />
+                                <path d="M4 7l8 5 8-5" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg></span> support@proplanner.com</div>
+                    <div class="contact-info-item"><span class="contact-info-icon"><svg width="22" height="22"
+                                fill="none" viewBox="0 0 24 24">
+                                <rect width="24" height="24" rx="7" fill="#6366f1" />
+                                <path d="M6 8l6 6 6-6" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg></span> +91 98765 43210</div>
+                    <div class="contact-info-item"><span class="contact-info-icon"><svg width="22" height="22"
+                                fill="none" viewBox="0 0 24 24">
+                                <rect width="24" height="24" rx="7" fill="#6366f1" />
+                                <path d="M4 17l8-8 8 8" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                            </svg></span> 123, Pro Street, Mumbai, India</div>
+                </div>
+            </div>
+            <div class="contact-form-card">
+                <div class="modern-section-title mb-4">Send a Message</div>
+                <form>
+                    <input type="text" placeholder="Your Name" required>
+                    <input type="email" placeholder="Your Email" required>
+                    <textarea rows="4" placeholder="Your Message" required></textarea>
+                    <button type="submit">Send Message</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- FAQ Section (Accordion) -->
+        <section class="modern-card">
+            <div class="modern-section-title">Frequently Asked Questions</div>
+            <div>
+                <div class="faq-accordion">
+                    <div class="faq-q" onclick="this.parentNode.classList.toggle('faq-open')">
+                        <span>What is ProPlanner?</span>
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                            <path d="M9 5l7 7-7 7" stroke="#2563eb" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </div>
+                    <div class="faq-a">ProPlanner is a modern project and task management platform with dashboards,
+                        analytics, AI assistant, and more.</div>
+                </div>
+                <div class="faq-accordion">
+                    <div class="faq-q" onclick="this.parentNode.classList.toggle('faq-open')">
+                        <span>Is my data secure?</span>
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                            <path d="M9 5l7 7-7 7" stroke="#2563eb" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </div>
+                    <div class="faq-a">Yes, your data is completely secure and private. We follow industry-standard
+                        security practices.</div>
+                </div>
+                <div class="faq-accordion">
+                    <div class="faq-q" onclick="this.parentNode.classList.toggle('faq-open')">
+                        <span>How many projects can I create in ProPlanner?</span>
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                            <path d="M9 5l7 7-7 7" stroke="#2563eb" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </div>
+                    <div class="faq-a">You can create unlimited projects and tasks. There is no limit!</div>
+                </div>
+                <div class="faq-accordion">
+                    <div class="faq-q" onclick="this.parentNode.classList.toggle('faq-open')">
+                        <span>How does the AI Assistant help?</span>
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                            <path d="M9 5l7 7-7 7" stroke="#2563eb" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </div>
+                    <div class="faq-a">The AI Assistant answers your questions, guides you in managing projects and
+                        tasks, and gives productivity tips.</div>
+                </div>
+                <div class="faq-accordion">
+                    <div class="faq-q" onclick="this.parentNode.classList.toggle('faq-open')">
+                        <span>Is ProPlanner mobile-friendly?</span>
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                            <path d="M9 5l7 7-7 7" stroke="#2563eb" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </div>
+                    <div class="faq-a">Yes, ProPlanner is fully mobile-friendly and responsive.</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-8 py-4 text-center text-gray-400 dark-theme border-t border-gray-200 text-sm relative z-10">
+        © <span id="year">
+            <script>document.getElementById('year').innerText = new Date().getFullYear();</script>
+        </span> ProPlanner. All rights reserved.
+    </footer>
+</body>
+
+</html>
