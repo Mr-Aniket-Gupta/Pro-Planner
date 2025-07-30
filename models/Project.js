@@ -9,7 +9,15 @@ const projectSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // if user system exists
   completed: { type: Boolean, default: false },
   deadline: { type: Date },
-  notes: { type: String, default: '' }
+  notes: { type: String, default: '' },
+  isPublic: {
+    type: Boolean,
+    default: false
+  },
+  sharedWith: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    access: { type: String, enum: ['read', 'write', 'both'], default: 'read' }
+  }]
 });
 
 module.exports = mongoose.model('Project', projectSchema);

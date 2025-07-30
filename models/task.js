@@ -6,6 +6,10 @@ const taskSchema = new mongoose.Schema({
     completed: { type: Boolean, default: false },
     created: { type: Date, default: Date.now },
     dueDate: { type: Date },
+    isPublic: {
+        type: Boolean,
+        default: false
+    },
     priority: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Low' },
     projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true }
 });

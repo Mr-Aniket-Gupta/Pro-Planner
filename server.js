@@ -9,33 +9,40 @@ const cron = require('node-cron');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const fetch = require('node-fetch');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const User = require('./models/User');
 const Project = require('./models/Project');
 const Task = require('./models/task');
 
-// API routes
 const projectRoutes = require('./routes/projectRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const userDataRoutes = require('./routes/userDataRoutes');
 
 dotenv.config();
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*' } });
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
-    // useNewUrlParser: true,
-    // useUnifiedTopology: true
-}).then(() => console.log('MongoDB connected'))
+// Initialize socket connection
+io.on('connection', (socket) => {
+    console.log('A user connected:', socket.id);
+});
+
+// Export socket instance for use in other files
+module.exports.io = io;
+
+// MongoDB connection
+mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('MongoDB connected successfully'))
     .catch(err => console.error(err));
 
-// Middleware
+// Middleware setup
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser());
-
-
 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'defaultsecret',
@@ -43,65 +50,55 @@ app.use(session({
     saveUninitialized: false
 }));
 
+// Set EJS as view engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// OTP store (in-memory)
-const otpStore = {}; // { email: { otp, expiresAt } }
+// Temporary in-memory OTP store
+const otpStore = {}; // Structure: { email: { otp, expiresAt, data } }
 
-// Helper: OTP generate
+// Generate a 6-digit OTP
 function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Routes
+// Landing page
 app.get('/', async (req, res) => {
     let isLoggedIn = false;
-    // Session check
     if (req.session && req.session.userId) {
         isLoggedIn = true;
     } else if (req.cookies && req.cookies.proplanner_token) {
-        // JWT cookie check (agar future me set ho)
         try {
             const decoded = jwt.verify(req.cookies.proplanner_token, process.env.JWT_SECRET || 'supersecretjwtkey');
-            if (decoded && decoded.userId) isLoggedIn = true;
-        } catch (e) { }
+            if (decoded?.userId) isLoggedIn = true;
+        } catch (e) {}
     }
     res.render('landing', { isLoggedIn });
 });
 
+// Auth page (login/signup)
 app.get('/auth', (req, res) => res.render('auth'));
 
-// Signup (Step 1: Send OTP or direct for Super Admin)
+// Signup - Step 1: Send OTP or direct sign up for Super Admin
 app.post('/signup', async (req, res) => {
     const { name, email, password, confirmPassword } = req.body;
-    if (password !== confirmPassword) {
-        return res.send('Passwords do not match');
-    }
+    if (password !== confirmPassword) return res.send('Passwords do not match');
 
-    // Check if email already exists in any user
     const existingUser = await User.findOne({ 'emails.email': email });
     if (existingUser) return res.send('Email already exists');
 
-    // Super Admin direct signup (no OTP)
     if (email === 'admin@gmail.com') {
         const hashed = await bcrypt.hash(password, 10);
         const newUser = new User({
             name,
             password: hashed,
-            emails: [{
-                email,
-                verified: true,
-                isPrimary: true,
-                addedAt: new Date()
-            }]
+            emails: [{ email, verified: true, isPrimary: true, addedAt: new Date() }]
         });
         await newUser.save();
         req.session.userId = newUser._id;
         return res.send('Signup successful!');
     }
 
-    // OTP generate & store (normal users)
     const otp = generateOTP();
     otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000, data: { name, email, password } };
     await transporter.sendMail({
@@ -113,24 +110,19 @@ app.post('/signup', async (req, res) => {
     res.send('OTP sent to your email. Please verify.');
 });
 
-// Signup (Step 2: Verify OTP)
+// Signup - Step 2: Verify OTP
 app.post('/verify-signup-otp', async (req, res) => {
     const { email, otp } = req.body;
     const record = otpStore[email];
     if (!record || record.otp !== otp || record.expiresAt < Date.now()) {
         return res.send('Invalid or expired OTP');
     }
-    // User create karo
+
     const hashed = await bcrypt.hash(record.data.password, 10);
     const newUser = new User({
         name: record.data.name,
         password: hashed,
-        emails: [{
-            email,
-            verified: true,
-            isPrimary: true,
-            addedAt: new Date()
-        }]
+        emails: [{ email, verified: true, isPrimary: true, addedAt: new Date() }]
     });
     await newUser.save();
     delete otpStore[email];
@@ -138,30 +130,24 @@ app.post('/verify-signup-otp', async (req, res) => {
     res.send('Signup successful!');
 });
 
-// Login (Step 1: Send OTP or direct for Super Admin)
+// Login - Step 1: Send OTP or direct login for Super Admin
 app.post('/login', async (req, res) => {
     const { email, password, remember } = req.body;
-
-    // Find user by any of their verified emails
     const user = await User.findOne({ 'emails.email': email, 'emails.verified': true });
     if (!user || !(await bcrypt.compare(password, user.password))) {
         return res.send('Invalid email or password');
     }
 
-    // Super Admin direct login (no OTP)
     if (email === 'admin@gmail.com') {
         req.session.userId = user._id;
-        if (remember) {
-            req.session.cookie.maxAge = 14 * 24 * 60 * 60 * 1000;
-        } else {
-            req.session.cookie.expires = false;
-        }
-        // JWT generate karo
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'supersecretjwtkey', { expiresIn: remember ? '14d' : '1d' });
+        req.session.cookie.maxAge = remember ? 14 * 24 * 60 * 60 * 1000 : null;
+
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'supersecretjwtkey', {
+            expiresIn: remember ? '14d' : '1d'
+        });
         return res.json({ message: 'Login successful!', token });
     }
 
-    // OTP generate & store (normal users)
     const otp = generateOTP();
     otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000, data: { userId: user._id, remember } };
     await transporter.sendMail({
@@ -173,27 +159,25 @@ app.post('/login', async (req, res) => {
     res.json({ message: 'OTP sent to your email. Please verify.' });
 });
 
-// Login (Step 2: Verify OTP)
+// Login - Step 2: Verify OTP
 app.post('/verify-login-otp', async (req, res) => {
     const { email, otp } = req.body;
     const record = otpStore[email];
     if (!record || record.otp !== otp || record.expiresAt < Date.now()) {
         return res.send('Invalid or expired OTP');
     }
-    // Session set karo
+
     req.session.userId = record.data.userId;
-    if (record.data.remember) {
-        req.session.cookie.maxAge = 14 * 24 * 60 * 60 * 1000;
-    } else {
-        req.session.cookie.expires = false;
-    }
-    // JWT generate karo
-    const token = jwt.sign({ userId: record.data.userId }, process.env.JWT_SECRET || 'supersecretjwtkey', { expiresIn: record.data.remember ? '14d' : '1d' });
+    req.session.cookie.maxAge = record.data.remember ? 14 * 24 * 60 * 60 * 1000 : null;
+
+    const token = jwt.sign({ userId: record.data.userId }, process.env.JWT_SECRET || 'supersecretjwtkey', {
+        expiresIn: record.data.remember ? '14d' : '1d'
+    });
     delete otpStore[email];
     res.json({ message: 'Login successful!', token });
 });
 
-// Auto-login endpoint (JWT verify)
+// Auto-login using JWT token
 app.post('/auto-login', async (req, res) => {
     const { token } = req.body;
     try {
@@ -202,21 +186,16 @@ app.post('/auto-login', async (req, res) => {
         if (!user) return res.status(401).json({ error: 'Invalid token' });
         req.session.userId = user._id;
         return res.json({ message: 'Auto-login successful!' });
-    } catch (err) {
+    } catch {
         return res.status(401).json({ error: 'Invalid or expired token' });
     }
 });
 
-// Dashboard view (JWT bhi allow karo)
+// Dashboard page (session required)
 app.get('/dashboard', async (req, res) => {
     if (!req.session.userId) return res.redirect('/auth');
     const user = await User.findById(req.session.userId);
     res.render('dashboard', { user });
-});
-
-// Voice test page
-app.get('/voice-test', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'voice-test.html'));
 });
 
 // Logout
@@ -224,40 +203,27 @@ app.get('/logout', (req, res) => {
     req.session.destroy(() => res.redirect('/auth'));
 });
 
-// // Project API (for local use — optional)
-// app.post('/projects', async (req, res) => {
-//     if (!req.session.userId) return res.status(401).json({ error: 'Unauthorized' });
-//     const { name, desc, basic, advanced } = req.body;
-//     try {
-//         const project = await Project.create({
-//             name,
-//             desc,
-//             basic: Array.isArray(basic) ? basic : [basic],
-//             advanced: Array.isArray(advanced) ? advanced : [advanced],
-//             user: req.session.userId
-//         });
-//         res.json({ success: true, project });
-//     } catch (err) {
-//         res.status(500).json({ error: 'Failed to create project' });
-//     }
-// });
+// Contact page
+app.get('/contact', (req, res) => {
+    res.render('contact');
+});
 
-// API Routes
+// API routes
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/userdata', userDataRoutes);
 
-// Nodemailer transporter setup (yahan apna email aur app password daalein)
+// Email transporter configuration
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'aniketgupta721910@gmail.com', // yahan apna email daalein
-        pass: 'ngwf udjw pgui rvbt'     // yahan apna app password daalein (Gmail ke liye app password use karein)
+        user: 'aniketgupta721910@gmail.com',
+        pass: 'ngwf udjw pgui rvbt'
     }
 });
 
-// Daily cron job: har din 5:02 PM
-cron.schedule('09 17 * * *', async () => { // 5:02 PM
+// Daily cron job to email task reminders at 5:09 PM
+cron.schedule('09 17 * * *', async () => {
     try {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -266,16 +232,13 @@ cron.schedule('09 17 * * *', async () => { // 5:02 PM
         const nextWeek = new Date(today);
         nextWeek.setDate(today.getDate() + 7);
 
-        // All users
         const users = await User.find({});
         for (const user of users) {
-            // User's incomplete projects
             const projects = await Project.find({ userId: user._id, completed: false });
             let emailContent = `Hello ${user.name || ''},\n\nHere are your projects and tasks with deadlines today:\n`;
             let hasTasks = false;
-            // TODAY's DEADLINES
+
             for (const project of projects) {
-                // Project's tasks with today's deadline and not completed
                 const tasks = await Task.find({
                     projectId: project._id,
                     dueDate: { $gte: today, $lt: tomorrow },
@@ -283,17 +246,16 @@ cron.schedule('09 17 * * *', async () => { // 5:02 PM
                 });
                 if (tasks.length > 0) {
                     hasTasks = true;
-                    emailContent += `\nProject: ${project.name} (Project Due: ${project.deadline ? project.deadline.toLocaleDateString() : 'No deadline'})\n`;
+                    emailContent += `\nProject: ${project.name} (Due: ${project.deadline?.toLocaleDateString() || 'No deadline'})\n`;
                     tasks.forEach(task => {
-                        emailContent += `  - Task: ${task.text} (Task Due: ${task.dueDate ? task.dueDate.toLocaleDateString() : 'No due date'})\n`;
+                        emailContent += `  - ${task.text} (Due: ${task.dueDate?.toLocaleDateString() || 'No due date'})\n`;
                     });
                 }
             }
-            // UPCOMING DEADLINES (Next 7 days, excluding today)
+
             let hasUpcoming = false;
             let upcomingContent = '\nUpcoming Deadlines (Next 7 days):\n';
             for (const project of projects) {
-                // Project's tasks with deadline in next 7 days (excluding today) and not completed
                 const tasks = await Task.find({
                     projectId: project._id,
                     dueDate: { $gte: tomorrow, $lt: nextWeek },
@@ -301,47 +263,37 @@ cron.schedule('09 17 * * *', async () => { // 5:02 PM
                 });
                 if (tasks.length > 0) {
                     hasUpcoming = true;
-                    upcomingContent += `\nProject: ${project.name} (Project Due: ${project.deadline ? project.deadline.toLocaleDateString() : 'No deadline'})\n`;
+                    upcomingContent += `\nProject: ${project.name} (Due: ${project.deadline?.toLocaleDateString() || 'No deadline'})\n`;
                     tasks.forEach(task => {
-                        upcomingContent += `  - Task: ${task.text} (Task Due: ${task.dueDate ? task.dueDate.toLocaleDateString() : 'No due date'})\n`;
+                        upcomingContent += `  - ${task.text} (Due: ${task.dueDate?.toLocaleDateString() || 'No due date'})\n`;
                     });
                 }
             }
-            if (hasUpcoming) {
-                emailContent += upcomingContent;
-            }
-            if (hasTasks || hasUpcoming) {
-                emailContent += '\n- ProPlanner Team';
 
-                // Send to all verified emails
+            if (hasTasks || hasUpcoming) {
+                emailContent += upcomingContent + '\n- ProPlanner Team';
                 const verifiedEmails = user.emails.filter(e => e.verified).map(e => e.email);
                 for (const email of verifiedEmails) {
-                    const mailOptions = {
-                        from: 'aniketgupta721910@gmail.com',
-                        to: email,
-                        subject: "Today's & Upcoming Task/Project Deadline Reminder",
-                        text: emailContent
-                    };
                     try {
-                        await transporter.sendMail(mailOptions);
+                        await transporter.sendMail({
+                            from: 'aniketgupta721910@gmail.com',
+                            to: email,
+                            subject: "Today's & Upcoming Task/Project Deadline Reminder",
+                            text: emailContent
+                        });
                         console.log(`Reminder sent to ${email}`);
-                    } catch (error) {
-                        console.error(`Failed to send reminder to ${email}:`, error);
+                    } catch (err) {
+                        console.error(`Failed to send reminder to ${email}:`, err);
                     }
                 }
             }
         }
-        console.log('All users have been sent their project/task deadline reminders!');
+        console.log('All reminders sent successfully!');
     } catch (err) {
         console.error('Error sending deadline reminders:', err);
     }
 });
 
-// server.js या app.js में (ऊपर require और app initialization के बाद)
-app.get('/contact', (req, res) => {
-  res.render('contact'); // contact.ejs को render करेगा
-});
-
-// Server start
+// Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(` Server running at http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));

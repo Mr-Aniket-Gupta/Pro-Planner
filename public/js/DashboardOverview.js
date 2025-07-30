@@ -1,5 +1,7 @@
 // Dashboard Overview Section से जुड़े functions
 
+// (Unused/commented code removed. Sirf actual dashboard overview/charts logic, functions, aur event listeners bache hain.)
+
 // --- Task Summary Cards ---
 function updateTaskSummaryCards() {
     document.getElementById('summaryTotalTasks').innerText = taskList.length;
@@ -161,14 +163,19 @@ function updateLineChart() {
 }
 // --- Dashboard Overview Update Function ---
 function updateDashboardOverview() {
-    updateTaskSummaryCards();
-    updateUpcomingDeadlines();
-    updateMostActiveProject();
-    updateAvgCompletionRate();
-    if (typeof updateActivityFeed === 'function') updateActivityFeed();
-    updatePieChart();
-    updateDoughnutChart();
-    updateLineChart();
+    try {
+        updateTaskSummaryCards();
+        updateUpcomingDeadlines();
+        updateMostActiveProject();
+        updateAvgCompletionRate();
+        if (typeof updateActivityFeed === 'function') updateActivityFeed();
+        updatePieChart();
+        updateDoughnutChart();
+        updateLineChart();
+    } catch (err) {
+        showAlert && showAlert({ icon: 'error', title: 'Error', text: err.message || 'Dashboard overview update failed!' });
+        console.error(err);
+    }
 }
 
 // Expose functions globally (window पर)

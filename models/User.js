@@ -16,7 +16,20 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   emails: [EmailSchema],
   createdAt: { type: Date, default: Date.now },
-  lastLogin: Date
+  lastLogin: Date,
+  connections: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
+  pendingRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
+  sentRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
+  projectAccessRequests: [{
+    project: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
+    access: { type: String, enum: ['read', 'write', 'both'], default: 'read' },
+    status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+    requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  }],
+  socialLinks: [{
+    name: { type: String, required: true },
+    url: { type: String, required: true }
+  }]
 });
 
 // Ensure only one primary email

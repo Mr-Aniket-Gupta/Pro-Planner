@@ -1,33 +1,24 @@
+// Task routes
 const express = require('express');
 const router = express.Router();
-const {
-  createTask,
-  getTasks,
-  updateTask,
-  deleteTask
-} = require('../controllers/taskController');
+const taskController = require('../controllers/taskController');
 const Task = require('../models/task');
 
-router.post('/', createTask);
-router.get('/:projectId', getTasks);
-router.put('/:taskId', updateTask);
-router.delete('/:taskId', deleteTask);
+// Task CRUD
+router.post('/', taskController.createTask);
+router.get('/:projectId', taskController.getTasks);
+router.put('/:taskId', taskController.updateTask);
+router.delete('/:taskId', taskController.deleteTask);
+router.put('/update-public-status/:projectId', taskController.updateTasksPublicStatus);
 
-// Task search/filter
+// Task search and filter
 router.get('/search', async (req, res) => {
   try {
     const { projectId, q = '', priority = '', status = '', due = '' } = req.query;
     const query = { projectId };
-    if (q) {
-      query.text = { $regex: q, $options: 'i' };
-    }
-    if (priority) {
-      query.priority = priority;
-    }
-    if (status) {
-      query.completed = status === 'completed';
-    }
-    // Date filter
+    if (q) query.text = { $regex: q, $options: 'i' };
+    if (priority) query.priority = priority;
+    if (status) query.completed = status === 'completed';
     if (due) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);

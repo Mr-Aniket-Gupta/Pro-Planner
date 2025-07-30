@@ -1,12 +1,13 @@
+// User data routes
 const express = require('express');
 const router = express.Router();
-const { getUserData, updateTodos, updateNotes } = require('../controllers/userDataController');
+const userDataController = require('../controllers/userDataController');
 const User = require('../models/User');
 const nodemailer = require('nodemailer');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fetch = require('node-fetch');
 
-// Nodemailer transporter setup
+// Email transporter
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -15,98 +16,54 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Initialize Gemini AI
+// Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'your-gemini-api-key');
 
 // Get all user data (todos + notes)
-router.get('/', getUserData);
+router.get('/', userDataController.getUserData);
 // Update todos
-router.put('/todos', updateTodos);
+router.put('/todos', userDataController.updateTodos);
 // Update notes
-router.put('/notes', updateNotes);
+router.put('/notes', userDataController.updateNotes);
 
-// Gemini AI Chat API - Using Direct API Call
+// Gemini AI Chat API
 router.post('/ai/chat', async (req, res) => {
     try {
         const { message, projectContext } = req.body;
         if (!req.session.userId) {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
-
-        // Get user's projects and tasks for context
         const user = await User.findById(req.session.userId);
         if (!user) {
             return res.status(401).json({ success: false, message: 'User not found' });
         }
-
-        // Create context-aware prompt
-        let contextPrompt = `You are ProPlanner AI Assistant, a helpful project management assistant. 
-        
-User: ${user.name}
-Current Message: ${message}
-
-Please provide helpful, concise responses in both Hindi and English with proper formatting. You can help with:
-- Project planning and task management advice
-- Productivity tips
-- Time management suggestions
-- Project organization recommendations
-- General questions about ProPlanner features
-
-**Format your responses like this:**
-
-**English:** [Your English response with proper formatting]
-- Use **bold** for important points
-- Use *italic* for emphasis
-- Use bullet points for lists
-- Use numbered lists for steps
-- Use \`code\` for technical terms
-
-**Hindi:** [Your Hindi response with proper formatting]
-- Use **bold** for important points
-- Use *italic* for emphasis
-- Use bullet points for lists
-- Use numbered lists for steps
-
-Keep responses friendly, practical, and actionable. Use proper markdown formatting for better readability.`;
-
+        let contextPrompt = `You are ProPlanner AI Assistant, a helpful project management assistant. \n\nUser: ${user.name}\nCurrent Message: ${message}\n\nPlease provide helpful, concise responses in both Hindi and English with proper formatting. You can help with:\n- Project planning and task management advice\n- Productivity tips\n- Time management suggestions\n- Project organization recommendations\n- General questions about ProPlanner features\n\n**Format your responses like this:**\n\n**English:** [Your English response with proper formatting]\n- Use **bold** for important points\n- Use *italic* for emphasis\n- Use bullet points for lists\n- Use numbered lists for steps\n- Use \`code\` for technical terms\n\n**Hindi:** [Your Hindi response with proper formatting]\n- Use **bold** for important points\n- Use *italic* for emphasis\n- Use bullet points for lists\n- Use numbered lists for steps\n\nKeep responses friendly, practical, and actionable. Use proper markdown formatting for better readability.`;
         if (projectContext) {
             contextPrompt += `\n\nProject Context: ${projectContext}`;
         }
-
-        // Direct API call to Gemini
         const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBKZCqmoC9WBlEFBXbeOyeMg7vf-DEtvHo";
-
         const requestBody = {
             contents: [{
-                parts: [{
-                    text: contextPrompt
-                }]
+                parts: [{ text: contextPrompt }]
             }]
         };
-
         const response = await fetch(apiUrl, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody)
         });
-
         if (!response.ok) {
             const errorData = await response.json();
             console.error('Gemini API Error:', errorData);
             throw new Error(`Gemini API Error: ${response.status} ${response.statusText}`);
         }
-
         const data = await response.json();
         const aiResponse = data.candidates[0].content.parts[0].text;
-
         res.json({
             success: true,
             response: aiResponse,
             timestamp: new Date().toISOString()
         });
-
     } catch (error) {
         console.error('Gemini AI Error:', error);
         res.status(500).json({
@@ -117,24 +74,18 @@ Keep responses friendly, practical, and actionable. Use proper markdown formatti
     }
 });
 
-// Voice to Text API (using browser's Web Speech API)
+// Voice to Text API (placeholder)
 router.post('/ai/voice-to-text', async (req, res) => {
     try {
         const { audioData } = req.body;
         if (!req.session.userId) {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
-
-        // For now, we'll return a placeholder since actual voice processing 
-        // would require additional services like Google Speech-to-Text
-        // In a real implementation, you'd send audioData to a speech service
-
         res.json({
             success: true,
             message: 'Voice processing feature coming soon!',
             text: 'Voice input detected. Please use text input for now.'
         });
-
     } catch (error) {
         console.error('Voice Processing Error:', error);
         res.status(500).json({
@@ -145,6 +96,18 @@ router.post('/ai/voice-to-text', async (req, res) => {
     }
 });
 
+// Connection system
+router.post('/search-users', userDataController.searchUsers);
+router.post('/send-connection-request', userDataController.sendConnectionRequest);
+router.post('/accept-connection-request', userDataController.acceptConnectionRequest);
+router.get('/pending-requests', userDataController.getPendingRequests);
+router.get('/connections', userDataController.getConnections);
+router.post('/remove-connection', require('../controllers/userDataController').removeConnection);
+
+// Social links
+router.get('/social-links', userDataController.getSocialLinks);
+router.put('/social-links', userDataController.updateSocialLinks);
+
 // Helper: validate email
 function validateEmail(email) {
     return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
@@ -154,48 +117,36 @@ function validateEmail(email) {
 router.post('/email/send-otp', async (req, res) => {
     const { email } = req.body;
     if (!validateEmail(email)) return res.json({ success: false, message: 'Invalid email format' });
-
-    // Check if email already exists in any user
     const existingUser = await User.findOne({ 'emails.email': email });
     if (existingUser && existingUser._id.toString() !== req.session.userId) {
         return res.json({ success: false, message: 'Email already in use by another user' });
     }
-
     const user = await User.findById(req.session.userId);
     if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
-
-    // Check if email already exists for this user
     let emailObj = user.emails.find(e => e.email === email);
     if (emailObj && emailObj.verified) {
         return res.json({ success: false, message: 'Email already verified' });
     }
-
     if (!emailObj) {
         emailObj = {
             email,
             verified: false,
             pending: true,
             addedAt: new Date(),
-            isPrimary: user.emails.length === 0 // First email becomes primary
+            isPrimary: user.emails.length === 0
         };
         user.emails.push(emailObj);
     }
-
     const now = new Date();
     if (emailObj.lastOtpSent && now - emailObj.lastOtpSent < 60000) {
         return res.json({ success: false, message: 'OTP already sent recently. Please wait.' });
     }
-
-    // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     emailObj.otp = otp;
-    emailObj.otpExpires = new Date(now.getTime() + 10 * 60 * 1000); // 10 min
+    emailObj.otpExpires = new Date(now.getTime() + 10 * 60 * 1000);
     emailObj.lastOtpSent = now;
     emailObj.pending = true;
-
     await user.save();
-
-    // Send OTP via email
     try {
         await transporter.sendMail({
             from: 'aniketgupta721910@gmail.com',
@@ -215,24 +166,18 @@ router.post('/email/verify-otp', async (req, res) => {
     const { email, otp } = req.body;
     const user = await User.findById(req.session.userId);
     if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
-
     const emailObj = user.emails.find(e => e.email === email && e.pending);
     if (!emailObj) return res.json({ success: false, message: 'Email not found or already verified' });
-
     if (!emailObj.otp || !emailObj.otpExpires || emailObj.otp !== otp || new Date() > emailObj.otpExpires) {
         return res.json({ success: false, message: 'Invalid or expired OTP' });
     }
-
     emailObj.verified = true;
     emailObj.pending = false;
     emailObj.otp = undefined;
     emailObj.otpExpires = undefined;
-
-    // If this is the first verified email, make it primary
     if (user.emails.filter(e => e.verified).length === 0) {
         emailObj.isPrimary = true;
     }
-
     await user.save();
     res.json({ success: true, message: 'Email verified successfully' });
 });
@@ -242,26 +187,19 @@ router.post('/email/remove', async (req, res) => {
     const { email } = req.body;
     const user = await User.findById(req.session.userId);
     if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
-
     const emailObj = user.emails.find(e => e.email === email);
     if (!emailObj) return res.json({ success: false, message: 'Email not found' });
-
     const verifiedEmails = user.emails.filter(e => e.verified && e.email !== email);
     if (emailObj.verified && verifiedEmails.length === 0) {
         return res.json({ success: false, message: 'At least one verified email required' });
     }
-
-    // Remove the email
     user.emails = user.emails.filter(e => e.email !== email);
-
-    // If primary email was removed, make another verified email primary
     if (emailObj.isPrimary && verifiedEmails.length > 0) {
         const newPrimary = user.emails.find(e => e.verified);
         if (newPrimary) {
             newPrimary.isPrimary = true;
         }
     }
-
     await user.save();
     res.json({ success: true, message: 'Email removed successfully' });
 });
@@ -271,16 +209,10 @@ router.post('/email/primary', async (req, res) => {
     const { email } = req.body;
     const user = await User.findById(req.session.userId);
     if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
-
     const found = user.emails.find(e => e.email === email && e.verified);
     if (!found) return res.json({ success: false, message: 'Email must be verified' });
-
-    // Remove primary from all emails
     user.emails.forEach(e => e.isPrimary = false);
-
-    // Set new primary
     found.isPrimary = true;
-
     await user.save();
     res.json({ success: true, message: 'Primary email updated successfully' });
 });
@@ -301,11 +233,9 @@ router.put('/profile', async (req, res) => {
         const { name } = req.body;
         const user = await User.findById(req.session.userId);
         if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
-
         if (name) {
             user.name = name;
         }
-
         await user.save();
         res.json({ success: true, message: 'Profile updated successfully' });
     } catch (error) {

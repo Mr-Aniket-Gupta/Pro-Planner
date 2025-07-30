@@ -1,27 +1,20 @@
-// Data
+// Data and state variables
 let projects = [];
 let selectedProjectIndex = null;
 let taskList = [];
 let sidebarTodos = [];
 let sidebarNotes = '';
 let activityFeedArr = [];
-
-// ===== Calendar variable global define करो =====
 let calendar = null;
-
-// ======= AI Bot Functionality =======
 let isRecording = false;
 let recognition = null;
-
-// ======= Settings Variables =======
 let userEmails = [];
-
-// ======= OTP Modal Variables =======
 let currentOtpEmail = '';
 let otpTimerInterval = null;
-let otpTimeLeft = 120; // 2 min = 120 sec
+let otpTimeLeft = 120;
 
 // Project List Render
+// Projects ko list me render karta hai
 function renderProjectList() {
     const projectListEl = document.getElementById('projectList');
     projectListEl.innerHTML = '';
@@ -30,19 +23,20 @@ function renderProjectList() {
     } else {
         document.getElementById('emptyProjectState').style.display = 'none';
         projects.forEach((project, idx) => {
+            const linked = isProjectLinked(project._id);
+            let sharedLabel = project.isShared ? `<span class='ml-2 px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold'>Shared</span>` : '';
+            let linkedIcon = linked ? `<span class="ml-1 text-green-500" title="Linked in Social Links"><svg width="16" height="16" fill="none" viewBox="0 0 20 20"><path d="M7 10l2 2 4-4" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>` : '';
             const li = document.createElement('li');
             li.className = 'flex items-center justify-between bg-blue-50 rounded-xl px-4 py-2 hover:bg-blue-100 cursor-pointer transition';
             li.innerHTML = `
-                <span class="font-semibold text-blue-700">${project.name}</span>
+                <span class="font-semibold text-blue-700 flex items-center gap-2">
+                  ${project.name}${sharedLabel}${!project.isShared && !project.isPublic ? ' <span style=\'color:#e02424;font-weight:bold\'>*</span>' : ''}
+                  <a href="/dashboard/project/${project._id}" target="_blank" class="ml-1 text-blue-500 hover:text-blue-700" title="Open Project Link"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M14 10V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-4" stroke="#2563eb" stroke-width="2"/><path d="M17 8l4 4m0 0l-4 4m4-4H9" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+                  ${linkedIcon}
+                </span>
                 <div class="flex gap-2">
                   <button onclick="selectProjectById('${project._id}')" class="ml-2 text-blue-400 hover:text-blue-600" title="Select"><svg width="18" height="18" fill="none" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" stroke="#3B82F6" stroke-width="1.5"/><path d="M6 9l2 2 4-4" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/></svg></button>
-                  <button onclick="deleteProject(${idx})" class="ml-2 text-red-400 hover:text-red-600" title="Delete">
-                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
-                      <rect x="5" y="7" width="14" height="12" rx="2" stroke="#ef4444" stroke-width="2"/>
-                      <path d="M10 11v4M14 11v4" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
-                      <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="#ef4444" stroke-width="2"/>
-                    </svg>
-                  </button>
+                  ${project.isShared ? '' : `<button onclick="deleteProject(${idx})" class="ml-2 text-red-400 hover:text-red-600" title="Delete"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="12" rx="2" stroke="#ef4444" stroke-width="2"/><path d="M10 11v4M14 11v4" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="#ef4444" stroke-width="2"/></svg></button>`}
                 </div>`;
             projectListEl.appendChild(li);
         });
@@ -50,7 +44,8 @@ function renderProjectList() {
 }
 
 // Project Details Render
-function renderProjectDetails() {
+// Selected project ke details card ko render karta hai
+async function renderProjectDetails() {
     if (selectedProjectIndex === null || !projects[selectedProjectIndex]) {
         const detailsCard = document.getElementById('projectDetailsCard');
         const mainTaskDashboard = document.getElementById('mainTaskDashboard');
@@ -61,121 +56,261 @@ function renderProjectDetails() {
         if (calendar && typeof calendar.destroy === 'function') { calendar.destroy(); calendar = null; }
         return;
     }
-    const project = projects[selectedProjectIndex];
+    let project = projects[selectedProjectIndex];
+    let access = 'both';
+    let isOwner = !project.isShared;
+    if (project.isShared) {
+        try {
+            const res = await fetch(`/api/projects/${project._id}/details`);
+            if (res.ok) {
+                const data = await res.json();
+                project = data.project;
+                access = data.access;
+                isOwner = data.isOwner;
+                project._access = access;
+                project._isOwner = isOwner;
+                project.isShared = true;
+            }
+        } catch (err) {
+            showAlert && showAlert({ icon: 'error', title: 'Error', text: 'Failed to load shared project details!' });
+        }
+    }
     const detailsCard = document.getElementById('projectDetailsCard');
     const mainTaskDashboard = document.getElementById('mainTaskDashboard');
     const selectProjectMsg = document.getElementById('selectProjectMsg');
     if (detailsCard) detailsCard.style.display = '';
     if (mainTaskDashboard) mainTaskDashboard.style.display = '';
     if (selectProjectMsg) selectProjectMsg.style.display = 'none';
+    // Show shared project info if applicable
+    let sharedInfoDiv = document.getElementById('sharedProjectInfoMsg');
+    if (!sharedInfoDiv) {
+        sharedInfoDiv = document.createElement('div');
+        sharedInfoDiv.id = 'sharedProjectInfoMsg';
+        sharedInfoDiv.className = 'mb-2 text-indigo-700 bg-indigo-50 rounded-xl px-4 py-2 font-semibold';
+        detailsCard.insertBefore(sharedInfoDiv, detailsCard.firstChild);
+    }
+    let message = "";
+    if (!isOwner && access) {
+        message = `This project is shared with you by another user. Access: ${access}`;
+    }
+    sharedInfoDiv.style.display = message ? '' : 'none';
+    sharedInfoDiv.innerText = message;
+    // Render details fields (always show all fields, use placeholders if missing)
     const projectTitle = document.getElementById('projectTitle');
-    if (projectTitle) projectTitle.innerHTML = project.name + (project.completed ? ' <span class="ml-2 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">Completed</span>' : '');
+    if (projectTitle) projectTitle.innerHTML = `${project.name || '-'}${project.completed ? ' <span class=\"ml-2 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold\">Completed</span>' : ''}`;
     const projectDesc = document.getElementById('projectDesc');
-    if (projectDesc) projectDesc.innerText = project.desc;
+    if (projectDesc) projectDesc.innerText = project.desc || project.description || 'No description provided.';
     const projectBasic = document.getElementById('projectBasic');
-    if (projectBasic) projectBasic.innerHTML = '<b>Basic:</b> ' + (Array.isArray(project.basic) ? '<ul class="list-disc ml-5">' + project.basic.map(b => `<li>${b}</li>`).join('') + '</ul>' : project.basic || '-');
+    if (projectBasic) projectBasic.innerHTML = '<b>Basic:</b> ' + (Array.isArray(project.basic) ? '<ul class="list-disc ml-5">' + project.basic.map(b => `<li>${b}</li>`).join('') + '</ul>' : (project.basic !== undefined && project.basic !== null ? project.basic : '-'));
     const projectAdvanced = document.getElementById('projectAdvanced');
-    if (projectAdvanced) projectAdvanced.innerHTML = '<b>Advanced:</b> ' + (Array.isArray(project.advanced) ? '<ul class="list-disc ml-5">' + project.advanced.map(a => `<li>${a}</li>`).join('') + '</ul>' : project.advanced || '-');
-    const dashboardProjectName = document.getElementById('dashboardProjectName');
-    if (dashboardProjectName) dashboardProjectName.innerText = project.name;
-    const dashboardProjectChip = document.getElementById('dashboardProjectChip');
-    if (dashboardProjectChip) dashboardProjectChip.title = project.created ? 'Created: ' + new Date(project.created).toLocaleDateString() : '';
-    // Progress Bar
-    const progress = getProjectProgress(project._id);
-    const projectProgressPercent = document.getElementById('projectProgressPercent');
-    if (projectProgressPercent) projectProgressPercent.innerText = progress + '%';
-    const projectProgressBar = document.getElementById('projectProgressBar');
-    if (projectProgressBar) projectProgressBar.style.width = progress + '%';
-    // Deadline
-    const projectDeadline = document.getElementById('projectDeadline');
-    if (projectDeadline) projectDeadline.value = project.deadline ? new Date(project.deadline).toISOString().split('T')[0] : '';
-    // Quick Notes
+    if (projectAdvanced) projectAdvanced.innerHTML = '<b>Advanced:</b> ' + (Array.isArray(project.advanced) ? '<ul class="list-disc ml-5">' + project.advanced.map(a => `<li>${a}</li>`).join('') + '</ul>' : (project.advanced !== undefined && project.advanced !== null ? project.advanced : '-'));
+    // Hide 'Make this project private' for non-owners (read/write and read-only)
+    const makePrivateDiv = document.getElementById('makeProjectPrivateDiv');
+    if (makePrivateDiv) makePrivateDiv.style.display = (isOwner ? '' : 'none');
+    // Notes section (Quick Notes)
     const projectQuickNotes = document.getElementById('projectQuickNotes');
     if (projectQuickNotes) {
         projectQuickNotes.value = project.notes || '';
+        projectQuickNotes.readOnly = (project.isShared && access === 'read' && !isOwner);
         projectQuickNotes.style.height = 'auto';
         projectQuickNotes.style.height = (projectQuickNotes.scrollHeight) + 'px';
+    }
+    // Save Notes button
+    const saveProjectNotesBtn = document.getElementById('saveProjectNotesBtn');
+    if (saveProjectNotesBtn) {
+        saveProjectNotesBtn.disabled = (project.isShared && access === 'read' && !isOwner);
+        saveProjectNotesBtn.style.display = (project.isShared && access === 'read' && !isOwner) ? 'none' : '';
+    }
+    // Progress Bar
+    const progress = getProjectProgress(project._id);
+    const projectProgressPercent = document.getElementById('projectProgressPercent');
+    if (projectProgressPercent) projectProgressPercent.innerText = (progress !== undefined && progress !== null ? progress : 0) + '%';
+    const projectProgressBar = document.getElementById('projectProgressBar');
+    if (projectProgressBar) projectProgressBar.style.width = (progress !== undefined && progress !== null ? progress : 0) + '%';
+    // Deadline
+    const projectDeadline = document.getElementById('projectDeadline');
+    if (projectDeadline) {
+        projectDeadline.value = project.deadline ? new Date(project.deadline).toISOString().split('T')[0] : '';
+        projectDeadline.disabled = (project.isShared && access === 'read' && !isOwner);
     }
     // Mark as Complete/Incomplete Button Toggle
     const markCompleteBtn = document.getElementById('markCompleteBtn');
     const markIncompleteBtn = document.getElementById('markIncompleteBtn');
-    if (project.completed) {
-        if (markCompleteBtn) markCompleteBtn.style.display = 'none';
-        if (markIncompleteBtn) markIncompleteBtn.style.display = '';
+    if (isOwner) {
+        if (project.completed) {
+            if (markCompleteBtn) markCompleteBtn.style.display = 'none';
+            if (markIncompleteBtn) markIncompleteBtn.style.display = '';
+        } else {
+            if (markCompleteBtn) markCompleteBtn.style.display = '';
+            if (markIncompleteBtn) markIncompleteBtn.style.display = 'none';
+        }
     } else {
-        if (markCompleteBtn) markCompleteBtn.style.display = '';
+        if (markCompleteBtn) markCompleteBtn.style.display = 'none';
         if (markIncompleteBtn) markIncompleteBtn.style.display = 'none';
     }
+    // Tasks: fetch and render for shared project
+    if (project.isShared) {
+        // Fetch tasks for shared project
+        try {
+            const res = await fetch(`/api/tasks/${project._id}`);
+            if (res.ok) {
+                taskList = await res.json();
+            }
+        } catch (err) {
+            // ignore
+        }
+    }
+    renderTasks();
     // Calendar/Chart re-render (reliable)
     requestAnimationFrame(() => {
         updateChart();
     });
+    // Edit Project Button disable logic
+    const editProjectBtn = document.getElementById('editProjectBtn');
+    if (editProjectBtn) {
+        // Disable the button if user has only read access and is not the owner
+        if (project.isShared && access === 'read' && !isOwner) {
+            editProjectBtn.disabled = true;
+            editProjectBtn.title = 'You cannot edit this project (read access)';
+            editProjectBtn.classList.add('cursor-not-allowed', 'opacity-60');
+        } else {
+            // Enable the button for owner or write-access users
+            editProjectBtn.disabled = false;
+            editProjectBtn.title = 'Edit Project';
+            editProjectBtn.classList.remove('cursor-not-allowed', 'opacity-60');
+        }
+        // Always set the click event so the state is correct
+        editProjectBtn.onclick = function (e) {
+            if (editProjectBtn.disabled) {
+                e.preventDefault();
+                return false;
+            }
+            editProject();
+        };
+    }
 }
 
 // Project Modal
+// Project add/edit modal ko show karta hai
 function showProjectForm(edit = false) {
+    let p = projects[selectedProjectIndex];
+    let access = 'both';
+    let isOwner = !p?.isShared;
+    // For shared projects, use the latest fetched details if available
+    if (edit && p?.isShared) {
+        fetch(`/api/projects/${p._id}/details`).then(async res => {
+            if (res.ok) {
+                const data = await res.json();
+                // Use the latest details for editing
+                openProjectEditModal(data.project, access, isOwner, true);
+            } else {
+                showAlert({ icon: 'error', title: 'Error', text: 'Failed to load shared project details!' });
+            }
+        });
+        return;
+    }
+    openProjectEditModal(p, access, isOwner, false);
+}
+
+function openProjectEditModal(p, access, isOwner, isSharedEdit) {
     document.getElementById('projectModal').classList.remove('hidden');
-    document.getElementById('projectModalTitle').innerText = edit ? 'Edit Project' : 'Add Project';
+    document.getElementById('projectModalTitle').innerText = 'Edit Project';
     const basicDiv = document.getElementById('basicInputs');
     const advDiv = document.getElementById('advancedInputs');
     basicDiv.innerHTML = '';
     advDiv.innerHTML = '';
-    if (edit && selectedProjectIndex !== null) {
-        const p = projects[selectedProjectIndex];
-        document.getElementById('projectName').value = p.name;
-        document.getElementById('projectDescInput').value = p.desc;
-        (Array.isArray(p.basic) ? p.basic : [p.basic]).filter(Boolean).forEach(val => addBasicInput(val));
-        (Array.isArray(p.advanced) ? p.advanced : [p.advanced]).filter(Boolean).forEach(val => addAdvancedInput(val));
-    } else {
-        document.getElementById('projectFormEl').reset();
-        addBasicInput();
-        addAdvancedInput();
-    }
+    document.getElementById('projectName').value = p.name || '';
+    document.getElementById('projectDescInput').value = p.desc || '';
+    // Prefill basic and advanced fields from latest details
+    (Array.isArray(p.basic) ? p.basic : (p.basic ? [p.basic] : [])).forEach(val => addBasicInput(val));
+    (Array.isArray(p.advanced) ? p.advanced : (p.advanced ? [p.advanced] : [])).forEach(val => addAdvancedInput(val));
+    // Hide 'Make this project private' for non-owners and for shared project edit
+    const makePrivateDiv = document.getElementById('makeProjectPrivateDiv');
+    if (makePrivateDiv) makePrivateDiv.style.display = (isOwner && !isSharedEdit ? '' : 'none');
+    // Prefill notes if available
+    const projectQuickNotes = document.getElementById('projectQuickNotes');
+    if (projectQuickNotes) projectQuickNotes.value = p.notes || '';
 }
 
+// Project modal ko close karta hai
 function closeProjectForm() {
     document.getElementById('projectModal').classList.add('hidden');
 }
 
+// Project edit button ke liye
 function editProject() {
+    const p = projects[selectedProjectIndex];
+    let access = 'both';
+    let isOwner = !p.isShared;
+    if (p.isShared && p._access) {
+        access = p._access;
+        isOwner = p._isOwner;
+    }
+    if (p.isShared && access === 'read' && !isOwner) {
+        showAlert({ icon: 'warning', title: 'Read Only', text: 'Aapko is project ko edit karne ki permission nahi hai.' });
+        return;
+    }
     showProjectForm(true);
 }
-// add project to database
+
+// Project add/edit form submit event
+// Project ko add ya update karta hai
 document.getElementById('projectFormEl').addEventListener('submit', async function (e) {
     e.preventDefault();
     const name = document.getElementById('projectName').value;
     const desc = document.getElementById('projectDescInput').value;
     const basic = Array.from(document.querySelectorAll('.basic-input')).map(i => i.value).filter(Boolean);
     const advanced = Array.from(document.querySelectorAll('.advanced-input')).map(i => i.value).filter(Boolean);
+    const notes = document.getElementById('projectQuickNotes') ? document.getElementById('projectQuickNotes').value : '';
+    const isPublic = !document.getElementById('projectIsPrivate').checked;
     if (document.getElementById('projectModalTitle').innerText === 'Edit Project' && selectedProjectIndex !== null) {
-        // Edit (API call)
         const projectId = projects[selectedProjectIndex]._id;
+        const oldProject = projects[selectedProjectIndex];
+        let updateData = { name, desc, basic, advanced, notes };
+        // Only allow isPublic for non-shared projects (do NOT send isPublic at all for shared)
+        if (!oldProject.isShared) {
+            updateData.isPublic = isPublic;
+        }
+        if (oldProject.deadline) updateData.deadline = oldProject.deadline;
         try {
             const res = await fetch(`/api/projects/${projectId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, desc, basic, advanced })
+                body: JSON.stringify(updateData)
             });
             if (!res.ok) throw new Error('Project update failed');
             showAlert({ icon: 'success', title: 'Success', text: 'Project updated!' });
+            // After update, re-fetch details for shared project to update UI
+            if (oldProject.isShared) {
+                await fetch(`/api/projects/${projectId}/details`).then(async res2 => {
+                    if (res2.ok) {
+                        const data2 = await res2.json();
+                        projects[selectedProjectIndex] = { ...oldProject, ...data2.project };
+                        await renderProjectDetails();
+                    }
+                });
+            }
         } catch (err) {
             showAlert({ icon: 'error', title: 'Error', text: 'Failed to update project!' });
         }
     } else {
-        await addProject({ name, desc, basic, advanced });
+        await addProject({ name, desc, basic, advanced, notes, isPublic });
     }
     await fetchProjects();
     closeProjectForm();
 });
 
 // Project select/update par default tasks fetch ho (pehle jaisa)
-function origSelectProject(idx) {
+async function origSelectProject(idx) {
     selectedProjectIndex = idx;
-    renderProjectDetails();
-    fetchTasks(projects[selectedProjectIndex]._id);
+    await renderProjectDetails();
+    if (projects[selectedProjectIndex]) { // Check if project still exists
+        await fetchTasks(projects[selectedProjectIndex]._id);
+    }
 }
 
 // Task List Render
+// Selected project ke tasks ko render karta hai
 function renderTasks(filter = '', tag = '') {
     const taskUl = document.getElementById('taskList');
     taskUl.innerHTML = '';
@@ -189,18 +324,51 @@ function renderTasks(filter = '', tag = '') {
     } else {
         document.getElementById('emptyTaskState').style.display = 'none';
     }
+    // Access logic
+    let project = projects[selectedProjectIndex];
+    let access = 'both';
+    let isOwner = !project.isShared;
+    if (project.isShared && project._access) {
+        access = project._access;
+        isOwner = project._isOwner;
+    }
+    // Disable add task button for read-only shared users
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    if (addTaskBtn) {
+        if (project.isShared && access === 'read' && !isOwner) {
+            addTaskBtn.disabled = true;
+            addTaskBtn.title = 'You cannot add tasks (read access)';
+            addTaskBtn.classList.add('cursor-not-allowed', 'opacity-60');
+        } else {
+            addTaskBtn.disabled = false;
+            addTaskBtn.title = 'Add Task';
+            addTaskBtn.classList.remove('cursor-not-allowed', 'opacity-60');
+        }
+    }
     filtered.forEach((task, index) => {
         const li = document.createElement('li');
         li.className = 'flex items-center justify-between bg-blue-50 rounded-xl px-4 py-2 shadow-sm';
+        let taskBtns = '';
+        // Disable task update for read-only users
+        if (!(project.isShared && access === 'read' && !isOwner)) {
+            taskBtns = `
+              <button onclick="editTask(${index})" class="text-yellow-400 hover:text-yellow-500 transition rounded-lg px-2" title="Edit">✏️</button>
+              <button onclick="deleteTask(${index})" class="text-red-400 hover:text-red-500 transition rounded-lg px-2" title="Delete">✖</button>
+            `;
+        } else {
+            taskBtns = `
+              <button disabled class="text-yellow-200 cursor-not-allowed rounded-lg px-2" title="You cannot edit (read access)">✏️</button>
+              <button disabled class="text-red-200 cursor-not-allowed rounded-lg px-2" title="You cannot delete (read access)">✖</button>
+            `;
+        }
         li.innerHTML = `
             <div class="flex items-center gap-2">
-              <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})" class="accent-blue-500">
+              <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})" class="accent-blue-500" ${(project.isShared && access === 'read' && !isOwner) ? 'disabled' : ''}>
               <span class="${task.completed ? 'line-through text-gray-400' : 'text-gray-700 font-medium'}">${task.text}</span>
               <span class="text-xs text-blue-400 ml-2">[${task.tag}]</span>
             </div>
             <div class="flex gap-2">
-              <button onclick="editTask(${index})" class="text-yellow-400 hover:text-yellow-500 transition rounded-lg px-2" title="Edit">✏️</button>
-              <button onclick="deleteTask(${index})" class="text-red-400 hover:text-red-500 transition rounded-lg px-2" title="Delete">✖</button>
+              ${taskBtns}
             </div>
           `;
         taskUl.appendChild(li);
@@ -213,29 +381,74 @@ function renderTasks(filter = '', tag = '') {
         document.getElementById('projectProgressBar').style.width = progress + '%';
     }
 }
-// Add task
+// Task add karta hai
 async function addTask() {
+    let project = projects[selectedProjectIndex];
+    let access = 'both';
+    let isOwner = !project.isShared;
+    if (project.isShared && project._access) {
+        access = project._access;
+        isOwner = project._isOwner;
+    }
+    if (project.isShared && access === 'read' && !isOwner) {
+        showAlert({ icon: 'warning', title: 'Read Only', text: 'You cannot add tasks to this shared project.' });
+        return;
+    }
     const input = document.getElementById('taskInput');
     const tag = document.getElementById('taskTag').value;
     const priority = document.getElementById('taskPriority').value;
-    // Due date input
     let dueDate = '';
     if (document.getElementById('taskDueDate')) dueDate = document.getElementById('taskDueDate').value;
+    const isPublic = false; // ab task ke liye nahi bhejna
     if (input.value.trim() && selectedProjectIndex !== null) {
-        await addTaskToDB({ text: input.value.trim(), tag, projectId: projects[selectedProjectIndex]._id, dueDate, priority });
+        await addTaskToDB({ text: input.value.trim(), tag, projectId: projects[selectedProjectIndex]._id, dueDate, priority, isPublic });
         input.value = '';
         if (document.getElementById('taskDueDate')) document.getElementById('taskDueDate').value = '';
+        if (document.getElementById('taskIsPublic')) document.getElementById('taskIsPublic').checked = false;
     }
 }
 async function toggleTask(index) {
+    let project = projects[selectedProjectIndex];
+    let access = 'both';
+    let isOwner = !project.isShared;
+    if (project.isShared && project._access) {
+        access = project._access;
+        isOwner = project._isOwner;
+    }
+    if (project.isShared && access === 'read' && !isOwner) {
+        showAlert({ icon: 'warning', title: 'Read Only', text: 'You cannot update tasks in this shared project.' });
+        return;
+    }
     const task = taskList[index];
     await updateTaskInDB(task._id, { completed: !task.completed }, task.projectId);
 }
 async function deleteTask(index) {
+    let project = projects[selectedProjectIndex];
+    let access = 'both';
+    let isOwner = !project.isShared;
+    if (project.isShared && project._access) {
+        access = project._access;
+        isOwner = project._isOwner;
+    }
+    if (project.isShared && access === 'read' && !isOwner) {
+        showAlert({ icon: 'warning', title: 'Read Only', text: 'You cannot delete tasks in this shared project.' });
+        return;
+    }
     const task = taskList[index];
     await deleteTaskFromDB(task._id, task.projectId);
 }
 async function editTask(index) {
+    let project = projects[selectedProjectIndex];
+    let access = 'both';
+    let isOwner = !project.isShared;
+    if (project.isShared && project._access) {
+        access = project._access;
+        isOwner = project._isOwner;
+    }
+    if (project.isShared && access === 'read' && !isOwner) {
+        showAlert({ icon: 'warning', title: 'Read Only', text: 'You cannot edit tasks in this shared project.' });
+        return;
+    }
     const task = taskList[index];
     Swal.fire({
         title: 'Edit Task',
@@ -267,9 +480,11 @@ async function editTask(index) {
         }
     });
 }
+// Local storage me tasks save karta hai
 function saveTasks() {
     localStorage.setItem('tasks', JSON.stringify(taskList));
 }
+// Dashboard summary/progress update karta hai
 function updateDashboard() {
     const filtered = taskList.filter(task => selectedProjectIndex === null || task.projectId === projects[selectedProjectIndex]?.projectId);
     const totalTasksEl = document.getElementById('totalTasks');
@@ -292,6 +507,7 @@ function updateDashboard() {
         ring.style.transition = 'stroke-dashoffset 0.6s cubic-bezier(.4,2,.6,1)';
     }
 }
+// Project ke tasks ka chart update karta hai
 function updateChart() {
     const filtered = taskList.filter(task => selectedProjectIndex === null || task.projectId === projects[selectedProjectIndex]?.projectId);
     const completedData = {};
@@ -310,13 +526,14 @@ function updateChart() {
     if (!chartCanvas) return;
     const ctx = chartCanvas.getContext('2d');
 }
+// Task search/filter event listeners
 document.getElementById('taskSearch').addEventListener('input', function () {
     renderTasks(this.value, document.getElementById('taskTagFilter').value);
 });
 document.getElementById('taskTagFilter').addEventListener('change', function () {
     renderTasks(document.getElementById('taskSearch').value, this.value);
 });
-// Calendar
+// Calendar render karta hai
 function renderCalendar() {
     if (calendar && typeof calendar.destroy === 'function') { calendar.destroy(); calendar = null; }
     const calendarEl = document.getElementById('calendar');
@@ -336,12 +553,13 @@ function renderCalendar() {
     });
     calendar.render();
 }
+// DOMContentLoaded par initial data fetch, render, aur setup karta hai
 document.addEventListener('DOMContentLoaded', async function () {
     await fetchProjects();
     updateSummaryCards();
     if (projects.length > 0) {
         selectedProjectIndex = 0;
-        renderProjectDetails();
+        await renderProjectDetails(); // Await details rendering
         await fetchTasks(projects[0]._id);
     } else {
         renderProjectList();
@@ -353,9 +571,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         renderCalendar();
     }
     fetchUserData();
+    // Start polling for real-time updates
+    setInterval(pollForProjectUpdates, 15000); // Poll every 15 seconds
 });
 
 // Add More for Basic/Advanced
+// Project form me basic/advanced input add karta hai
 function addBasicInput(val = '') {
     const div = document.createElement('div');
     div.className = 'flex gap-2';
@@ -368,11 +589,11 @@ function addAdvancedInput(val = '') {
     div.innerHTML = `<input type="text" class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 advanced-input" placeholder="Advanced Feature" value="${val}"><button type="button" onclick="this.parentNode.remove()" class="text-red-400 hover:text-red-600 px-2">✖</button>`;
     document.getElementById('advancedInputs').appendChild(div);
 }
-// Helper for modern alert
+// Modern alert (Swal) show karta hai
 function showAlert({ icon = 'success', title = '', text = '', color = '#2563eb', bg = '#f0f6ff' }) {
     Swal.fire({ icon, title, text, background: bg, color, confirmButtonColor: '#2563eb' });
 }
-// Logout पर Swal
+// Logout par Swal confirmation
 function logoutUser() {
     Swal.fire({
         title: 'Logout',
@@ -393,6 +614,7 @@ function logoutUser() {
 }
 
 // ======= Dark Theme Toggle =======
+// Theme toggle aur localStorage logic
 const themeToggleBtn = document.getElementById('themeToggleBtn');
 const moonIcon = document.getElementById('moonIcon');
 const sunIcon = document.getElementById('sunIcon');
@@ -427,7 +649,7 @@ window.addEventListener('DOMContentLoaded', function () {
 });
 
 // ===== Sidebar Todo List (DB Version, alerts added) =====
-
+// Sidebar todos ko render, add, toggle, delete, save karta hai
 async function fetchUserData() {
     try {
         const res = await fetch('/api/userdata');
@@ -499,10 +721,7 @@ async function saveSidebarTodos(action) {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to save todos!' });
     }
 }
-// ===== Sidebar Notes (DB Version, alerts added) =====
-function loadSidebarNotes() {
-    document.getElementById('sidebarNotes').value = sidebarNotes;
-}
+// Sidebar notes save karta hai
 async function saveSidebarNotes() {
     sidebarNotes = document.getElementById('sidebarNotes').value;
     try {
@@ -516,24 +735,39 @@ async function saveSidebarNotes() {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to save notes!' });
     }
 }
-// ===== Init Sidebar on Load (DB Version) =====
-document.addEventListener('DOMContentLoaded', function () {
-    fetchUserData();
-});
+// Sidebar notes/todos initial load
+// ... existing code ...
 
 // Projects API
+// Projects ko fetch, add, update, delete karta hai
 async function fetchProjects() {
+    window.showLoader();
     try {
-        const res = await fetch('/api/projects');
-        if (!res.ok) throw new Error('Failed to load projects!');
-        projects = await res.json();
+        // Fetch own projects
+        const resOwn = await fetch('/api/projects');
+        if (!resOwn.ok) throw new Error('Failed to load projects!');
+        let ownProjects = await resOwn.json();
+        // Fetch shared projects
+        const resShared = await fetch('/api/projects/shared-with-me');
+        let sharedProjects = [];
+        if (resShared.ok) {
+            sharedProjects = await resShared.json();
+            // Mark shared projects
+            sharedProjects = sharedProjects.map(p => ({ ...p, isShared: true }));
+        }
+        // Merge lists
+        projects = [...ownProjects, ...sharedProjects];
         renderProjectList();
         addActivityFeed('Projects loaded');
     } catch (err) {
-        showAlert({ icon: 'error', title: 'Error', text: 'Failed to load projects!' });
+        showAlert({ icon: 'error', title: 'Error', text: err.message || 'Failed to load projects!' });
+        console.error(err);
+    } finally {
+        window.hideLoader();
     }
 }
 async function addProject(project) {
+    window.showLoader();
     try {
         const res = await fetch('/api/projects', {
             method: 'POST',
@@ -546,10 +780,13 @@ async function addProject(project) {
         await fetchProjects();
     } catch (err) {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to add project!' });
+    } finally {
+        window.hideLoader();
     }
 }
 // Project update (edit)
 async function updateProject(projectId, data) {
+    window.showLoader();
     try {
         const res = await fetch(`/api/projects/${projectId}`, {
             method: 'PUT',
@@ -557,10 +794,18 @@ async function updateProject(projectId, data) {
             body: JSON.stringify(data)
         });
         if (!res.ok) throw new Error('Project update failed');
+        // Saare tasks ko bhi update karo
+        await fetch(`/api/tasks/update-public-status/${projectId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isPublic: data.isPublic })
+        });
         addActivityFeed('Project updated: ' + (data.name || projectId));
         await fetchProjects();
     } catch (err) {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to update project!' });
+    } finally {
+        window.hideLoader();
     }
 }
 async function deleteProject(idx) {
@@ -575,6 +820,7 @@ async function deleteProject(idx) {
         cancelButtonText: 'Cancel'
     });
     if (confirmDelete.isConfirmed) {
+        window.showLoader();
         try {
             const res = await fetch(`/api/projects/${project._id}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('Project delete failed');
@@ -587,17 +833,23 @@ async function deleteProject(idx) {
             }
         } catch (err) {
             showAlert({ icon: 'error', title: 'Error', text: 'Failed to delete project!' });
+        } finally {
+            window.hideLoader();
         }
     }
 }
 // Tasks API
+// Tasks ko fetch, add, update, delete karta hai
 async function fetchTasks(projectId) {
+    window.showLoader();
     const res = await fetch(`/api/tasks/${projectId}`);
     taskList = await res.json();
     renderTasks();
     updateDashboardOverview();
+    window.hideLoader();
 }
 async function addTaskToDB(task) {
+    window.showLoader();
     try {
         const res = await fetch('/api/tasks', {
             method: 'POST',
@@ -611,9 +863,12 @@ async function addTaskToDB(task) {
         updateSummaryCards();
     } catch (err) {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to add task!' });
+    } finally {
+        window.hideLoader();
     }
 }
 async function updateTaskInDB(taskId, data, projectId) {
+    window.showLoader();
     try {
         const res = await fetch(`/api/tasks/${taskId}`, {
             method: 'PUT',
@@ -626,9 +881,12 @@ async function updateTaskInDB(taskId, data, projectId) {
         await fetchTasks(projectId);
     } catch (err) {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to update task!' });
+    } finally {
+        window.hideLoader();
     }
 }
 async function deleteTaskFromDB(taskId, projectId) {
+    window.showLoader();
     try {
         const res = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
         if (!res.ok) throw new Error('Task delete failed');
@@ -637,18 +895,20 @@ async function deleteTaskFromDB(taskId, projectId) {
         await fetchTasks(projectId);
     } catch (err) {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to delete task!' });
+    } finally {
+        window.hideLoader();
     }
 }
 
 // ===== Project Complete, Deadline, Notes, Progress Bar, Priority, Quick Notes, Recent Activity, Export PDF =====
-// Helper: Calculate project progress
+// Project progress calculate karta hai
 function getProjectProgress(projectId) {
     const projectTasks = taskList.filter(t => t.projectId === projectId);
     if (projectTasks.length === 0) return 0;
     const done = projectTasks.filter(t => t.completed).length;
     return Math.round((done / projectTasks.length) * 100);
 }
-// Mark project as complete
+// Project ko complete/incomplete mark karta hai
 async function markProjectComplete(projectId) {
     const project = projects.find(p => p._id === projectId);
     if (!project) return;
@@ -667,7 +927,7 @@ async function markProjectComplete(projectId) {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to mark project complete!' });
     }
 }
-// Mark project as incomplete
+// Project ko incomplete mark karta hai
 async function markProjectIncomplete(projectId) {
     const project = projects.find(p => p._id === projectId);
     if (!project) return;
@@ -686,7 +946,7 @@ async function markProjectIncomplete(projectId) {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to mark project incomplete!' });
     }
 }
-// Update project notes
+// Project notes/deadline update karta hai
 async function saveProjectNotes(projectId, notes) {
     const project = projects.find(p => p._id === projectId);
     if (!project) return;
@@ -702,7 +962,7 @@ async function saveProjectNotes(projectId, notes) {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to save notes!' });
     }
 }
-// Update project deadline
+// Project deadline update karta hai
 async function saveProjectDeadline(projectId, deadline) {
     const project = projects.find(p => p._id === projectId);
     if (!project) return;
@@ -718,7 +978,7 @@ async function saveProjectDeadline(projectId, deadline) {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to save deadline!' });
     }
 }
-// Export project as PDF
+// Project ko PDF me export karta hai
 async function exportProjectPDF(projectId) {
     const project = projects.find(p => p._id === projectId);
     if (!project) return;
@@ -736,6 +996,7 @@ async function exportProjectPDF(projectId) {
 }
 
 // ===== Dashboard Summary Cards =====
+// Dashboard ke summary cards update karta hai
 function updateSummaryCards() {
     const total = projects.length;
     const completed = projects.filter(p => p.completed).length;
@@ -746,7 +1007,7 @@ function updateSummaryCards() {
     document.getElementById('summaryActiveProjects').innerText = active;
     document.getElementById('summaryOverdueProjects').innerText = overdue;
 }
-// ===== Pie Chart (Task Status) =====
+// Pie chart update karta hai
 function updatePieChart() {
     const completed = taskList.filter(t => t.completed).length;
     const pending = taskList.filter(t => !t.completed).length;
@@ -766,7 +1027,7 @@ function updatePieChart() {
         options: { plugins: { legend: { position: 'bottom' } } }
     });
 }
-// ===== Doughnut Chart (Priority) =====
+// Doughnut chart update karta hai
 function updateDoughnutChart() {
     const high = taskList.filter(t => t.priority === 'High').length;
     const medium = taskList.filter(t => t.priority === 'Medium').length;
@@ -786,7 +1047,7 @@ function updateDoughnutChart() {
         options: { plugins: { legend: { position: 'bottom' } } }
     });
 }
-// ===== Upcoming Deadlines =====
+// Upcoming deadlines update karta hai
 function updateUpcomingDeadlines() {
     const upcoming = taskList.filter(t => t.dueDate && !t.completed && new Date(t.dueDate) >= new Date()).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)).slice(0, 5);
     const ul = document.getElementById('upcomingDeadlines');
@@ -801,7 +1062,7 @@ function updateUpcomingDeadlines() {
         ul.appendChild(li);
     });
 }
-// ===== Activity Feed =====
+// Activity feed update/add karta hai
 function addActivityFeed(msg) {
     activityFeedArr.unshift({ msg, time: new Date() });
     if (activityFeedArr.length > 20) activityFeedArr.pop();
@@ -846,6 +1107,7 @@ async function deleteProject(idx) {
         cancelButtonText: 'Cancel'
     });
     if (confirmDelete.isConfirmed) {
+        window.showLoader();
         try {
             const res = await fetch(`/api/projects/${project._id}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('Project delete failed');
@@ -859,6 +1121,8 @@ async function deleteProject(idx) {
             }
         } catch (err) {
             showAlert({ icon: 'error', title: 'Error', text: 'Failed to delete project!' });
+        } finally {
+            window.hideLoader();
         }
     }
 }
@@ -914,7 +1178,6 @@ function initializeSettingsTabs() {
     const settingsSections = document.querySelectorAll('.settings-section');
 
     if (settingsTabs.length === 0) {
-        console.log('Settings tabs not found, will retry later');
         return;
     }
 
@@ -940,388 +1203,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeSettingsTabs();
 });
 
-// ======= AI Bot Functionality =======
 
-// Initialize AI Bot functionality
-function initializeAIBot() {
-
-    // Initialize Web Speech API
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.lang = 'en-US';
-
-        recognition.onresult = function (event) {
-            const transcript = event.results[0][0].transcript;
-            const input = document.getElementById('aiMessageInput');
-            if (input) {
-                input.value = transcript;
-            }
-            stopVoiceRecording();
-        };
-
-        recognition.onerror = function (event) {
-            console.error('Speech recognition error:', event.error);
-            stopVoiceRecording();
-            showAlert({ icon: 'error', title: 'Voice Error', text: 'Voice recognition failed: ' + event.error });
-        };
-
-        recognition.onend = function () {
-            stopVoiceRecording();
-        };
-    }
-}
-
-// Initialize AI Bot when DOM is ready
-document.addEventListener('DOMContentLoaded', function () {
-    initializeAIBot();
-
-    // Initialize settings button (backup)
-    initializeSettingsButton();
-});
-
-// ======= AI Bot Modal Open Function (Global) =======
-function openAiBotModal() {
-    const modal = document.getElementById('aiBotModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        // ...rest of your code (focus input etc.) ...
-    } else {
-        alert('AI Bot modal not found. Please refresh the page.');
-    }
-}
-window.openAiBotModal = openAiBotModal;
-
-// ======= DOMContentLoaded Event Listeners =======
-document.addEventListener('DOMContentLoaded', function () {
-    // AI Bot Button Event
-    const aiBotBtn = document.getElementById('aiBotBtn');
-    if (aiBotBtn) {
-        aiBotBtn.addEventListener('click', openAiBotModal);
-    }
-    // Settings Button Event
-    const settingsBtn = document.getElementById('settingsBtn');
-    if (settingsBtn && typeof openSettingsModal === 'function') {
-        settingsBtn.onclick = openSettingsModal;
-    }
-});
-
-// Voice Input Functions
-function toggleVoiceInput() {
-
-    // Safety check for variables
-    if (typeof isRecording === 'undefined') {
-        console.error('isRecording variable not initialized');
-        return;
-    }
-
-    if (isRecording) {
-        stopVoiceRecording();
-    } else {
-        startVoiceRecording();
-    }
-}
-
-function startVoiceRecording() {
-
-    if (!recognition) {
-        console.error('Recognition not available');
-        showAlert({ icon: 'error', title: 'Not Supported', text: 'Voice recognition is not supported in your browser.' });
-        return;
-    }
-
-    try {
-        recognition.start();
-        isRecording = true;
-
-        const micIcon = document.getElementById('micIcon');
-        const stopIcon = document.getElementById('stopIcon');
-        const voiceStatus = document.getElementById('voiceStatus');
-        const voiceStatusText = document.getElementById('voiceStatusText');
-        const voiceBtn = document.getElementById('voiceBtn');
-
-        if (micIcon) micIcon.style.display = 'none';
-        if (stopIcon) stopIcon.style.display = 'block';
-        if (voiceStatus) voiceStatus.classList.remove('hidden');
-        if (voiceStatusText) voiceStatusText.textContent = 'Listening... Speak now!';
-        if (voiceBtn) voiceBtn.classList.add('text-red-500', 'recording');
-
-    } catch (error) {
-        console.error('Error starting voice recognition:', error);
-        showAlert({ icon: 'error', title: 'Voice Error', text: 'Could not start voice recognition: ' + error.message });
-    }
-}
-
-function stopVoiceRecording() {
-
-    if (recognition && isRecording) {
-        recognition.stop();
-    }
-    isRecording = false;
-
-    const micIcon = document.getElementById('micIcon');
-    const stopIcon = document.getElementById('stopIcon');
-    const voiceStatus = document.getElementById('voiceStatus');
-    const voiceBtn = document.getElementById('voiceBtn');
-
-    if (micIcon) micIcon.style.display = 'block';
-    if (stopIcon) stopIcon.style.display = 'none';
-    if (voiceStatus) voiceStatus.classList.add('hidden');
-    if (voiceBtn) voiceBtn.classList.remove('text-red-500', 'recording');
-
-}
-
-// Send AI Message
-async function sendAiMessage() {
-    const messageInput = document.getElementById('aiMessageInput');
-    const message = messageInput.value.trim();
-
-    if (!message) {
-        showAlert({ icon: 'warning', title: 'Empty Message', text: 'Please enter a message to send.' });
-        return;
-    }
-
-    // Add user message to chat
-    addMessageToChat('user', message);
-    messageInput.value = '';
-
-    // Show typing indicator
-    const typingId = addTypingIndicator();
-
-    try {
-        // Get current project context
-        let projectContext = '';
-        if (selectedProjectIndex !== null && projects[selectedProjectIndex]) {
-            const project = projects[selectedProjectIndex];
-            projectContext = `Current Project: ${project.name} - ${project.desc}`;
-        }
-
-        const response = await fetch('/api/userdata/ai/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message, projectContext })
-        });
-
-        const data = await response.json();
-
-        // Remove typing indicator
-        removeTypingIndicator(typingId);
-
-        if (data.success) {
-            addMessageToChat('ai', data.response);
-        } else {
-            addMessageToChat('ai', 'Sorry, I encountered an error. Please try again later.');
-        }
-
-    } catch (error) {
-        console.error('AI Chat Error:', error);
-        removeTypingIndicator(typingId);
-        addMessageToChat('ai', 'Sorry, I am temporarily unavailable. Please try again later.');
-    }
-}
-
-// Add message to chat
-function addMessageToChat(sender, message) {
-    const chatArea = document.getElementById('aiChatArea');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'flex items-start gap-3';
-
-    if (sender === 'user') {
-        messageDiv.innerHTML = `
-            <div class="flex-1"></div>
-            <div class="bg-blue-100 rounded-xl p-3 max-w-xs">
-                <p class="text-sm text-blue-700">${message}</p>
-            </div>
-            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#fff" stroke-width="2"/>
-                    <circle cx="12" cy="7" r="4" stroke="#fff" stroke-width="2"/>
-                </svg>
-            </div>
-        `;
-    } else {
-        // Format AI response with better styling
-        const formattedMessage = formatAIResponse(message);
-        messageDiv.innerHTML = `
-            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#9333ea"/>
-                </svg>
-            </div>
-            <div class="bg-white border border-purple-200 rounded-xl p-4 max-w-md shadow-sm">
-                <div class="prose prose-sm max-w-none">
-                    ${formattedMessage}
-                </div>
-            </div>
-        `;
-    }
-
-    chatArea.appendChild(messageDiv);
-    chatArea.scrollTop = chatArea.scrollHeight;
-}
-
-// Format AI response with better styling
-function formatAIResponse(message) {
-    let formatted = message;
-
-    // Replace **text** with <strong>text</strong>
-    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>');
-
-    // Replace *text* with <em>text</em>
-    formatted = formatted.replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>');
-
-    // Replace bullet points with styled list items
-    formatted = formatted.replace(/^\* (.*$)/gm, '<li class="text-gray-700 mb-1">• $1</li>');
-
-    // Replace numbered lists
-    formatted = formatted.replace(/^\d+\. (.*$)/gm, '<li class="text-gray-700 mb-1">$&</li>');
-
-    // Wrap lists in ul tags
-    formatted = formatted.replace(/(<li.*<\/li>)/gs, '<ul class="list-none space-y-1 mb-3">$1</ul>');
-
-    // Replace line breaks with proper spacing
-    formatted = formatted.replace(/\n\n/g, '</p><p class="mb-3">');
-    formatted = formatted.replace(/\n/g, '<br>');
-
-    // Wrap in paragraph tags
-    formatted = `<p class="text-gray-800 leading-relaxed mb-3">${formatted}</p>`;
-
-    // Add special styling for sections
-    formatted = formatted.replace(/(<strong.*?English.*?<\/strong>)/g, '<div class="bg-blue-50 border-l-4 border-blue-400 p-3 mb-3 rounded-r">$1');
-    formatted = formatted.replace(/(<strong.*?Hindi.*?<\/strong>)/g, '</div><div class="bg-green-50 border-l-4 border-green-400 p-3 mb-3 rounded-r">$1');
-
-    // Add closing div for Hindi section
-    if (formatted.includes('bg-green-50')) {
-        formatted += '</div>';
-    }
-
-    // Style code blocks
-    formatted = formatted.replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">$1</code>');
-
-    // Style quotes
-    formatted = formatted.replace(/^"([^"]+)"$/gm, '<blockquote class="border-l-4 border-purple-300 pl-3 italic text-gray-600">"$1"</blockquote>');
-
-    return formatted;
-}
-
-// Add typing indicator
-function addTypingIndicator() {
-    const chatArea = document.getElementById('aiChatArea');
-    const typingDiv = document.createElement('div');
-    const typingId = 'typing-' + Date.now();
-    typingDiv.id = typingId;
-    typingDiv.className = 'flex items-start gap-3';
-    typingDiv.innerHTML = `
-        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#9333ea"/>
-            </svg>
-        </div>
-        <div class="bg-purple-50 rounded-xl p-3">
-            <div class="flex space-x-1">
-                <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
-                <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-            </div>
-        </div>
-    `;
-
-    chatArea.appendChild(typingDiv);
-    chatArea.scrollTop = chatArea.scrollHeight;
-    return typingId;
-}
-
-// Remove typing indicator
-function removeTypingIndicator(typingId) {
-    const typingDiv = document.getElementById(typingId);
-    if (typingDiv) {
-        typingDiv.remove();
-    }
-}
-
-// Settings button event listener - Add immediately
-function initializeSettingsButton() {
-    let settingsBtn = document.getElementById('settingsBtn');
-    if (settingsBtn && !settingsBtn.hasAttribute('data-listener-added')) {
-        settingsBtn.addEventListener('click', function () {
-            console.log('Settings button clicked!');
-            openSettingsModal();
-        });
-        settingsBtn.setAttribute('data-listener-added', 'true');
-    } else if (!settingsBtn) {
-        console.log('Settings button not found on page load');
-    }
-}
-
-// Initialize settings button immediately
-initializeSettingsButton();
-
-// Voice button event listener - Add immediately if available
-const voiceBtn = document.getElementById('voiceBtn');
-if (voiceBtn && !voiceBtn.hasAttribute('data-listener-added')) {
-    voiceBtn.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (typeof toggleVoiceInput === 'function') {
-            toggleVoiceInput();
-        } else {
-            console.error('toggleVoiceInput function not found');
-        }
-    });
-    voiceBtn.setAttribute('data-listener-added', 'true');
-}
-
-// Enter key to send message and voice button
-document.addEventListener('DOMContentLoaded', function () {
-    const messageInput = document.getElementById('aiMessageInput');
-    if (messageInput) {
-        messageInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendAiMessage();
-            }
-        });
-    }
-
-    // Voice button event listener (backup)
-    const voiceBtn = document.getElementById('voiceBtn');
-    if (voiceBtn && !voiceBtn.hasAttribute('data-listener-added')) {
-        voiceBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (typeof toggleVoiceInput === 'function') {
-                toggleVoiceInput();
-            } else {
-                console.error('toggleVoiceInput function not found');
-            }
-        });
-        voiceBtn.setAttribute('data-listener-added', 'true');
-    }
-
-    // Also add AI Bot button listener here as backup
-    const aiBotBtnBackup = document.getElementById('aiBotBtn');
-    if (aiBotBtnBackup && !aiBotBtnBackup.hasAttribute('data-listener-added')) {
-        aiBotBtnBackup.addEventListener('click', openAiBotModal);
-        aiBotBtnBackup.setAttribute('data-listener-added', 'true');
-    }
-
-    // Also add voice button listener here as backup
-    const voiceBtnBackup = document.getElementById('voiceBtn');
-    if (voiceBtnBackup && !voiceBtnBackup.hasAttribute('data-listener-added')) {
-        voiceBtnBackup.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (typeof toggleVoiceInput === 'function') {
-                toggleVoiceInput();
-            } else {
-                console.error('toggleVoiceInput function not found');
-            }
-        });
-        voiceBtnBackup.setAttribute('data-listener-added', 'true');
-    }
-});
 
 // ======= Modular Settings Forms =======
 // Profile Form
@@ -1731,12 +1613,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Edit project button
-    const editProjectBtn = document.getElementById('editProjectBtn');
-    if (editProjectBtn) {
-        editProjectBtn.addEventListener('click', editProject);
-    }
-
     // Mark complete button
     const markCompleteBtn = document.getElementById('markCompleteBtn');
     if (markCompleteBtn) {
@@ -1936,3 +1812,402 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
+// Project public/private toggle function
+toggleProjectVisibility = async function (projectId, newStatus) {
+    const project = projects.find(p => p._id === projectId);
+    if (!project) return;
+    try {
+        await updateProject(projectId, { ...project, isPublic: newStatus });
+        showAlert({ icon: 'success', title: 'Updated', text: `Project is now ${newStatus ? 'Public' : 'Private'}` });
+    } catch (err) {
+        showAlert({ icon: 'error', title: 'Error', text: 'Failed to update visibility!' });
+    }
+    await fetchProjects();
+}
+
+function showLoader() {
+    document.getElementById('universalLoader').style.display = '';
+}
+function hideLoader() {
+    document.getElementById('universalLoader').style.display = 'none';
+}
+window.showLoader = showLoader;
+window.hideLoader = hideLoader;
+
+// --- Real-time Polling for Project Updates ---
+async function pollForProjectUpdates() {
+    const currentProjectId = selectedProjectIndex !== null && projects[selectedProjectIndex] ? projects[selectedProjectIndex]._id : null;
+    try {
+        const resOwn = await fetch('/api/projects');
+        if (!resOwn.ok) return; // Fail silently on poll
+        const ownProjects = await resOwn.json();
+        const resShared = await fetch('/api/projects/shared-with-me');
+        let sharedProjects = [];
+        if (resShared.ok) {
+            sharedProjects = await resShared.json();
+            sharedProjects = sharedProjects.map(p => ({ ...p, isShared: true }));
+        }
+        const newProjects = [...ownProjects, ...sharedProjects];
+        // Only update UI if there's a change
+        if (JSON.stringify(projects) !== JSON.stringify(newProjects)) {
+            projects = newProjects;
+            renderProjectList();
+            if (currentProjectId) {
+                const newIndex = projects.findIndex(p => p._id === currentProjectId);
+                selectedProjectIndex = newIndex; // Becomes -1 if revoked
+                await renderProjectDetails(); // Re-render details or clear view
+            }
+        }
+    } catch (err) {
+        console.error("Project polling failed:", err); // Log error but don't alert user
+    }
+}
+
+// ======= Settings Hub (New UI) =======
+const settingsHubModal = document.getElementById('settingsHubModal');
+const settingsBtn = document.getElementById('settingsBtn');
+const closeSettingsHubBtn = document.getElementById('closeSettingsHubBtn');
+const settingsHubNav = document.getElementById('settingsHubNav');
+const settingsHubContent = document.getElementById('settingsHubContent');
+
+const settingsNavItems = [
+    { id: 'profile', icon: '👤', text: 'Profile' },
+    { id: 'emails', icon: '📧', text: 'Emails' },
+    { id: 'preferences', icon: '⚙️', text: 'Preferences' },
+    { id: 'social', icon: '🌐', text: 'Social Media' },
+];
+let currentSettingsTab = 'profile';
+
+function openSettingsHub() {
+    settingsHubModal.classList.remove('hidden');
+    setTimeout(() => { settingsHubModal.style.transform = 'translateX(0)'; }, 10);
+    renderSettingsNav();
+    renderSettingsContent(currentSettingsTab);
+}
+function closeSettingsHub() {
+    settingsHubModal.style.transform = 'translateX(100%)';
+    setTimeout(() => { settingsHubModal.classList.add('hidden'); }, 300);
+}
+function renderSettingsNav() {
+    settingsHubNav.innerHTML = settingsNavItems.map(item => `
+        <a href="#" class="settings-nav-item flex items-center p-2 rounded-lg hover:bg-gray-200 text-gray-700 relative ${currentSettingsTab === item.id ? 'active' : ''}" data-tab="${item.id}">
+            <span class="text-xl">${item.icon}</span>
+            <span class="ml-3 hidden md:block">${item.text}</span>
+        </a>
+    `).join('');
+    settingsHubNav.querySelectorAll('.settings-nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            currentSettingsTab = item.getAttribute('data-tab');
+            renderSettingsNav();
+            renderSettingsContent(currentSettingsTab);
+        });
+    });
+}
+function renderSettingsContent(tabId) {
+    switch (tabId) {
+        case 'profile':
+            settingsHubContent.innerHTML = `
+                <h2 class="text-xl font-bold text-blue-600 mb-4">Profile</h2>
+                <form id="profileForm" class="space-y-4 max-w-lg">
+                    <input type="text" id="settingsName" placeholder="Full Name" class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 text-base md:text-lg" required />
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white px-4 py-2 rounded-xl font-semibold shadow hover:from-blue-500 hover:to-blue-700 transition text-base md:text-lg">Update Profile</button>
+                </form>
+            `;
+            prefillSettingsModal();
+            document.getElementById('profileForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const name = document.getElementById('settingsName').value;
+                if (!name.trim()) {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Please enter a name.' });
+                    return;
+                }
+                try {
+                    const res = await fetch('/api/userdata/profile', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: name.trim() })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        Swal.fire({ icon: 'success', title: 'Updated!', text: 'Profile updated successfully.' });
+                        prefillSettingsModal();
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Update failed.' });
+                    }
+                } catch (error) {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update profile. Please try again.' });
+                }
+            });
+            break;
+        case 'emails':
+            settingsHubContent.innerHTML = `
+                <h2 class="text-xl font-bold text-blue-600 mb-4">Emails</h2>
+                <div>
+                    <label class="block text-blue-500 font-semibold mb-1">Your Emails</label>
+                    <div id="emailList" class="space-y-2 mb-4"></div>
+                    <div class="flex gap-2 mt-2 flex-col sm:flex-row">
+                        <input type="email" id="addEmailInput" placeholder="Add new email" class="flex-1 border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 text-base" />
+                        <button type="button" id="addEmailBtn" class="bg-blue-500 text-white px-3 py-1 rounded-xl font-semibold hover:bg-blue-600 transition text-base">Add Email</button>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-2">You can login with any of your verified emails using the same password.</p>
+                </div>
+            `;
+            loadUserEmails();
+            document.getElementById('addEmailBtn').addEventListener('click', async function () {
+                const emailInput = document.getElementById('addEmailInput');
+                const email = emailInput.value.trim();
+                if (!email) {
+                    Swal.fire({ icon: 'warning', title: 'Error', text: 'Please enter an email address.' });
+                    return;
+                }
+                try {
+                    const res = await fetch('/api/userdata/email/send-otp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        openOtpModal(email);
+                        emailInput.value = '';
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+                    }
+                } catch (error) {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to send OTP. Please try again.' });
+                }
+            });
+            break;
+        case 'preferences':
+            settingsHubContent.innerHTML = `
+                <h2 class="text-xl font-bold text-blue-600 mb-4">Preferences</h2>
+                <div class="flex items-center gap-4 mb-6">
+                    <span class="font-semibold text-blue-700">Theme:</span>
+                    <button id="themeToggleBtn" title="Dark/Light Theme Toggle" class="p-2 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-600 transition flex items-center justify-center">
+                        <svg id="moonIcon" width="20" height="20" fill="none" viewBox="0 0 24 24" style="display:block;">
+                            <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" fill="#2563eb" />
+                        </svg>
+                        <svg id="sunIcon" width="20" height="20" fill="none" viewBox="0 0 24 24" style="display:none;">
+                            <circle cx="12" cy="12" r="5" fill="#fbbf24" />
+                            <g stroke="#fbbf24" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="3" />
+                                <line x1="12" y1="21" x2="12" y2="23" />
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                                <line x1="1" y1="12" x2="3" y2="12" />
+                                <line x1="21" y1="12" x2="23" y2="12" />
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                            </g>
+                        </svg>
+                    </button>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="font-semibold text-blue-700">Logout:</span>
+                    <button onclick="logoutUser()" title="Logout" class="p-2 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-600 transition flex items-center justify-center">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                            <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+            `;
+            // Theme toggle logic
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const moonIcon = document.getElementById('moonIcon');
+            const sunIcon = document.getElementById('sunIcon');
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', function () {
+                    const isDark = !document.body.classList.contains('dark-theme');
+                    setTheme(isDark);
+                });
+            }
+            break;
+        case 'social':
+            // Fetch from backend API
+            settingsHubContent.innerHTML = `
+                <h2 class="text-xl font-bold text-blue-600 mb-4">Social Media</h2>
+                <div id="socialLinksList" class="space-y-2 mb-4"></div>
+                <div class="flex flex-col sm:flex-row gap-2 mt-2">
+                    <button type="button" id="addMoreSocialBtn" class="bg-blue-500 text-white px-3 py-1 rounded-xl font-semibold hover:bg-blue-600 transition text-base">Add More Social</button>
+                    <button type="button" id="saveSocialLinksBtn" class="bg-gradient-to-r from-blue-400 to-blue-600 text-white px-4 py-2 rounded-xl font-semibold shadow hover:from-blue-500 hover:to-blue-700 transition">Save Social Links</button>
+                    </div>
+            `;
+            document.getElementById('socialLinksList').innerHTML = '<div class="text-gray-400 text-center py-4">Loading...</div>';
+            fetch('/api/userdata/social-links')
+                .then(res => res.json())
+                .then(data => {
+                    socialLinks = Array.isArray(data.socialLinks) && data.socialLinks.length > 0 ? data.socialLinks : [{ name: '', url: '' }];
+                    renderSocialLinks();
+                })
+                .catch(() => {
+                    document.getElementById('socialLinksList').innerHTML = '<div class="text-red-500 text-center py-4">Failed to load social links.</div>';
+                    socialLinks = [{ name: '', url: '' }];
+                });
+            document.getElementById('saveSocialLinksBtn').onclick = async function() {
+                // Only save project links and custom links with both name and url
+                const filtered = socialLinks.filter(link => (link.projectId && link.name.trim() && link.url.trim()) || (!link.projectId && link.name.trim() && link.url.trim()));
+                try {
+                    const res = await fetch('/api/userdata/social-links', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ socialLinks: filtered })
+                    });
+                    const data = await res.json();
+                    if (data.socialLinks) {
+                        Swal.fire({ icon: 'success', title: 'Saved!', text: 'Social links updated.' });
+                        socialLinks = data.socialLinks.length > 0 ? data.socialLinks : [{ name: '', url: '' }];
+                        renderSocialLinks();
+                        renderProjectList(); // update linked icons
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Failed to save social links.' });
+                    }
+                } catch (err) {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save social links.' });
+                }
+            };
+            break;
+        default:
+            settingsHubContent.innerHTML = '<h2>Select a section</h2>';
+    }
+}
+if (settingsBtn) settingsBtn.addEventListener('click', openSettingsHub);
+if (closeSettingsHubBtn) closeSettingsHubBtn.addEventListener('click', closeSettingsHub);
+
+// Social Media Links Logic
+let socialLinks = [
+  { name: '', url: '' }
+];
+
+// Helper: Check if a project is linked in socialLinks
+function isProjectLinked(projectId) {
+  return socialLinks.some(link => link.projectId === projectId);
+}
+
+// Helper: Get the social link object for a project
+function getProjectSocialLink(projectId) {
+  return socialLinks.find(link => link.projectId === projectId);
+}
+
+// Update renderSocialLinks to allow adding/removing/editing project links
+function renderSocialLinks() {
+  const list = document.getElementById('socialLinksList');
+  if (!list) return;
+  list.innerHTML = '';
+  // Render all projects with toggle/add/edit/delete
+  if (Array.isArray(projects) && projects.length > 0) {
+    projects.forEach((project) => {
+      const linked = isProjectLinked(project._id);
+      const linkObj = getProjectSocialLink(project._id);
+      const row = document.createElement('div');
+      row.className = 'flex flex-col sm:flex-row items-center gap-2 project-link-row';
+      if (linked) {
+        row.innerHTML = `
+          <input type="text" value="${linkObj.name || project.name}" class="border border-blue-200 p-2 rounded-xl bg-blue-50 flex-1 w-full sm:w-auto font-semibold text-blue-700" data-project-id="${project._id}" data-type="name" />
+          <input type="url" value="${linkObj.url || `${window.location.origin}/dashboard/project/${project._id}`}" class="border border-blue-200 p-2 rounded-xl bg-blue-50 flex-1 w-full sm:w-auto text-blue-600" data-project-id="${project._id}" data-type="url" />
+          <button type="button" class="text-blue-600 hover:text-blue-800" title="Open Project" onclick="window.open('${linkObj.url || `${window.location.origin}/dashboard/project/${project._id}`}','_blank')">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M14 10V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-4" stroke="#2563eb" stroke-width="2"/><path d="M17 8l4 4m0 0l-4 4m4-4H9" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button type="button" class="text-red-500 hover:text-red-700" data-project-id="${project._id}" data-action="remove-project-link" title="Remove"><svg width="18" height="18" fill="none" viewBox="0 0 18 18"><path d="M6 6l6 6M6 12L12 6" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/></svg></button>
+        `;
+      } else {
+        row.innerHTML = `
+          <input type="text" value="${project.name}" class="border border-blue-200 p-2 rounded-xl bg-blue-50 flex-1 w-full sm:w-auto font-semibold text-blue-700" readonly />
+          <input type="url" value="${window.location.origin}/dashboard/project/${project._id}" class="border border-blue-200 p-2 rounded-xl bg-blue-50 flex-1 w-full sm:w-auto text-blue-600" readonly />
+          <button type="button" class="text-blue-600 hover:text-blue-800" title="Open Project" onclick="window.open('${window.location.origin}/dashboard/project/${project._id}','_blank')">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M14 10V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-4" stroke="#2563eb" stroke-width="2"/><path d="M17 8l4 4m0 0l-4 4m4-4H9" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button type="button" class="text-green-500 hover:text-green-700" data-project-id="${project._id}" data-action="add-project-link" title="Add to Social Links"><svg width="18" height="18" fill="none" viewBox="0 0 18 18"><path d="M9 3v12M3 9h12" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/></svg></button>
+        `;
+      }
+      list.appendChild(row);
+    });
+  }
+  // Render editable social links (not project links)
+  socialLinks.forEach((link, idx) => {
+    if (link.projectId) return; // skip project links already rendered
+    const row = document.createElement('div');
+    row.className = 'flex flex-col sm:flex-row items-center gap-2 social-link-row';
+    row.innerHTML = `
+      <input type="text" placeholder="Name (e.g. LinkedIn, GitHub, Portfolio)" value="${link.name || ''}" class="border border-blue-200 p-2 rounded-xl bg-blue-50 flex-1 w-full sm:w-auto" data-idx="${idx}" data-type="name" />
+      <input type="url" placeholder="URL" value="${link.url || ''}" class="border border-blue-200 p-2 rounded-xl bg-blue-50 flex-1 w-full sm:w-auto" data-idx="${idx}" data-type="url" />
+      <button type="button" class="text-blue-600 hover:text-blue-800" data-idx="${idx}" data-action="open-link" title="Open Link">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M14 10V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-4" stroke="#2563eb" stroke-width="2"/><path d="M17 8l4 4m0 0l-4 4m4-4H9" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      ${socialLinks.length > 1 ? `<button type="button" class="text-red-500 hover:text-red-700" data-idx="${idx}" data-action="remove-link" title="Remove"><svg width="18" height="18" fill="none" viewBox="0 0 18 18"><path d="M6 6l6 6M6 12L12 6" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/></svg></button>` : ''}
+    `;
+    list.appendChild(row);
+  });
+}
+
+// Update input/change/click handlers for project link add/remove/edit
+window.addEventListener('input', function(e) {
+  // Project link edit
+  if (e.target.closest('.project-link-row')) {
+    const projectId = e.target.dataset.projectId;
+    const type = e.target.dataset.type;
+    if (projectId && type) {
+      let link = getProjectSocialLink(projectId);
+      if (link) {
+        link[type] = e.target.value;
+      }
+    }
+  }
+  // Social link edit
+  if (e.target.closest('#socialLinksList') && e.target.dataset.idx !== undefined) {
+    const idx = e.target.dataset.idx;
+    const type = e.target.dataset.type;
+    if (type && idx !== undefined) {
+      socialLinks[idx][type] = e.target.value;
+    }
+  }
+});
+window.addEventListener('click', function(e) {
+  // Add project link
+  if (e.target.closest('[data-action="add-project-link"]')) {
+    const projectId = e.target.closest('[data-action="add-project-link"]').dataset.projectId;
+    const project = projects.find(p => p._id === projectId);
+    if (project && !isProjectLinked(projectId)) {
+      socialLinks.push({ projectId, name: project.name, url: `${window.location.origin}/dashboard/project/${projectId}` });
+    renderSocialLinks();
+  }
+  }
+  // Remove project link
+  if (e.target.closest('[data-action="remove-project-link"]')) {
+    const projectId = e.target.closest('[data-action="remove-project-link"]').dataset.projectId;
+    const idx = socialLinks.findIndex(link => link.projectId === projectId);
+    if (idx !== -1) {
+      socialLinks.splice(idx, 1);
+      renderSocialLinks();
+    }
+  }
+  // Open link (custom social)
+  if (e.target.closest('[data-action="open-link"]')) {
+    const idx = e.target.closest('[data-action="open-link"]').dataset.idx;
+    const url = socialLinks[idx].url;
+    if (url && /^https?:\/\//.test(url)) {
+      window.open(url, '_blank');
+    } else {
+      alert('Please enter a valid URL (starting with http:// or https://)');
+    }
+  }
+  // Remove custom social link
+  if (e.target.closest('[data-action="remove-link"]')) {
+    const idx = e.target.closest('[data-action="remove-link"]').dataset.idx;
+    socialLinks.splice(idx, 1);
+    renderSocialLinks();
+  }
+  // Add more social (custom)
+  if (e.target.closest('#addMoreSocialBtn')) {
+    socialLinks.push({ name: '', url: '' });
+    renderSocialLinks();
+  }
+});
+
+// Initial render when settings modal opens
+function openSettingsModal() {
+  // ...existing code...
+  renderSocialLinks();
+  // ...rest of your code...
+}
