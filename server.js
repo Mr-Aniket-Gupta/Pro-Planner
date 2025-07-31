@@ -11,6 +11,7 @@ const cookieParser = require('cookie-parser');
 const fetch = require('node-fetch');
 const http = require('http');
 const { Server } = require('socket.io');
+const MongoStore = require('connect-mongo');
 
 const User = require('./models/User');
 const Project = require('./models/Project');
@@ -47,7 +48,11 @@ app.use(cookieParser());
 app.use(session({
     secret: process.env.SESSION_SECRET || 'defaultsecret',
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI,
+        ttl: 14 * 24 * 60 * 60 // 14 days
+    })
 }));
 
 // Set EJS as view engine
@@ -71,7 +76,7 @@ app.get('/', async (req, res) => {
         try {
             const decoded = jwt.verify(req.cookies.proplanner_token, process.env.JWT_SECRET || 'supersecretjwtkey');
             if (decoded?.userId) isLoggedIn = true;
-        } catch (e) {}
+        } catch (e) { }
     }
     res.render('landing', { isLoggedIn });
 });
