@@ -104,6 +104,9 @@ router.get('/pending-requests', userDataController.getPendingRequests);
 router.get('/connections', userDataController.getConnections);
 router.post('/remove-connection', require('../controllers/userDataController').removeConnection);
 
+// Notification count APIs
+router.get('/notification-counts', userDataController.getNotificationCounts);
+
 // Social links
 router.get('/social-links', userDataController.getSocialLinks);
 router.put('/social-links', userDataController.updateSocialLinks);

@@ -43,4 +43,7 @@ router.post('/reject-access', projectController.rejectProjectAccess);
 router.post('/revoke-access', projectController.revokeProjectAccess);
 router.post('/delete-access-request', projectController.deleteProjectAccessRequest);
 
+// Notification count APIs
+router.get('/notification-counts', projectController.getNotificationCounts);
+
 module.exports = router;

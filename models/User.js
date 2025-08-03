@@ -27,8 +27,10 @@ const UserSchema = new mongoose.Schema({
     requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   }],
   socialLinks: [{
+    type: { type: String, enum: ['project', 'social'], required: true },
     name: { type: String, required: true },
-    url: { type: String, required: true }
+    url: { type: String, required: true },
+    projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' }
   }]
 });
 

@@ -9,6 +9,11 @@ const connectionsHubContent = document.getElementById('connectionsHubContent');
 
 // State
 let currentHubTab = 'search';
+let notificationCounts = {
+    friendRequests: 0,
+    sharedWithMe: 0,
+    accessRequests: 0
+};
 
 // Navigation Items
 const navItems = [
@@ -16,7 +21,7 @@ const navItems = [
     { id: 'requests', icon: '📥', text: 'Friend Requests', badgeId: 'requestsBadge' },
     { id: 'friends', icon: '👥', text: 'My Friends' },
     { id: 'sharing', icon: '📤', text: 'My Project Sharing' },
-    { id: 'shared_with_me', icon: '🤝', text: 'Shared With Me' },
+    { id: 'shared_with_me', icon: '🤝', text: 'Shared With Me', badgeId: 'sharedWithMeBadge' },
     { id: 'access_requests', icon: '🔑', text: 'Access Requests', badgeId: 'accessRequestsBadge' },
 ];
 
@@ -26,6 +31,67 @@ function initializeConnectionsHub() {
     connectionsBtn.addEventListener('click', openConnectionsHub);
     closeConnectionsHubBtn.addEventListener('click', closeConnectionsHub);
     renderHubNavigation();
+    fetchNotificationCounts(); // Fetch initial counts
+}
+
+// Fetch notification counts from backend
+async function fetchNotificationCounts() {
+    try {
+        // Fetch friend requests count
+        const userDataRes = await fetch('/api/userdata/notification-counts');
+        if (userDataRes.ok) {
+            const userData = await userDataRes.json();
+            notificationCounts.friendRequests = userData.friendRequests || 0;
+        }
+
+        // Fetch project-related counts
+        const projectRes = await fetch('/api/projects/notification-counts');
+        if (projectRes.ok) {
+            const projectData = await projectRes.json();
+            notificationCounts.sharedWithMe = projectData.sharedWithMe || 0;
+            notificationCounts.accessRequests = projectData.accessRequests || 0;
+        }
+
+        updateNotificationBadges();
+    } catch (err) {
+        console.error('Failed to fetch notification counts:', err);
+    }
+}
+
+// Update notification badges in the UI
+function updateNotificationBadges() {
+    // Update friend requests badge
+    const requestsBadge = document.getElementById('requestsBadge');
+    if (requestsBadge) {
+        if (notificationCounts.friendRequests > 0) {
+            requestsBadge.textContent = notificationCounts.friendRequests;
+            requestsBadge.classList.remove('hidden');
+        } else {
+            requestsBadge.classList.add('hidden');
+        }
+    }
+
+    // Update shared with me badge (we'll add this to the nav)
+    const sharedWithMeBadge = document.getElementById('sharedWithMeBadge');
+    if (sharedWithMeBadge) {
+        if (notificationCounts.sharedWithMe > 0) {
+            sharedWithMeBadge.textContent = notificationCounts.sharedWithMe;
+            sharedWithMeBadge.classList.remove('hidden');
+        } else {
+            sharedWithMeBadge.classList.add('hidden');
+        }
+    }
+
+    // Update access requests badge
+    const accessRequestsBadge = document.getElementById('accessRequestsBadge');
+    if (accessRequestsBadge) {
+        if (notificationCounts.accessRequests > 0) {
+            accessRequestsBadge.textContent = notificationCounts.accessRequests;
+            accessRequestsBadge.classList.remove('hidden');
+        } else {
+            accessRequestsBadge.classList.add('hidden');
+        }
+    }
 }
 
 // Open/Close Hub
@@ -36,6 +102,7 @@ function openConnectionsHub() {
     connectionsHubModal.classList.remove('hidden');
     setTimeout(() => { connectionsHubModal.style.transform = 'translateX(0)'; }, 10);
     renderHubContent(currentHubTab);
+    fetchNotificationCounts(); // Refresh counts when hub opens
 }
 function closeConnectionsHub() {
     connectionsHubModal.style.transform = 'translateX(100%)';
@@ -48,7 +115,7 @@ function renderHubNavigation() {
         <a href="#" class="hub-nav-item flex items-center p-2 rounded-lg hover:bg-gray-200 text-gray-700 relative" data-tab="${item.id}">
             <span class="text-xl">${item.icon}</span>
             <span class="ml-3 hidden md:block">${item.text}</span>
-            ${item.badgeId ? `<span id="${item.badgeId}" class="badge hidden">0</span>` : ''}
+            ${item.badgeId ? `<span id="${item.badgeId}" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold hidden">0</span>` : ''}
         </a>
     `).join('');
     connectionsHubNav.querySelectorAll('.hub-nav-item').forEach(item => {
@@ -56,6 +123,7 @@ function renderHubNavigation() {
             e.preventDefault();
             currentHubTab = item.getAttribute('data-tab');
             renderHubContent(currentHubTab);
+            fetchNotificationCounts(); // Refresh counts when switching tabs
         });
     });
 }
@@ -127,6 +195,7 @@ async function renderUserSearchSection() {
                     if (res.ok) {
                         btn.innerText = 'Sent!';
                         btn.classList.add('bg-green-500');
+                        // Note: The recipient will get the count updated via WebSocket
                     } else {
                         btn.innerText = 'Error';
                     }
@@ -191,6 +260,7 @@ async function renderFriendRequestsSection() {
                         btn.innerText = 'Accepted!';
                         btn.classList.add('bg-blue-500');
                         await renderFriendRequestsSection();
+                        await fetchNotificationCounts(); // Refresh counts
                     } else {
                         btn.innerText = 'Error';
                     }
@@ -330,6 +400,7 @@ async function showFriendPublicProjectsModal(friendId) {
                     });
                     if (res.ok) {
                         btn.innerText = 'Request Sent';
+                        // Note: The project owner will get the count updated via WebSocket
                     } else {
                         btn.innerText = 'Error';
                     }
@@ -418,6 +489,7 @@ async function renderMyProjectSharingSection() {
                 const data = await res.json();
                 if (res.ok && data.success) {
                     await renderMyProjectSharingSection();
+                    await fetchNotificationCounts(); // Refresh counts when access is changed
                         } else {
                             btn.innerText = 'Error';
                         }
@@ -444,6 +516,7 @@ async function renderMyProjectSharingSection() {
                 const data = await res.json();
                 if (res.ok && data.success) {
                     await renderMyProjectSharingSection();
+                    await fetchNotificationCounts(); // Refresh counts when access is revoked
                         } else {
                             btn.innerText = 'Error';
                         }
@@ -669,6 +742,7 @@ async function renderAccessRequestsSection() {
                         body: JSON.stringify({ requestId: btn.getAttribute('data-requestid'), access: btn.getAttribute('data-access') })
                     });
                     await renderAccessRequestsSection();
+                    await fetchNotificationCounts(); // Refresh counts
                 } catch (err) {
                     btn.innerText = 'Error';
                 }
@@ -685,6 +759,7 @@ async function renderAccessRequestsSection() {
                         body: JSON.stringify({ requestId: btn.getAttribute('data-requestid') })
                     });
                     await renderAccessRequestsSection();
+                    await fetchNotificationCounts(); // Refresh counts
                 } catch (err) {
                     btn.innerText = 'Error';
                 }
@@ -761,6 +836,21 @@ document.addEventListener('DOMContentLoaded', async function() {
                 if (currentHubTab === 'shared_with_me') {
                     renderSharedWithMeSection();
                 }
+                fetchNotificationCounts(); // Refresh counts on real-time updates
+            }
+        });
+        
+        // Listen for friend request updates
+        socket.on('friend-request-sent', (data) => {
+            if (data.toUserId === currentUserId) {
+                fetchNotificationCounts(); // Refresh counts when new friend request is received
+            }
+        });
+        
+        // Listen for access request updates
+        socket.on('access-request-sent', (data) => {
+            if (data.projectOwnerId === currentUserId) {
+                fetchNotificationCounts(); // Refresh counts when new access request is received
             }
         });
     }

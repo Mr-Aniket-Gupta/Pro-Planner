@@ -173,14 +173,55 @@ exports.updateSocialLinks = async (req, res) => {
     try {
         const userId = req.session.userId;
         const { socialLinks } = req.body;
+        
+        // Validate the social links structure
+        if (Array.isArray(socialLinks)) {
+            for (const link of socialLinks) {
+                if (!link.type || !['project', 'social'].includes(link.type)) {
+                    return res.status(400).json({ error: 'Invalid link type' });
+                }
+                if (!link.name || !link.url) {
+                    return res.status(400).json({ error: 'Name and URL are required' });
+                }
+                if (link.type === 'project' && !link.projectId) {
+                    return res.status(400).json({ error: 'Project ID is required for project links' });
+                }
+            }
+        }
+        
         const user = await User.findByIdAndUpdate(
             userId,
             { socialLinks: socialLinks || [] },
             { new: true }
         ).select('socialLinks');
+        
         if (!user) return res.status(404).json({ error: 'User not found' });
         res.json({ socialLinks: user.socialLinks });
     } catch (err) {
+        console.error('Update social links error:', err);
         res.status(500).json({ error: 'Failed to update social links' });
+    }
+};
+
+// Get notification counts for the logged-in user
+exports.getNotificationCounts = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+        // Get pending friend requests count
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const friendRequestsCount = user.pendingRequests ? user.pendingRequests.length : 0;
+
+        res.json({
+            friendRequests: friendRequestsCount,
+            sharedWithMe: 0, // This will be calculated from project routes
+            accessRequests: 0 // This will be calculated from project routes
+        });
+    } catch (err) {
+        console.error('Get notification counts error:', err);
+        res.status(500).json({ error: 'Failed to get notification counts' });
     }
 }; 

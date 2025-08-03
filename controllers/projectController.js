@@ -2,6 +2,33 @@ const Project = require('../models/Project');
 const User = require('../models/User');
 const { io } = require('../server');
 
+// Get notification counts for projects
+exports.getNotificationCounts = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+        // Get shared with me count (projects shared with the user)
+        const sharedWithMeCount = await Project.countDocuments({
+            'sharedWith.user': userId
+        });
+
+        // Get access requests count (pending requests for user's projects)
+        const accessRequestsCount = await Project.countDocuments({
+            userId: userId,
+            'projectAccessRequests.status': 'pending'
+        });
+
+        res.json({
+            sharedWithMe: sharedWithMeCount,
+            accessRequests: accessRequestsCount
+        });
+    } catch (err) {
+        console.error('Get project notification counts error:', err);
+        res.status(500).json({ error: 'Failed to get project notification counts' });
+    }
+};
+
 // Create a new project
 exports.createProject = async (req, res) => {
     try {

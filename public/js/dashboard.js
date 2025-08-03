@@ -24,15 +24,28 @@ function renderProjectList() {
         document.getElementById('emptyProjectState').style.display = 'none';
         projects.forEach((project, idx) => {
             const linked = isProjectLinked(project._id);
+            const projectLink = getProjectSocialLink(project._id);
             let sharedLabel = project.isShared ? `<span class='ml-2 px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold'>Shared</span>` : '';
-            let linkedIcon = linked ? `<span class="ml-1 text-green-500" title="Linked in Social Links"><svg width="16" height="16" fill="none" viewBox="0 0 20 20"><path d="M7 10l2 2 4-4" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>` : '';
+            let linkedIcon = linked ? `<span class="ml-1 text-green-500" title="Linked in Social Links"></span>` : '';
+
+            // Show URL icon only if project has a saved URL
+            let urlIcon = '';
+            if (projectLink && projectLink.url && projectLink.url.trim()) {
+                urlIcon = `<a href="${projectLink.url}" target="_blank" class="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" title="Open Project URL (${projectLink.url})" onclick="event.stopPropagation();">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="2"/>
+                        <polyline points="15,3 21,3 21,9" stroke="currentColor" stroke-width="2"/>
+                        <line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                </a>`;
+            }
+
             const li = document.createElement('li');
-            li.className = 'flex items-center justify-between bg-blue-50 rounded-xl px-4 py-2 hover:bg-blue-100 cursor-pointer transition';
+            li.className = 'flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 rounded-xl px-4 py-2 hover:bg-blue-100 dark:hover:bg-blue-800/30 cursor-pointer transition';
             li.innerHTML = `
-                <span class="font-semibold text-blue-700 flex items-center gap-2">
+                <span class="font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
                   ${project.name}${sharedLabel}${!project.isShared && !project.isPublic ? ' <span style=\'color:#e02424;font-weight:bold\'>*</span>' : ''}
-                  <a href="/dashboard/project/${project._id}" target="_blank" class="ml-1 text-blue-500 hover:text-blue-700" title="Open Project Link"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M14 10V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-4" stroke="#2563eb" stroke-width="2"/><path d="M17 8l4 4m0 0l-4 4m4-4H9" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-                  ${linkedIcon}
+                  ${linkedIcon}${urlIcon}
                 </span>
                 <div class="flex gap-2">
                   <button onclick="selectProjectById('${project._id}')" class="ml-2 text-blue-400 hover:text-blue-600" title="Select"><svg width="18" height="18" fill="none" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" stroke="#3B82F6" stroke-width="1.5"/><path d="M6 9l2 2 4-4" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/></svg></button>
@@ -193,11 +206,17 @@ async function renderProjectDetails() {
 // Project Modal
 // Project add/edit modal ko show karta hai
 function showProjectForm(edit = false) {
+    if (!edit) {
+        // Add new project
+        openProjectAddModal();
+        return;
+    }
+
     let p = projects[selectedProjectIndex];
     let access = 'both';
     let isOwner = !p?.isShared;
     // For shared projects, use the latest fetched details if available
-    if (edit && p?.isShared) {
+    if (p?.isShared) {
         fetch(`/api/projects/${p._id}/details`).then(async res => {
             if (res.ok) {
                 const data = await res.json();
@@ -210,6 +229,31 @@ function showProjectForm(edit = false) {
         return;
     }
     openProjectEditModal(p, access, isOwner, false);
+}
+
+// Function to open add project modal
+function openProjectAddModal() {
+    document.getElementById('projectModal').classList.remove('hidden');
+    document.getElementById('projectModalTitle').innerText = 'Add New Project';
+
+    // Clear the form
+    document.getElementById('projectFormEl').reset();
+    document.getElementById('projectName').value = '';
+    document.getElementById('projectDescInput').value = '';
+
+    // Clear basic and advanced inputs
+    const basicDiv = document.getElementById('basicInputs');
+    const advDiv = document.getElementById('advancedInputs');
+    basicDiv.innerHTML = '<input type="text" class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 basic-input" placeholder="Basic Requirement" />';
+    advDiv.innerHTML = '<input type="text" class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 advanced-input" placeholder="Advanced Feature" />';
+
+    // Show make private option for new projects
+    const makePrivateDiv = document.getElementById('makeProjectPrivateDiv');
+    if (makePrivateDiv) makePrivateDiv.style.display = '';
+
+    // Clear notes
+    const projectQuickNotes = document.getElementById('projectQuickNotes');
+    if (projectQuickNotes) projectQuickNotes.value = '';
 }
 
 function openProjectEditModal(p, access, isOwner, isSharedEdit) {
@@ -757,6 +801,20 @@ async function fetchProjects() {
         }
         // Merge lists
         projects = [...ownProjects, ...sharedProjects];
+
+        // Load social links if not already loaded
+        if (socialLinks.length === 0) {
+            try {
+                const socialRes = await fetch('/api/userdata/social-links');
+                if (socialRes.ok) {
+                    const socialData = await socialRes.json();
+                    socialLinks = Array.isArray(socialData.socialLinks) ? socialData.socialLinks : [];
+                }
+            } catch (err) {
+                console.error('Failed to load social links:', err);
+            }
+        }
+
         renderProjectList();
         addActivityFeed('Projects loaded');
     } catch (err) {
@@ -1874,8 +1932,8 @@ const settingsHubContent = document.getElementById('settingsHubContent');
 const settingsNavItems = [
     { id: 'profile', icon: '👤', text: 'Profile' },
     { id: 'emails', icon: '📧', text: 'Emails' },
-    { id: 'preferences', icon: '⚙️', text: 'Preferences' },
     { id: 'social', icon: '🌐', text: 'Social Media' },
+    { id: 'preferences', icon: '⚙️', text: 'Preferences' },
 ];
 let currentSettingsTab = 'profile';
 
@@ -2027,27 +2085,102 @@ function renderSettingsContent(tabId) {
         case 'social':
             // Fetch from backend API
             settingsHubContent.innerHTML = `
-                <h2 class="text-xl font-bold text-blue-600 mb-4">Social Media</h2>
-                <div id="socialLinksList" class="space-y-2 mb-4"></div>
-                <div class="flex flex-col sm:flex-row gap-2 mt-2">
-                    <button type="button" id="addMoreSocialBtn" class="bg-blue-500 text-white px-3 py-1 rounded-xl font-semibold hover:bg-blue-600 transition text-base">Add More Social</button>
-                    <button type="button" id="saveSocialLinksBtn" class="bg-gradient-to-r from-blue-400 to-blue-600 text-white px-4 py-2 rounded-xl font-semibold shadow hover:from-blue-500 hover:to-blue-700 transition">Save Social Links</button>
+                <h2 class="text-xl font-bold text-blue-600 dark:text-blue-400 mb-6">Social Media & Project Links</h2>
+                
+                <!-- Top Section: Add Project URL -->
+                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 md:p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-blue-700 dark:text-blue-300 mb-4 flex items-center gap-2">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2"/>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        Add Project URL
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                        <select id="projectUrlSelect" class="border border-blue-200 dark:border-blue-600 p-3 rounded-xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-600 text-blue-700 dark:text-blue-300">
+                            <option value="">Select a project...</option>
+                        </select>
+                        <input type="url" id="projectUrlInput" placeholder="Enter project URL..." 
+                               class="border border-blue-200 dark:border-blue-600 p-3 rounded-xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-600 text-blue-700 dark:text-blue-300 placeholder-blue-400 dark:placeholder-blue-500 md:col-span-2">
                     </div>
+                    <button type="button" id="addProjectUrlBtn" 
+                            class="bg-gradient-to-r from-blue-400 to-blue-600 text-white px-4 md:px-6 py-3 rounded-xl font-semibold shadow hover:from-blue-500 hover:to-blue-700 transition flex items-center gap-2 w-full md:w-auto justify-center">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                            <path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        Add Project URL
+                    </button>
+                </div>
+
+                <!-- Middle Section: Show Added Project Links -->
+                <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 md:p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-green-700 dark:text-green-300 mb-4 flex items-center gap-2">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                            <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        Project URLs
+                    </h3>
+                    <div id="projectUrlsList" class="space-y-3">
+                        <!-- Project URLs will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Bottom Section: Social Media Links -->
+                <div class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 md:p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-purple-700 dark:text-purple-300 mb-4 flex items-center gap-2">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        Social Media Links
+                    </h3>
+                    <div id="socialLinksList" class="space-y-3 mb-4">
+                        <!-- Social media links will be injected here -->
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <button type="button" id="addMoreSocialBtn" class="bg-purple-500 text-white px-3 py-2 rounded-xl font-semibold hover:bg-purple-600 transition">Add More Social</button>
+                    </div>
+                </div>
+                <button type="button" id="saveSocialLinksBtn" class="bg-gradient-to-r from-purple-400 to-purple-600 text-white px-4 py-2 rounded-xl font-semibold shadow hover:from-purple-500 hover:to-purple-700 transition">Save All Social Links</button>
             `;
             document.getElementById('socialLinksList').innerHTML = '<div class="text-gray-400 text-center py-4">Loading...</div>';
+            document.getElementById('projectUrlsList').innerHTML = '<div class="text-gray-400 text-center py-4">Loading...</div>';
             fetch('/api/userdata/social-links')
                 .then(res => res.json())
                 .then(data => {
-                    socialLinks = Array.isArray(data.socialLinks) && data.socialLinks.length > 0 ? data.socialLinks : [{ name: '', url: '' }];
+                    socialLinks = Array.isArray(data.socialLinks) ? data.socialLinks : [];
                     renderSocialLinks();
+                    renderProjectUrlsList();
+                    renderProjectList(); // update URL icons in project list
                 })
                 .catch(() => {
                     document.getElementById('socialLinksList').innerHTML = '<div class="text-red-500 text-center py-4">Failed to load social links.</div>';
-                    socialLinks = [{ name: '', url: '' }];
+                    document.getElementById('projectUrlsList').innerHTML = '<div class="text-red-500 text-center py-4">Failed to load project URLs.</div>';
+                    socialLinks = [];
                 });
-            document.getElementById('saveSocialLinksBtn').onclick = async function() {
-                // Only save project links and custom links with both name and url
-                const filtered = socialLinks.filter(link => (link.projectId && link.name.trim() && link.url.trim()) || (!link.projectId && link.name.trim() && link.url.trim()));
+            // Populate project dropdown
+            populateProjectUrlDropdown();
+
+            // Render project URLs list
+            renderProjectUrlsList();
+
+            // Add event listeners for new functionality
+            document.getElementById('addProjectUrlBtn').onclick = addProjectUrl;
+            document.getElementById('addMoreSocialBtn').onclick = addMoreSocialLink;
+
+            document.getElementById('saveSocialLinksBtn').onclick = async function () {
+                // Filter out empty links and ensure all links have required fields
+                const filtered = socialLinks.filter(link => {
+                    if (link.type === 'project') {
+                        // Project links must have type, projectId, name, and url
+                        return link.name.trim() && link.url.trim() && link.projectId;
+                    } else if (link.type === 'social') {
+                        // Social links must have type, name, and url
+                        return link.name.trim() && link.url.trim();
+                    }
+                    return false;
+                });
+
                 try {
                     const res = await fetch('/api/userdata/social-links', {
                         method: 'PUT',
@@ -2057,13 +2190,15 @@ function renderSettingsContent(tabId) {
                     const data = await res.json();
                     if (data.socialLinks) {
                         Swal.fire({ icon: 'success', title: 'Saved!', text: 'Social links updated.' });
-                        socialLinks = data.socialLinks.length > 0 ? data.socialLinks : [{ name: '', url: '' }];
+                        socialLinks = data.socialLinks;
                         renderSocialLinks();
-                        renderProjectList(); // update linked icons
+                        renderProjectUrlsList();
+                        renderProjectList(); // update URL icons in project list
                     } else {
                         Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Failed to save social links.' });
                     }
                 } catch (err) {
+                    console.error('Save error:', err);
                     Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save social links.' });
                 }
             };
@@ -2076,138 +2211,263 @@ if (settingsBtn) settingsBtn.addEventListener('click', openSettingsHub);
 if (closeSettingsHubBtn) closeSettingsHubBtn.addEventListener('click', closeSettingsHub);
 
 // Social Media Links Logic
-let socialLinks = [
-  { name: '', url: '' }
-];
+let socialLinks = [];
+
+// Project URL Functions
+function populateProjectUrlDropdown() {
+    const select = document.getElementById('projectUrlSelect');
+    if (!select) return;
+
+    // Clear existing options except the first one
+    select.innerHTML = '<option value="">Select a project...</option>';
+
+    // Add project options
+    if (Array.isArray(projects) && projects.length > 0) {
+        projects.forEach(project => {
+            const option = document.createElement('option');
+            option.value = project._id;
+            option.textContent = project.name;
+            select.appendChild(option);
+        });
+    }
+}
+
+function renderProjectUrlsList() {
+    const container = document.getElementById('projectUrlsList');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    // Get project links from socialLinks
+    const projectLinks = socialLinks.filter(link => link.type === 'project');
+
+    if (projectLinks.length === 0) {
+        container.innerHTML = '<div class="text-gray-500 text-center py-4">No project URLs added yet.</div>';
+        return;
+    }
+
+    projectLinks.forEach((link, index) => {
+        const item = document.createElement('div');
+        item.className = 'flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-700';
+        item.innerHTML = `
+            <div class="flex-1">
+                <h4 class="font-semibold text-green-800 dark:text-green-300">${link.name}</h4>
+                <p class="text-sm text-green-600 dark:text-green-400 truncate">${link.url}</p>
+            </div>
+            <div class="flex items-center gap-2 ml-4">
+                <button type="button" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300" title="Open URL" onclick="window.open('${link.url}', '_blank')">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="2"/>
+                        <polyline points="15,3 21,3 21,9" stroke="currentColor" stroke-width="2"/>
+                        <line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                </button>
+                <button type="button" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" title="Remove" onclick="removeProjectUrl(${index})">
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+        container.appendChild(item);
+    });
+}
+
+function addProjectUrl() {
+    const projectId = document.getElementById('projectUrlSelect').value;
+    const url = document.getElementById('projectUrlInput').value.trim();
+
+    if (!projectId) {
+        Swal.fire({ icon: 'warning', title: 'Select Project', text: 'Please select a project first.' });
+        return;
+    }
+
+    if (!url) {
+        Swal.fire({ icon: 'warning', title: 'Enter URL', text: 'Please enter a project URL.' });
+        return;
+    }
+
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        Swal.fire({ icon: 'warning', title: 'Invalid URL', text: 'Please enter a valid URL starting with http:// or https://' });
+        return;
+    }
+
+    // Check if project already has a URL
+    const existingIndex = socialLinks.findIndex(link => link.type === 'project' && link.projectId === projectId);
+    const project = projects.find(p => p._id === projectId);
+
+    if (existingIndex !== -1) {
+        // Update existing
+        socialLinks[existingIndex].url = url;
+        socialLinks[existingIndex].name = project.name;
+    } else {
+        // Add new
+        socialLinks.push({
+            type: 'project',
+            projectId: projectId,
+            name: project.name,
+            url: url
+        });
+    }
+
+    // Clear form
+    document.getElementById('projectUrlSelect').value = '';
+    document.getElementById('projectUrlInput').value = '';
+
+    // Re-render
+    renderProjectUrlsList();
+    renderSocialLinks();
+    renderProjectList(); // update URL icons in project list
+
+    Swal.fire({ icon: 'success', title: 'Added!', text: 'Project URL added successfully.' });
+}
+
+function removeProjectUrl(index) {
+    const projectLinks = socialLinks.filter(link => link.type === 'project');
+    const linkToRemove = projectLinks[index];
+    const actualIndex = socialLinks.findIndex(link => link === linkToRemove);
+
+    if (actualIndex !== -1) {
+        socialLinks.splice(actualIndex, 1);
+        renderProjectUrlsList();
+        renderSocialLinks();
+        renderProjectList(); // update URL icons in project list
+        Swal.fire({ icon: 'success', title: 'Removed!', text: 'Project URL removed successfully.' });
+    }
+}
+
+function addMoreSocialLink() {
+    socialLinks.push({ type: 'social', name: '', url: '' });
+    renderSocialLinks();
+}
 
 // Helper: Check if a project is linked in socialLinks
 function isProjectLinked(projectId) {
-  return socialLinks.some(link => link.projectId === projectId);
+    return socialLinks.some(link => link.type === 'project' && link.projectId === projectId);
 }
 
 // Helper: Get the social link object for a project
 function getProjectSocialLink(projectId) {
-  return socialLinks.find(link => link.projectId === projectId);
+    return socialLinks.find(link => link.type === 'project' && link.projectId === projectId);
 }
 
-// Update renderSocialLinks to allow adding/removing/editing project links
+// Render only social media links (not project links)
 function renderSocialLinks() {
-  const list = document.getElementById('socialLinksList');
-  if (!list) return;
-  list.innerHTML = '';
-  // Render all projects with toggle/add/edit/delete
-  if (Array.isArray(projects) && projects.length > 0) {
-    projects.forEach((project) => {
-      const linked = isProjectLinked(project._id);
-      const linkObj = getProjectSocialLink(project._id);
-      const row = document.createElement('div');
-      row.className = 'flex flex-col sm:flex-row items-center gap-2 project-link-row';
-      if (linked) {
+    const list = document.getElementById('socialLinksList');
+    if (!list) return;
+    list.innerHTML = '';
+
+    // Only render social links (not project links)
+    const socialOnlyLinks = socialLinks.filter(link => link.type === 'social');
+
+    if (socialOnlyLinks.length === 0) {
+        list.innerHTML = '<div class="text-gray-500 dark:text-gray-400 text-center py-4">No social media links added yet.</div>';
+        return;
+    }
+
+    socialOnlyLinks.forEach((link, idx) => {
+        const row = document.createElement('div');
+        row.className = 'flex flex-col sm:flex-row items-center gap-2 social-link-row bg-white dark:bg-gray-800 p-3 rounded-lg border border-purple-200 dark:border-purple-700';
         row.innerHTML = `
-          <input type="text" value="${linkObj.name || project.name}" class="border border-blue-200 p-2 rounded-xl bg-blue-50 flex-1 w-full sm:w-auto font-semibold text-blue-700" data-project-id="${project._id}" data-type="name" />
-          <input type="url" value="${linkObj.url || `${window.location.origin}/dashboard/project/${project._id}`}" class="border border-blue-200 p-2 rounded-xl bg-blue-50 flex-1 w-full sm:w-auto text-blue-600" data-project-id="${project._id}" data-type="url" />
-          <button type="button" class="text-blue-600 hover:text-blue-800" title="Open Project" onclick="window.open('${linkObj.url || `${window.location.origin}/dashboard/project/${project._id}`}','_blank')">
-            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M14 10V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-4" stroke="#2563eb" stroke-width="2"/><path d="M17 8l4 4m0 0l-4 4m4-4H9" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <button type="button" class="text-red-500 hover:text-red-700" data-project-id="${project._id}" data-action="remove-project-link" title="Remove"><svg width="18" height="18" fill="none" viewBox="0 0 18 18"><path d="M6 6l6 6M6 12L12 6" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/></svg></button>
-        `;
-      } else {
-        row.innerHTML = `
-          <input type="text" value="${project.name}" class="border border-blue-200 p-2 rounded-xl bg-blue-50 flex-1 w-full sm:w-auto font-semibold text-blue-700" readonly />
-          <input type="url" value="${window.location.origin}/dashboard/project/${project._id}" class="border border-blue-200 p-2 rounded-xl bg-blue-50 flex-1 w-full sm:w-auto text-blue-600" readonly />
-          <button type="button" class="text-blue-600 hover:text-blue-800" title="Open Project" onclick="window.open('${window.location.origin}/dashboard/project/${project._id}','_blank')">
-            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M14 10V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-4" stroke="#2563eb" stroke-width="2"/><path d="M17 8l4 4m0 0l-4 4m4-4H9" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <button type="button" class="text-green-500 hover:text-green-700" data-project-id="${project._id}" data-action="add-project-link" title="Add to Social Links"><svg width="18" height="18" fill="none" viewBox="0 0 18 18"><path d="M9 3v12M3 9h12" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/></svg></button>
-        `;
-      }
-      list.appendChild(row);
-    });
-  }
-  // Render editable social links (not project links)
-  socialLinks.forEach((link, idx) => {
-    if (link.projectId) return; // skip project links already rendered
-    const row = document.createElement('div');
-    row.className = 'flex flex-col sm:flex-row items-center gap-2 social-link-row';
-    row.innerHTML = `
-      <input type="text" placeholder="Name (e.g. LinkedIn, GitHub, Portfolio)" value="${link.name || ''}" class="border border-blue-200 p-2 rounded-xl bg-blue-50 flex-1 w-full sm:w-auto" data-idx="${idx}" data-type="name" />
-      <input type="url" placeholder="URL" value="${link.url || ''}" class="border border-blue-200 p-2 rounded-xl bg-blue-50 flex-1 w-full sm:w-auto" data-idx="${idx}" data-type="url" />
-      <button type="button" class="text-blue-600 hover:text-blue-800" data-idx="${idx}" data-action="open-link" title="Open Link">
-        <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M14 10V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-4" stroke="#2563eb" stroke-width="2"/><path d="M17 8l4 4m0 0l-4 4m4-4H9" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <input type="text" placeholder="Name (e.g. LinkedIn, GitHub, Portfolio)" value="${link.name || ''}" class="border border-purple-200 dark:border-purple-600 p-2 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex-1 w-full sm:w-auto text-purple-700 dark:text-purple-300 placeholder-purple-400 dark:placeholder-purple-500" data-idx="${idx}" data-type="name" />
+      <input type="url" placeholder="URL" value="${link.url || ''}" class="border border-purple-200 dark:border-purple-600 p-2 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex-1 w-full sm:w-auto text-purple-700 dark:text-purple-300 placeholder-purple-400 dark:placeholder-purple-500" data-idx="${idx}" data-type="url" />
+      <button type="button" class="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300" data-idx="${idx}" data-action="open-link" title="Open Link">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="2"/>
+          <polyline points="15,3 21,3 21,9" stroke="currentColor" stroke-width="2"/>
+          <line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="2"/>
+        </svg>
       </button>
-      ${socialLinks.length > 1 ? `<button type="button" class="text-red-500 hover:text-red-700" data-idx="${idx}" data-action="remove-link" title="Remove"><svg width="18" height="18" fill="none" viewBox="0 0 18 18"><path d="M6 6l6 6M6 12L12 6" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/></svg></button>` : ''}
+      <button type="button" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" data-idx="${idx}" data-action="remove-link" title="Remove">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
     `;
-    list.appendChild(row);
-  });
+        list.appendChild(row);
+    });
 }
 
-// Update input/change/click handlers for project link add/remove/edit
-window.addEventListener('input', function(e) {
-  // Project link edit
-  if (e.target.closest('.project-link-row')) {
-    const projectId = e.target.dataset.projectId;
-    const type = e.target.dataset.type;
-    if (projectId && type) {
-      let link = getProjectSocialLink(projectId);
-      if (link) {
-        link[type] = e.target.value;
-      }
+// Update input/change handlers for social link editing
+window.addEventListener('input', function (e) {
+    // Social link edit
+    if (e.target.closest('#socialLinksList') && e.target.dataset.idx !== undefined) {
+        const idx = e.target.dataset.idx;
+        const type = e.target.dataset.type;
+        if (type && idx !== undefined) {
+            const socialOnlyLinks = socialLinks.filter(link => link.type === 'social');
+            const linkToUpdate = socialOnlyLinks[idx];
+            const actualIndex = socialLinks.findIndex(link => link === linkToUpdate);
+            if (actualIndex !== -1) {
+                socialLinks[actualIndex][type] = e.target.value;
+            }
+        }
     }
-  }
-  // Social link edit
-  if (e.target.closest('#socialLinksList') && e.target.dataset.idx !== undefined) {
-    const idx = e.target.dataset.idx;
-    const type = e.target.dataset.type;
-    if (type && idx !== undefined) {
-      socialLinks[idx][type] = e.target.value;
-    }
-  }
 });
-window.addEventListener('click', function(e) {
-  // Add project link
-  if (e.target.closest('[data-action="add-project-link"]')) {
-    const projectId = e.target.closest('[data-action="add-project-link"]').dataset.projectId;
-    const project = projects.find(p => p._id === projectId);
-    if (project && !isProjectLinked(projectId)) {
-      socialLinks.push({ projectId, name: project.name, url: `${window.location.origin}/dashboard/project/${projectId}` });
-    renderSocialLinks();
-  }
-  }
-  // Remove project link
-  if (e.target.closest('[data-action="remove-project-link"]')) {
-    const projectId = e.target.closest('[data-action="remove-project-link"]').dataset.projectId;
-    const idx = socialLinks.findIndex(link => link.projectId === projectId);
-    if (idx !== -1) {
-      socialLinks.splice(idx, 1);
-      renderSocialLinks();
+window.addEventListener('click', function (e) {
+    // Open link (social media)
+    if (e.target.closest('[data-action="open-link"]')) {
+        const idx = e.target.closest('[data-action="open-link"]').dataset.idx;
+        const socialOnlyLinks = socialLinks.filter(link => link.type === 'social');
+        const url = socialOnlyLinks[idx].url;
+        if (url && /^https?:\/\//.test(url)) {
+            window.open(url, '_blank');
+        } else {
+            Swal.fire({ icon: 'warning', title: 'Invalid URL', text: 'Please enter a valid URL (starting with http:// or https://)' });
+        }
     }
-  }
-  // Open link (custom social)
-  if (e.target.closest('[data-action="open-link"]')) {
-    const idx = e.target.closest('[data-action="open-link"]').dataset.idx;
-    const url = socialLinks[idx].url;
-    if (url && /^https?:\/\//.test(url)) {
-      window.open(url, '_blank');
-    } else {
-      alert('Please enter a valid URL (starting with http:// or https://)');
+    // Remove social link
+    if (e.target.closest('[data-action="remove-link"]')) {
+        const idx = e.target.closest('[data-action="remove-link"]').dataset.idx;
+        const socialOnlyLinks = socialLinks.filter(link => link.type === 'social');
+        const linkToRemove = socialOnlyLinks[idx];
+        const actualIndex = socialLinks.findIndex(link => link === linkToRemove);
+        if (actualIndex !== -1) {
+            socialLinks.splice(actualIndex, 1);
+            renderSocialLinks();
+        }
     }
-  }
-  // Remove custom social link
-  if (e.target.closest('[data-action="remove-link"]')) {
-    const idx = e.target.closest('[data-action="remove-link"]').dataset.idx;
-    socialLinks.splice(idx, 1);
-    renderSocialLinks();
-  }
-  // Add more social (custom)
-  if (e.target.closest('#addMoreSocialBtn')) {
-    socialLinks.push({ name: '', url: '' });
-    renderSocialLinks();
-  }
+    // Add more social (custom)
+    if (e.target.closest('#addMoreSocialBtn')) {
+        socialLinks.push({ type: 'social', name: '', url: '' });
+        renderSocialLinks();
+    }
 });
 
 // Initial render when settings modal opens
 function openSettingsModal() {
-  // ...existing code...
-  renderSocialLinks();
-  // ...rest of your code...
+    // ...existing code...
+    renderSocialLinks();
+    renderProjectList(); // ensure URL icons are shown
+    // ...rest of your code...
 }
+
+// Event Listeners
+document.addEventListener('DOMContentLoaded', function () {
+    // Project modal close button
+    const closeProjectFormBtn = document.getElementById('closeProjectFormBtn');
+    if (closeProjectFormBtn) {
+        closeProjectFormBtn.addEventListener('click', closeProjectForm);
+    }
+
+    // Add basic input button
+    const addBasicInputBtn = document.getElementById('addBasicInputBtn');
+    if (addBasicInputBtn) {
+        addBasicInputBtn.addEventListener('click', () => addBasicInput());
+    }
+
+    // Add advanced input button
+    const addAdvancedInputBtn = document.getElementById('addAdvancedInputBtn');
+    if (addAdvancedInputBtn) {
+        addAdvancedInputBtn.addEventListener('click', () => addAdvancedInput());
+    }
+
+    // Auto-resize project notes textarea
+    const projectQuickNotes = document.getElementById('projectQuickNotes');
+    if (projectQuickNotes) {
+        projectQuickNotes.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    }
+});
