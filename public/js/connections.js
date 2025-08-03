@@ -50,6 +50,7 @@ async function fetchNotificationCounts() {
             const projectData = await projectRes.json();
             notificationCounts.sharedWithMe = projectData.sharedWithMe || 0;
             notificationCounts.accessRequests = projectData.accessRequests || 0;
+
         }
 
         updateNotificationBadges();
@@ -123,7 +124,10 @@ function renderHubNavigation() {
             e.preventDefault();
             currentHubTab = item.getAttribute('data-tab');
             renderHubContent(currentHubTab);
-            fetchNotificationCounts(); // Refresh counts when switching tabs
+            // Refresh counts when switching to access requests tab
+            if (currentHubTab === 'access_requests') {
+                fetchNotificationCounts();
+            }
         });
     });
 }
@@ -260,7 +264,7 @@ async function renderFriendRequestsSection() {
                         btn.innerText = 'Accepted!';
                         btn.classList.add('bg-blue-500');
                         await renderFriendRequestsSection();
-                        await fetchNotificationCounts(); // Refresh counts
+                        await fetchNotificationCounts(); // Refresh friend request counts
                     } else {
                         btn.innerText = 'Error';
                     }
@@ -401,6 +405,14 @@ async function showFriendPublicProjectsModal(friendId) {
                     if (res.ok) {
                         btn.innerText = 'Request Sent';
                         // Note: The project owner will get the count updated via WebSocket
+                        // We could also emit a socket event here to notify the project owner
+                        if (socket) {
+                            socket.emit('access-request-sent', {
+                                projectId: projectId,
+                                projectOwnerId: friendId,
+                                access: access
+                            });
+                        }
                     } else {
                         btn.innerText = 'Error';
                     }
@@ -489,7 +501,7 @@ async function renderMyProjectSharingSection() {
                 const data = await res.json();
                 if (res.ok && data.success) {
                     await renderMyProjectSharingSection();
-                    await fetchNotificationCounts(); // Refresh counts when access is changed
+                    await fetchNotificationCounts(); // Refresh counts when project access is changed
                         } else {
                             btn.innerText = 'Error';
                         }
@@ -516,7 +528,7 @@ async function renderMyProjectSharingSection() {
                 const data = await res.json();
                 if (res.ok && data.success) {
                     await renderMyProjectSharingSection();
-                    await fetchNotificationCounts(); // Refresh counts when access is revoked
+                    await fetchNotificationCounts(); // Refresh counts when project access is revoked
                         } else {
                             btn.innerText = 'Error';
                         }
@@ -694,6 +706,9 @@ async function renderAccessRequestsSection() {
         <div id="accessRequestsList" class="space-y-2"></div>`;
     const listDiv = document.getElementById('accessRequestsList');
     listDiv.innerHTML = '<div class="text-blue-400 text-center">Loading...</div>';
+    
+    // Refresh notification counts when this section is rendered
+    await fetchNotificationCounts();
     try {
         const res = await fetch('/api/projects/access-requests');
         const requests = await res.json();
@@ -736,13 +751,15 @@ async function renderAccessRequestsSection() {
                 btn.disabled = true;
                 btn.innerText = 'Approving...';
                 try {
-                    await fetch('/api/projects/approve-access', {
+                    const res = await fetch('/api/projects/approve-access', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ requestId: btn.getAttribute('data-requestid'), access: btn.getAttribute('data-access') })
                     });
-                    await renderAccessRequestsSection();
-                    await fetchNotificationCounts(); // Refresh counts
+                    if (res.ok) {
+                        await renderAccessRequestsSection();
+                        await fetchNotificationCounts(); // Refresh counts
+                    }
                 } catch (err) {
                     btn.innerText = 'Error';
                 }
@@ -753,13 +770,15 @@ async function renderAccessRequestsSection() {
                 btn.disabled = true;
                 btn.innerText = 'Rejecting...';
                 try {
-                    await fetch('/api/projects/reject-access', {
+                    const res = await fetch('/api/projects/reject-access', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ requestId: btn.getAttribute('data-requestid') })
                     });
-                    await renderAccessRequestsSection();
-                    await fetchNotificationCounts(); // Refresh counts
+                    if (res.ok) {
+                        await renderAccessRequestsSection();
+                        await fetchNotificationCounts(); // Refresh counts
+                    }
                 } catch (err) {
                     btn.innerText = 'Error';
                 }

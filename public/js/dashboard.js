@@ -2353,9 +2353,9 @@ function getProjectSocialLink(projectId) {
 
 // Render only social media links (not project links)
 function renderSocialLinks() {
-    const list = document.getElementById('socialLinksList');
-    if (!list) return;
-    list.innerHTML = '';
+  const list = document.getElementById('socialLinksList');
+  if (!list) return;
+  list.innerHTML = '';
 
     // Only render social links (not project links)
     const socialOnlyLinks = socialLinks.filter(link => link.type === 'social');
@@ -2366,7 +2366,7 @@ function renderSocialLinks() {
     }
 
     socialOnlyLinks.forEach((link, idx) => {
-        const row = document.createElement('div');
+      const row = document.createElement('div');
         row.className = 'flex flex-col sm:flex-row items-center gap-2 social-link-row bg-white dark:bg-gray-800 p-3 rounded-lg border border-purple-200 dark:border-purple-700';
         row.innerHTML = `
       <input type="text" placeholder="Name (e.g. LinkedIn, GitHub, Portfolio)" value="${link.name || ''}" class="border border-purple-200 dark:border-purple-600 p-2 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex-1 w-full sm:w-auto text-purple-700 dark:text-purple-300 placeholder-purple-400 dark:placeholder-purple-500" data-idx="${idx}" data-type="name" />
@@ -2377,24 +2377,24 @@ function renderSocialLinks() {
           <polyline points="15,3 21,3 21,9" stroke="currentColor" stroke-width="2"/>
           <line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="2"/>
         </svg>
-      </button>
+          </button>
       <button type="button" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" data-idx="${idx}" data-action="remove-link" title="Remove">
         <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
           <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
-      </button>
+          </button>
     `;
-        list.appendChild(row);
-    });
+    list.appendChild(row);
+  });
 }
 
 // Update input/change handlers for social link editing
 window.addEventListener('input', function (e) {
-    // Social link edit
-    if (e.target.closest('#socialLinksList') && e.target.dataset.idx !== undefined) {
-        const idx = e.target.dataset.idx;
-        const type = e.target.dataset.type;
-        if (type && idx !== undefined) {
+  // Social link edit
+  if (e.target.closest('#socialLinksList') && e.target.dataset.idx !== undefined) {
+    const idx = e.target.dataset.idx;
+    const type = e.target.dataset.type;
+    if (type && idx !== undefined) {
             const socialOnlyLinks = socialLinks.filter(link => link.type === 'social');
             const linkToUpdate = socialOnlyLinks[idx];
             const actualIndex = socialLinks.findIndex(link => link === linkToUpdate);
@@ -2406,40 +2406,40 @@ window.addEventListener('input', function (e) {
 });
 window.addEventListener('click', function (e) {
     // Open link (social media)
-    if (e.target.closest('[data-action="open-link"]')) {
-        const idx = e.target.closest('[data-action="open-link"]').dataset.idx;
+  if (e.target.closest('[data-action="open-link"]')) {
+    const idx = e.target.closest('[data-action="open-link"]').dataset.idx;
         const socialOnlyLinks = socialLinks.filter(link => link.type === 'social');
         const url = socialOnlyLinks[idx].url;
-        if (url && /^https?:\/\//.test(url)) {
-            window.open(url, '_blank');
-        } else {
+    if (url && /^https?:\/\//.test(url)) {
+      window.open(url, '_blank');
+    } else {
             Swal.fire({ icon: 'warning', title: 'Invalid URL', text: 'Please enter a valid URL (starting with http:// or https://)' });
-        }
     }
+  }
     // Remove social link
-    if (e.target.closest('[data-action="remove-link"]')) {
-        const idx = e.target.closest('[data-action="remove-link"]').dataset.idx;
+  if (e.target.closest('[data-action="remove-link"]')) {
+    const idx = e.target.closest('[data-action="remove-link"]').dataset.idx;
         const socialOnlyLinks = socialLinks.filter(link => link.type === 'social');
         const linkToRemove = socialOnlyLinks[idx];
         const actualIndex = socialLinks.findIndex(link => link === linkToRemove);
         if (actualIndex !== -1) {
             socialLinks.splice(actualIndex, 1);
-            renderSocialLinks();
+    renderSocialLinks();
         }
-    }
-    // Add more social (custom)
-    if (e.target.closest('#addMoreSocialBtn')) {
+  }
+  // Add more social (custom)
+  if (e.target.closest('#addMoreSocialBtn')) {
         socialLinks.push({ type: 'social', name: '', url: '' });
-        renderSocialLinks();
-    }
+    renderSocialLinks();
+  }
 });
 
 // Initial render when settings modal opens
 function openSettingsModal() {
-    // ...existing code...
-    renderSocialLinks();
+  // ...existing code...
+  renderSocialLinks();
     renderProjectList(); // ensure URL icons are shown
-    // ...rest of your code...
+  // ...rest of your code...
 }
 
 // Event Listeners

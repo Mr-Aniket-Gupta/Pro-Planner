@@ -14,10 +14,15 @@ exports.getNotificationCounts = async (req, res) => {
         });
 
         // Get access requests count (pending requests for user's projects)
-        const accessRequestsCount = await Project.countDocuments({
-            userId: userId,
-            'projectAccessRequests.status': 'pending'
-        });
+        // Access requests are stored in the project owner's User document
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        // Count pending access requests where current user is the project owner
+        const accessRequestsCount = user.projectAccessRequests ? 
+            user.projectAccessRequests.filter(req => req.status === 'pending').length : 0;
+
+
 
         res.json({
             sharedWithMe: sharedWithMeCount,
