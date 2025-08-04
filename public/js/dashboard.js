@@ -1149,21 +1149,337 @@ async function saveProjectDeadline(projectId, deadline) {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to save deadline!' });
     }
 }
-// Project ko PDF me export karta hai
+// Project ko PDF me export karta hai - Enhanced Professional Version
 async function exportProjectPDF(projectId) {
-    const project = projects.find(p => p._id === projectId);
-    if (!project) return;
-    const tasks = taskList.filter(t => t.projectId === projectId);
-    const doc = new window.jspdf.jsPDF();
-    doc.text(`Project: ${project.name}`, 10, 10);
-    doc.text(`Description: ${project.desc}`, 10, 20);
-    doc.text(`Deadline: ${project.deadline ? new Date(project.deadline).toLocaleDateString() : 'N/A'}`, 10, 30);
-    doc.text(`Progress: ${getProjectProgress(projectId)}%`, 10, 40);
-    doc.text('Tasks:', 10, 50);
-    tasks.forEach((t, i) => {
-        doc.text(`- [${t.completed ? 'x' : ' '}] ${t.text} (${t.tag || ''})`, 12, 60 + i * 8);
-    });
-    doc.save(`${project.name}_project.pdf`);
+    try {
+        // Show loading state
+        const exportBtn = document.getElementById('exportProjectBtn');
+        if (exportBtn) {
+            const originalText = exportBtn.innerHTML;
+            exportBtn.innerHTML = `
+                <svg class="animate-spin" width="18" height="18" fill="none" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-dasharray="31.416" stroke-dashoffset="31.416"/>
+                </svg>
+                Generating PDF...
+            `;
+            exportBtn.disabled = true;
+        }
+        
+        const project = projects.find(p => p._id === projectId);
+        if (!project) {
+            showAlert({ icon: 'error', title: 'Project Not Found', text: 'Unable to find project for PDF export.' });
+            return;
+        }
+
+        const tasks = taskList.filter(t => t.projectId === projectId);
+        const doc = new window.jspdf.jsPDF();
+        
+        // Set font and styling
+        doc.setFont('helvetica');
+        doc.setFontSize(12);
+        
+        let yPosition = 25;
+        const leftMargin = 25;
+        const rightMargin = 185;
+        const lineHeight = 8;
+        const sectionSpacing = 20;
+        
+        // ===== HEADER =====
+        doc.setFontSize(24);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 64, 175); // Blue color
+        doc.text('PROJECT REPORT', 105, yPosition, { align: 'center' });
+        
+        yPosition += 25;
+        
+        // ===== PROJECT NAME =====
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 64, 175);
+        doc.text('Project Name', leftMargin, yPosition);
+        yPosition += 8;
+        
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0, 0, 0);
+        doc.text(project.name, leftMargin + 5, yPosition);
+        yPosition += sectionSpacing;
+        
+        // ===== PROJECT DESCRIPTION =====
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 64, 175);
+        doc.text('Project Description', leftMargin, yPosition);
+        yPosition += 8;
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0, 0, 0);
+        
+        // Handle long descriptions with word wrapping
+        const descLines = doc.splitTextToSize(project.desc || 'No description available', rightMargin - leftMargin - 10);
+        descLines.forEach(line => {
+            doc.text(line, leftMargin + 5, yPosition);
+            yPosition += 6;
+        });
+        yPosition += sectionSpacing;
+        
+        // ===== FEATURES SECTION (TWO COLUMN LAYOUT) =====
+        const hasBasicFeatures = project.basic && project.basic.length > 0;
+        const hasAdvancedFeatures = project.advanced && project.advanced.length > 0;
+        
+        if (hasBasicFeatures || hasAdvancedFeatures) {
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(30, 64, 175);
+            doc.text('Project Features', leftMargin, yPosition);
+            yPosition += 15;
+            
+            // Calculate column positions
+            const colWidth = (rightMargin - leftMargin - 10) / 2;
+            const leftColX = leftMargin + 5;
+            const rightColX = leftMargin + 5 + colWidth + 10;
+            
+            // Basic Features Column
+            if (hasBasicFeatures) {
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(30, 64, 175);
+                doc.text('Basic Features:', leftColX, yPosition);
+                yPosition += 8;
+                
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(0, 0, 0);
+                
+                project.basic.forEach(feature => {
+                    if (feature && feature.trim()) {
+                        doc.text(`• ${feature.trim()}`, leftColX + 5, yPosition);
+                        yPosition += 5;
+                    }
+                });
+            }
+            
+            // Advanced Features Column
+            if (hasAdvancedFeatures) {
+                // Calculate the starting Y position for advanced features
+                const advancedStartY = yPosition - (hasBasicFeatures ? project.basic.length * 5 + 8 : 0);
+                
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(30, 64, 175);
+                doc.text('Advanced Features:', rightColX, advancedStartY);
+                
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(0, 0, 0);
+                
+                let advancedY = advancedStartY + 8;
+                project.advanced.forEach(feature => {
+                    if (feature && feature.trim()) {
+                        doc.text(`• ${feature.trim()}`, rightColX + 5, advancedY);
+                        advancedY += 5;
+                    }
+                });
+                
+                // Update main Y position to the maximum of both columns
+                yPosition = Math.max(yPosition, advancedY);
+            }
+            
+            // Move to next section
+            yPosition += sectionSpacing;
+        }
+        
+        // ===== PROJECT DEADLINE =====
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 64, 175);
+        doc.text('Project Deadline', leftMargin, yPosition);
+        yPosition += 8;
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0, 0, 0);
+        const deadline = project.deadline ? new Date(project.deadline).toLocaleDateString() : 'No deadline set';
+        doc.text(deadline, leftMargin + 5, yPosition);
+        yPosition += sectionSpacing;
+        
+        // ===== PROJECT PROGRESS =====
+        const progress = getProjectProgress(projectId);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 64, 175);
+        doc.text('Project Progress', leftMargin, yPosition);
+        yPosition += 8;
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0, 0, 0);
+        doc.text(`${progress}% Complete`, leftMargin + 5, yPosition);
+        yPosition += sectionSpacing;
+        
+        // ===== TASKS TABLE =====
+        if (tasks.length > 0) {
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(30, 64, 175);
+            doc.text('Project Tasks', leftMargin, yPosition);
+            yPosition += 8;
+            
+            // Add task count
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(107, 114, 128);
+            doc.text(`Total Tasks: ${tasks.length} | Completed: ${tasks.filter(t => t.completed).length} | Pending: ${tasks.filter(t => !t.completed).length}`, leftMargin + 5, yPosition);
+            yPosition += 15;
+            
+            // Calculate column widths for better fit
+            const tableWidth = rightMargin - leftMargin;
+            const taskNameWidth = tableWidth * 0.35;
+            const tagWidth = tableWidth * 0.20;
+            const priorityWidth = tableWidth * 0.20;
+            const dueDateWidth = tableWidth * 0.15;
+            const statusWidth = tableWidth * 0.10;
+            
+            // Table headers
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(255, 255, 255);
+            doc.setFillColor(59, 130, 246); // Blue background
+            
+            // Header row
+            doc.rect(leftMargin, yPosition - 8, tableWidth, 8, 'F');
+            doc.text('Task Name', leftMargin + 3, yPosition - 2);
+            doc.text('Tag', leftMargin + taskNameWidth + 3, yPosition - 2);
+            doc.text('Priority', leftMargin + taskNameWidth + tagWidth + 3, yPosition - 2);
+            doc.text('Due Date', leftMargin + taskNameWidth + tagWidth + priorityWidth + 3, yPosition - 2);
+            doc.text('Status', leftMargin + taskNameWidth + tagWidth + priorityWidth + dueDateWidth + 3, yPosition - 2);
+            
+            yPosition += 2;
+            
+            // Table content
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(0, 0, 0);
+            doc.setFillColor(255, 255, 255);
+            
+            tasks.forEach((task, index) => {
+                // Alternate row colors
+                if (index % 2 === 0) {
+                    doc.setFillColor(248, 250, 252); // Light gray
+                } else {
+                    doc.setFillColor(255, 255, 255); // White
+                }
+                
+                doc.rect(leftMargin, yPosition - 8, tableWidth, 8, 'F');
+                
+                // Task name (truncated if too long)
+                const maxTaskNameLength = Math.floor(taskNameWidth / 4); // Approximate characters per unit
+                const taskName = task.text.length > maxTaskNameLength ? task.text.substring(0, maxTaskNameLength - 3) + '...' : task.text;
+                doc.text(taskName, leftMargin + 3, yPosition - 2);
+                
+                // Tag (truncated if too long)
+                const tag = (task.tag || 'General').substring(0, 8);
+                doc.text(tag, leftMargin + taskNameWidth + 3, yPosition - 2);
+                
+                // Priority with color coding
+                const priority = (task.priority || 'Low').substring(0, 6);
+                if (priority === 'High') {
+                    doc.setTextColor(220, 38, 38); // Red
+                } else if (priority === 'Medium') {
+                    doc.setTextColor(245, 158, 11); // Orange
+                } else {
+                    doc.setTextColor(59, 130, 246); // Blue
+                }
+                doc.text(priority, leftMargin + taskNameWidth + tagWidth + 3, yPosition - 2);
+                doc.setTextColor(0, 0, 0);
+                
+                // Due date (shortened format)
+                const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-GB') : 'N/A';
+                doc.text(dueDate, leftMargin + taskNameWidth + tagWidth + priorityWidth + 3, yPosition - 2);
+                
+                // Status
+                const status = task.completed ? 'Done' : 'Pending';
+                doc.text(status, leftMargin + taskNameWidth + tagWidth + priorityWidth + dueDateWidth + 3, yPosition - 2);
+                
+                yPosition += 8;
+                
+                // Check if we need a new page
+                if (yPosition > 250) {
+                    doc.addPage();
+                    yPosition = 20;
+                    
+                    // Add header to new page
+                    doc.setFontSize(12);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(30, 64, 175);
+                    doc.text(`Project: ${project.name} - Tasks (Continued)`, leftMargin, yPosition);
+                    yPosition += 15;
+                }
+            });
+            
+            yPosition += sectionSpacing;
+        }
+        
+        // ===== QUICK NOTES =====
+        if (project.notes && project.notes.trim()) {
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(30, 64, 175);
+            doc.text('Quick Notes', leftMargin, yPosition);
+            yPosition += 8;
+            
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(0, 0, 0);
+            
+            // Handle long notes with word wrapping and proper padding
+            const notesLines = doc.splitTextToSize(project.notes, rightMargin - leftMargin - 20);
+            notesLines.forEach(line => {
+                doc.text(line, leftMargin + 10, yPosition);
+                yPosition += 7;
+            });
+            yPosition += sectionSpacing;
+        }
+        
+        // ===== FOOTER =====
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(107, 114, 128); // Gray
+        doc.text(`Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, 105, 280, { align: 'center' });
+        doc.text('ProPlanner - Professional Project Management', 105, 285, { align: 'center' });
+        
+        // Save the PDF
+        const fileName = `${project.name.replace(/[^a-zA-Z0-9]/g, '_')}_project_report.pdf`;
+        doc.save(fileName);
+        
+        // Show success message
+        showAlert({ 
+            icon: 'success', 
+            title: 'PDF Exported Successfully!', 
+            text: `Project report has been saved as "${fileName}"` 
+        });
+        
+    } catch (error) {
+        console.error('PDF Export Error:', error);
+        showAlert({ 
+            icon: 'error', 
+            title: 'Export Failed', 
+            text: 'Failed to generate PDF. Please try again.' 
+        });
+    } finally {
+        // Restore button state
+        const exportBtn = document.getElementById('exportProjectBtn');
+        if (exportBtn) {
+            exportBtn.innerHTML = `
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Export as PDF
+            `;
+            exportBtn.disabled = false;
+        }
+    }
 }
 
 // ===== Dashboard Summary Cards =====
