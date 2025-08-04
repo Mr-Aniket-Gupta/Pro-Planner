@@ -120,13 +120,23 @@ async function renderProjectDetails() {
     // Hide 'Make this project private' for non-owners (read/write and read-only)
     const makePrivateDiv = document.getElementById('makeProjectPrivateDiv');
     if (makePrivateDiv) makePrivateDiv.style.display = (isOwner ? '' : 'none');
-    // Notes section (Quick Notes)
+    // Notes section (Quick Notes) - Hidden in add/edit form, shown in project overview
     const projectQuickNotes = document.getElementById('projectQuickNotes');
     if (projectQuickNotes) {
         projectQuickNotes.value = project.notes || '';
         projectQuickNotes.readOnly = (project.isShared && access === 'read' && !isOwner);
         projectQuickNotes.style.height = 'auto';
         projectQuickNotes.style.height = (projectQuickNotes.scrollHeight) + 'px';
+    }
+    
+    // Show Quick Notes section in project overview (not in add/edit form)
+    const quickNotesSection = document.getElementById('quickNotesSection');
+    if (quickNotesSection && !document.getElementById('projectModal').classList.contains('hidden')) {
+        // If we're in the modal (add/edit form), hide Quick Notes
+        quickNotesSection.style.display = 'none';
+    } else if (quickNotesSection) {
+        // If we're in project overview, show Quick Notes
+        quickNotesSection.style.display = 'block';
     }
     // Save Notes button
     const saveProjectNotesBtn = document.getElementById('saveProjectNotesBtn');
@@ -251,9 +261,26 @@ function openProjectAddModal() {
     const makePrivateDiv = document.getElementById('makeProjectPrivateDiv');
     if (makePrivateDiv) makePrivateDiv.style.display = '';
 
-    // Clear notes
+    // Hide Quick Notes section completely
+    const quickNotesSection = document.getElementById('quickNotesSection');
+    if (quickNotesSection) {
+        quickNotesSection.style.display = 'none';
+    }
+    
+    // Clear notes and prevent auto-focus
     const projectQuickNotes = document.getElementById('projectQuickNotes');
-    if (projectQuickNotes) projectQuickNotes.value = '';
+    if (projectQuickNotes) {
+        projectQuickNotes.value = '';
+        projectQuickNotes.blur(); // Remove focus from Quick Notes
+    }
+    
+    // Focus on project name input instead
+    setTimeout(() => {
+        const projectNameInput = document.getElementById('projectName');
+        if (projectNameInput) {
+            projectNameInput.focus();
+        }
+    }, 100);
 }
 
 function openProjectEditModal(p, access, isOwner, isSharedEdit) {
@@ -271,9 +298,26 @@ function openProjectEditModal(p, access, isOwner, isSharedEdit) {
     // Hide 'Make this project private' for non-owners and for shared project edit
     const makePrivateDiv = document.getElementById('makeProjectPrivateDiv');
     if (makePrivateDiv) makePrivateDiv.style.display = (isOwner && !isSharedEdit ? '' : 'none');
-    // Prefill notes if available
+    // Hide Quick Notes section completely
+    const quickNotesSection = document.getElementById('quickNotesSection');
+    if (quickNotesSection) {
+        quickNotesSection.style.display = 'none';
+    }
+    
+    // Prefill notes if available and prevent auto-focus
     const projectQuickNotes = document.getElementById('projectQuickNotes');
-    if (projectQuickNotes) projectQuickNotes.value = p.notes || '';
+    if (projectQuickNotes) {
+        projectQuickNotes.value = p.notes || '';
+        projectQuickNotes.blur(); // Remove focus from Quick Notes
+    }
+    
+    // Focus on project name input instead
+    setTimeout(() => {
+        const projectNameInput = document.getElementById('projectName');
+        if (projectNameInput) {
+            projectNameInput.focus();
+        }
+    }, 100);
 }
 
 // Project modal ko close karta hai
@@ -305,7 +349,8 @@ document.getElementById('projectFormEl').addEventListener('submit', async functi
     const desc = document.getElementById('projectDescInput').value;
     const basic = Array.from(document.querySelectorAll('.basic-input')).map(i => i.value).filter(Boolean);
     const advanced = Array.from(document.querySelectorAll('.advanced-input')).map(i => i.value).filter(Boolean);
-    const notes = document.getElementById('projectQuickNotes') ? document.getElementById('projectQuickNotes').value : '';
+    // Quick Notes are now handled in project overview, not in add/edit form
+    const notes = '';
     const isPublic = !document.getElementById('projectIsPrivate').checked;
     if (document.getElementById('projectModalTitle').innerText === 'Edit Project' && selectedProjectIndex !== null) {
         const projectId = projects[selectedProjectIndex]._id;
@@ -494,25 +539,61 @@ async function editTask(index) {
         return;
     }
     const task = taskList[index];
+    
+    // Enhanced themed Edit Task modal
     Swal.fire({
-        title: 'Edit Task',
-        html: `<input id="swalTaskText" class="swal2-input" value="${task.text}">
-                 <select id="swalTaskTag" class="swal2-input">
-                   <option value="General" ${task.tag === 'General' ? 'selected' : ''}>General</option>
-                   <option value="Frontend" ${task.tag === 'Frontend' ? 'selected' : ''}>Frontend</option>
-                   <option value="Backend" ${task.tag === 'Backend' ? 'selected' : ''}>Backend</option>
-                   <option value="Bug" ${task.tag === 'Bug' ? 'selected' : ''}>Bug</option>
-                 </select>
-                 <select id="swalTaskPriority" class="swal2-input">
-                   <option value="Low" ${task.priority === 'Low' ? 'selected' : ''}>Low Priority</option>
-                   <option value="Medium" ${task.priority === 'Medium' ? 'selected' : ''}>Medium Priority</option>
-                   <option value="High" ${task.priority === 'High' ? 'selected' : ''}>High Priority</option>
-                 </select>
-                 <input id="swalTaskDueDate" type="date" class="swal2-input" value="${task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ''}">`,
+        title: '<div class="flex items-center gap-2"><svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#3B82F6" stroke-width="2"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#3B82F6" stroke-width="2"/></svg><span class="text-blue-600 font-bold">Edit Task</span></div>',
+        html: `
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="block text-sm font-semibold text-blue-600 mb-2">Task Name</label>
+                    <input id="swalTaskText" class="w-full border border-blue-200 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 text-blue-700 placeholder-blue-300 transition" value="${task.text}" placeholder="Enter task name">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-blue-600 mb-2">Category</label>
+                    <select id="swalTaskTag" class="w-full border border-blue-200 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 text-blue-700 transition">
+                        <option value="General" ${task.tag === 'General' ? 'selected' : ''}>📋 General</option>
+                        <option value="Frontend" ${task.tag === 'Frontend' ? 'selected' : ''}>🎨 Frontend</option>
+                        <option value="Backend" ${task.tag === 'Backend' ? 'selected' : ''}>⚙️ Backend</option>
+                        <option value="Bug" ${task.tag === 'Bug' ? 'selected' : ''}>🐛 Bug Fix</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-blue-600 mb-2">Priority</label>
+                    <select id="swalTaskPriority" class="w-full border border-blue-200 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 text-blue-700 transition">
+                        <option value="Low" ${task.priority === 'Low' ? 'selected' : ''}>🟢 Low Priority</option>
+                        <option value="Medium" ${task.priority === 'Medium' ? 'selected' : ''}>🟡 Medium Priority</option>
+                        <option value="High" ${task.priority === 'High' ? 'selected' : ''}>🔴 High Priority</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-blue-600 mb-2">Due Date</label>
+                    <input id="swalTaskDueDate" type="date" class="w-full border border-blue-200 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 text-blue-700 transition" value="${task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ''}">
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '<svg width="18" height="18" fill="none" viewBox="0 0 24 24" class="mr-2"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Update Task',
+        cancelButtonText: '<svg width="18" height="18" fill="none" viewBox="0 0 24 24" class="mr-2"><path d="M6 18L18 6M6 6l12 12" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/></svg>Cancel',
+        confirmButtonColor: '#3B82F6',
+        cancelButtonColor: '#6B7280',
+        background: '#f0f6ff',
+        color: '#1e40af',
+        customClass: {
+            popup: 'rounded-2xl shadow-2xl',
+            title: 'text-blue-600 font-bold text-xl',
+            confirmButton: 'bg-gradient-to-r from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 shadow-lg',
+            cancelButton: 'bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-6 py-3 rounded-xl transition-all duration-200'
+        },
         focusConfirm: false,
         preConfirm: () => {
+            const text = document.getElementById('swalTaskText').value.trim();
+            if (!text) {
+                Swal.showValidationMessage('Task name is required');
+                return false;
+            }
             return {
-                text: document.getElementById('swalTaskText').value,
+                text: text,
                 tag: document.getElementById('swalTaskTag').value,
                 priority: document.getElementById('swalTaskPriority').value,
                 dueDate: document.getElementById('swalTaskDueDate').value
@@ -520,7 +601,38 @@ async function editTask(index) {
         }
     }).then(async result => {
         if (result.isConfirmed) {
-            await updateTaskInDB(task._id, { text: result.value.text, tag: result.value.tag, priority: result.value.priority, dueDate: result.value.dueDate }, task.projectId);
+            try {
+                await updateTaskInDB(task._id, { 
+                    text: result.value.text, 
+                    tag: result.value.tag, 
+                    priority: result.value.priority, 
+                    dueDate: result.value.dueDate 
+                }, task.projectId);
+                
+                // Show success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Task Updated!',
+                    text: 'Task has been successfully updated.',
+                    background: '#f0f6ff',
+                    color: '#1e40af',
+                    confirmButtonColor: '#3B82F6',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+                // Refresh task list
+                await fetchAndRenderTasksWithFilters();
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Update Failed',
+                    text: 'Failed to update task. Please try again.',
+                    background: '#fef2f2',
+                    color: '#dc2626',
+                    confirmButtonColor: '#dc2626'
+                });
+            }
         }
     });
 }
@@ -624,13 +736,14 @@ document.addEventListener('DOMContentLoaded', async function () {
 function addBasicInput(val = '') {
     const div = document.createElement('div');
     div.className = 'flex gap-2';
-    div.innerHTML = `<input type="text" class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 basic-input" placeholder="Basic Requirement" value="${val}"><button type="button" onclick="this.parentNode.remove()" class="text-red-400 hover:text-red-600 px-2">✖</button>`;
+    div.innerHTML = `<input type="text" class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 basic-input" placeholder="Basic Requirement" value="${val}"><button type="button" onclick="this.parentNode.remove()" class="text-red-400 hover:text-red-600 px-2 transition-colors">✖</button>`;
     document.getElementById('basicInputs').appendChild(div);
 }
+
 function addAdvancedInput(val = '') {
     const div = document.createElement('div');
     div.className = 'flex gap-2';
-    div.innerHTML = `<input type="text" class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 advanced-input" placeholder="Advanced Feature" value="${val}"><button type="button" onclick="this.parentNode.remove()" class="text-red-400 hover:text-red-600 px-2">✖</button>`;
+    div.innerHTML = `<input type="text" class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 advanced-input" placeholder="Advanced Feature" value="${val}"><button type="button" onclick="this.parentNode.remove()" class="text-red-400 hover:text-red-600 px-2 transition-colors">✖</button>`;
     document.getElementById('advancedInputs').appendChild(div);
 }
 // Modern alert (Swal) show karta hai
@@ -1736,18 +1849,28 @@ document.addEventListener('DOMContentLoaded', function () {
         closeProjectFormBtn.addEventListener('click', closeProjectForm);
     }
 
-    // Add basic input button
+    // Add basic input button (prevent duplicate listeners)
     const addBasicInputBtn = document.getElementById('addBasicInputBtn');
     if (addBasicInputBtn) {
-        addBasicInputBtn.addEventListener('click', function () {
+        // Remove existing listeners to prevent duplicates
+        addBasicInputBtn.replaceWith(addBasicInputBtn.cloneNode(true));
+        const newAddBasicInputBtn = document.getElementById('addBasicInputBtn');
+        newAddBasicInputBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
             addBasicInput();
         });
     }
 
-    // Add advanced input button
+    // Add advanced input button (prevent duplicate listeners)
     const addAdvancedInputBtn = document.getElementById('addAdvancedInputBtn');
     if (addAdvancedInputBtn) {
-        addAdvancedInputBtn.addEventListener('click', function () {
+        // Remove existing listeners to prevent duplicates
+        addAdvancedInputBtn.replaceWith(addAdvancedInputBtn.cloneNode(true));
+        const newAddAdvancedInputBtn = document.getElementById('addAdvancedInputBtn');
+        newAddAdvancedInputBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
             addAdvancedInput();
         });
     }
@@ -2450,16 +2573,30 @@ document.addEventListener('DOMContentLoaded', function () {
         closeProjectFormBtn.addEventListener('click', closeProjectForm);
     }
 
-    // Add basic input button
+    // Add basic input button (prevent duplicate listeners)
     const addBasicInputBtn = document.getElementById('addBasicInputBtn');
     if (addBasicInputBtn) {
-        addBasicInputBtn.addEventListener('click', () => addBasicInput());
+        // Remove existing listeners to prevent duplicates
+        addBasicInputBtn.replaceWith(addBasicInputBtn.cloneNode(true));
+        const newAddBasicInputBtn = document.getElementById('addBasicInputBtn');
+        newAddBasicInputBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            addBasicInput();
+        });
     }
 
-    // Add advanced input button
+    // Add advanced input button (prevent duplicate listeners)
     const addAdvancedInputBtn = document.getElementById('addAdvancedInputBtn');
     if (addAdvancedInputBtn) {
-        addAdvancedInputBtn.addEventListener('click', () => addAdvancedInput());
+        // Remove existing listeners to prevent duplicates
+        addAdvancedInputBtn.replaceWith(addAdvancedInputBtn.cloneNode(true));
+        const newAddAdvancedInputBtn = document.getElementById('addAdvancedInputBtn');
+        newAddAdvancedInputBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            addAdvancedInput();
+        });
     }
 
     // Auto-resize project notes textarea

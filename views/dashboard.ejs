@@ -81,7 +81,8 @@
                     </h2>
                     <button onclick="showProjectForm()"
                         class="bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-full p-2 shadow hover:from-blue-500 hover:to-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        title="Add Project">
+                        title="Add Project"
+                        type="button">
                         <svg width="22" height="22" fill="none" viewBox="0 0 22 22">
                             <circle cx="11" cy="11" r="10" stroke="#fff" stroke-width="2" />
                             <path d="M11 7v8M7 11h8" stroke="#fff" stroke-width="2" stroke-linecap="round" />
@@ -378,7 +379,7 @@
                             class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 basic-input"
                             placeholder="Basic Requirement" />
                     </div>
-                    <button type="button" id="addBasicInputBtn" class="mt-2 text-xs text-blue-500 hover:underline">+ Add More</button>
+                    <button type="button" id="addBasicInputBtn" class="mt-2 text-xs text-blue-500 hover:underline transition-colors" onclick="event.preventDefault(); event.stopPropagation();">+ Add More</button>
                 </div>
                 <div>
                     <label class="block text-blue-500 font-semibold mb-1">Advanced Features</label>
@@ -387,9 +388,9 @@
                             class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 advanced-input"
                             placeholder="Advanced Feature" />
                     </div>
-                    <button type="button" id="addAdvancedInputBtn" class="mt-2 text-xs text-blue-500 hover:underline">+ Add More</button>
+                    <button type="button" id="addAdvancedInputBtn" class="mt-2 text-xs text-blue-500 hover:underline transition-colors" onclick="event.preventDefault(); event.stopPropagation();">+ Add More</button>
                 </div>
-                <div>
+                <div id="quickNotesSection" style="display: none;">
                     <label class="block text-blue-500 font-semibold mb-1">Quick Notes</label>
                     <textarea id="projectQuickNotes" rows="2"
                         class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 resize-none"
