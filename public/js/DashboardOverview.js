@@ -108,16 +108,14 @@ function updateDoughnutChart() {
 }
 
 // --- Daily Activity Line Chart Data ---
-function getDailyActivityData() {
-    if (!activityFeedArr) return { dateLabels: [], activityCounts: [] };
-    const days = 14;
+function getDailyActivityData(days = 30) {
+    if (!activityFeedArr) return { dateLabels: [], activityCounts: [], movingAvg: [] };
     const today = new Date();
     const dateLabels = [];
     const activityCounts = [];
     for (let i = days - 1; i >= 0; i--) {
         const d = new Date(today);
         d.setDate(today.getDate() - i);
-        // dd/mm/yy format
         const dd = String(d.getDate()).padStart(2, '0');
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const yy = String(d.getFullYear()).slice(-2);
@@ -125,39 +123,93 @@ function getDailyActivityData() {
         dateLabels.push(label);
         const count = activityFeedArr.filter(a => {
             const atime = new Date(a.time);
-            // Compare by date only
             return atime.getDate() === d.getDate() && atime.getMonth() === d.getMonth() && atime.getFullYear() === d.getFullYear();
         }).length;
         activityCounts.push(count);
     }
-    return { dateLabels, activityCounts };
+    // 7-day moving average for trend
+    const windowSize = 7;
+    const movingAvg = activityCounts.map((_, idx, arr) => {
+        const start = Math.max(0, idx - windowSize + 1);
+        const slice = arr.slice(start, idx + 1);
+        const sum = slice.reduce((s, v) => s + v, 0);
+        return Number((sum / slice.length).toFixed(2));
+    });
+    return { dateLabels, activityCounts, movingAvg };
 }
 // --- Line Chart Render ---
 function updateLineChart() {
-    const { dateLabels, activityCounts } = getDailyActivityData();
-    const ctx = document.getElementById('lineChart')?.getContext('2d');
+    const { dateLabels, activityCounts, movingAvg } = getDailyActivityData(30);
+    const canvas = document.getElementById('lineChart');
+    const ctx = canvas?.getContext('2d');
     if (!ctx) return;
     if (window.lineChart && typeof window.lineChart.destroy === 'function') window.lineChart.destroy();
+
+    // Gradient fill for primary dataset
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height || 300);
+    gradient.addColorStop(0, 'rgba(59,130,246,0.25)');
+    gradient.addColorStop(1, 'rgba(59,130,246,0.02)');
+
     window.lineChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: dateLabels,
-            datasets: [{
-                label: 'Daily Activity',
-                data: activityCounts,
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59,130,246,0.1)',
-                fill: true,
-                tension: 0.3,
-                pointRadius: 4,
-                pointBackgroundColor: '#2563eb'
-            }]
+            datasets: [
+                {
+                    label: 'Daily Activity',
+                    data: activityCounts,
+                    borderColor: '#3b82f6',
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 2,
+                    pointHoverRadius: 5,
+                    pointBackgroundColor: '#2563eb',
+                    segment: {
+                        borderColor: ctx => (ctx.p0.parsed.y === 0 && ctx.p1.parsed.y === 0 ? 'rgba(59,130,246,0.3)' : '#3b82f6')
+                    }
+                },
+                {
+                    label: '7-day Avg',
+                    data: movingAvg,
+                    borderColor: '#10b981',
+                    backgroundColor: 'transparent',
+                    borderDash: [6, 6],
+                    pointRadius: 0,
+                    tension: 0.25
+                }
+            ]
         },
         options: {
-            plugins: { legend: { display: false } },
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            animation: {
+                duration: 500,
+                easing: 'easeOutQuart'
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, boxHeight: 8, padding: 12, font: { size: 10 } } },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}`
+                    }
+                },
+                decimation: { enabled: true, algorithm: 'lttb', samples: 60 }
+            },
             scales: {
-                y: { beginAtZero: true, ticks: { stepSize: 1 } }
-            }
+                x: {
+                    ticks: { autoSkip: true, maxTicksLimit: 6, font: { size: 10 } },
+                    grid: { display: false }
+                },
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: Math.max(5, Math.ceil(Math.max(...activityCounts, 0) * 1.2)),
+                    ticks: { stepSize: 1, font: { size: 10 } },
+                    grid: { color: 'rgba(203,213,225,0.4)' }
+                }
+            },
+            layout: { padding: { top: 4, right: 8, bottom: 4, left: 8 } }
         }
     });
 }

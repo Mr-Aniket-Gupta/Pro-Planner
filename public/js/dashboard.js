@@ -400,13 +400,14 @@ async function origSelectProject(idx) {
 
 // Task List Render
 // Selected project ke tasks ko render karta hai
-function renderTasks(filter = '', tag = '') {
+function renderTasks(filter = '', tag = '', priority = '') {
     const taskUl = document.getElementById('taskList');
     taskUl.innerHTML = '';
     let filtered = taskList.filter(task =>
         (selectedProjectIndex === null || task.projectId === projects[selectedProjectIndex]?._id) &&
         task.text.toLowerCase().includes(filter ? filter.toLowerCase() : '') &&
-        (tag === '' || task.tag === tag)
+        (tag === '' || task.tag === tag) &&
+        (priority === '' || task.priority === priority)
     );
     if (filtered.length === 0) {
         document.getElementById('emptyTaskState').style.display = '';
@@ -450,11 +451,24 @@ function renderTasks(filter = '', tag = '') {
               <button disabled class="text-red-200 cursor-not-allowed rounded-lg px-2" title="You cannot delete (read access)">✖</button>
             `;
         }
+        // Priority badge styling
+        let priorityBadge = '';
+        if (task.priority) {
+            const priorityColors = {
+                'High': 'bg-red-100 text-red-700 border-red-200',
+                'Medium': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                'Low': 'bg-green-100 text-green-700 border-green-200'
+            };
+            const colorClass = priorityColors[task.priority] || 'bg-gray-100 text-gray-700 border-gray-200';
+            priorityBadge = `<span class="text-xs px-2 py-1 rounded-full border ${colorClass} ml-2">${task.priority}</span>`;
+        }
+        
         li.innerHTML = `
             <div class="flex items-center gap-2">
               <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})" class="accent-blue-500" ${(project.isShared && access === 'read' && !isOwner) ? 'disabled' : ''}>
               <span class="${task.completed ? 'line-through text-gray-400' : 'text-gray-700 font-medium'}">${task.text}</span>
               <span class="text-xs text-blue-400 ml-2">[${task.tag}]</span>
+              ${priorityBadge}
             </div>
             <div class="flex gap-2">
               ${taskBtns}
@@ -684,10 +698,13 @@ function updateChart() {
 }
 // Task search/filter event listeners
 document.getElementById('taskSearch').addEventListener('input', function () {
-    renderTasks(this.value, document.getElementById('taskTagFilter').value);
+    renderTasks(this.value, document.getElementById('taskTagFilter').value, document.getElementById('taskPriorityFilter').value);
 });
 document.getElementById('taskTagFilter').addEventListener('change', function () {
-    renderTasks(document.getElementById('taskSearch').value, this.value);
+    renderTasks(document.getElementById('taskSearch').value, this.value, document.getElementById('taskPriorityFilter').value);
+});
+document.getElementById('taskPriorityFilter').addEventListener('change', function () {
+    renderTasks(document.getElementById('taskSearch').value, document.getElementById('taskTagFilter').value, this.value);
 });
 // Calendar render karta hai
 function renderCalendar() {
@@ -847,19 +864,19 @@ async function addSidebarTodo() {
     const val = input.value.trim();
     if (!val) return;
     sidebarTodos.push({ text: val, done: false });
-    addActivityFeed('Todo added: ' + val);
+            addActivityFeed(`Todo "${val}" added to personal list`, 'todo');
     await saveSidebarTodos('add');
     input.value = '';
     renderSidebarTodos();
 }
 async function toggleSidebarTodo(idx) {
     sidebarTodos[idx].done = !sidebarTodos[idx].done;
-    addActivityFeed('Todo updated: ' + sidebarTodos[idx].text);
+            addActivityFeed(`Todo "${sidebarTodos[idx].text}" marked as ${sidebarTodos[idx].done ? 'completed' : 'pending'}`, 'todo');
     await saveSidebarTodos('update');
     renderSidebarTodos();
 }
 async function deleteSidebarTodo(idx) {
-    addActivityFeed('Todo deleted: ' + sidebarTodos[idx].text);
+            addActivityFeed(`Todo "${sidebarTodos[idx].text}" removed from personal list`, 'delete');
     sidebarTodos.splice(idx, 1);
     await saveSidebarTodos('delete');
     renderSidebarTodos();
@@ -888,6 +905,7 @@ async function saveSidebarNotes() {
             body: JSON.stringify({ notes: sidebarNotes })
         });
         showAlert({ icon: 'success', title: 'Success', text: 'Notes saved!' });
+        addActivityFeed('Personal notes updated', 'update');
     } catch (err) {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to save notes!' });
     }
@@ -929,7 +947,7 @@ async function fetchProjects() {
         }
 
         renderProjectList();
-        addActivityFeed('Projects loaded');
+        addActivityFeed('Project list refreshed successfully', 'info');
     } catch (err) {
         showAlert({ icon: 'error', title: 'Error', text: err.message || 'Failed to load projects!' });
         console.error(err);
@@ -947,7 +965,7 @@ async function addProject(project) {
         });
         if (!res.ok) throw new Error('Project add failed');
         showAlert({ icon: 'success', title: 'Success', text: 'Project added!' });
-        addActivityFeed('Project added: ' + project.name);
+        addActivityFeed(`Project "${project.name}" created successfully`, 'project');
         await fetchProjects();
     } catch (err) {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to add project!' });
@@ -971,7 +989,7 @@ async function updateProject(projectId, data) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ isPublic: data.isPublic })
         });
-        addActivityFeed('Project updated: ' + (data.name || projectId));
+        addActivityFeed(`Project "${data.name || projectId}" details updated`, 'update');
         await fetchProjects();
     } catch (err) {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to update project!' });
@@ -1029,7 +1047,7 @@ async function addTaskToDB(task) {
         });
         if (!res.ok) throw new Error('Task add failed');
         showAlert({ icon: 'success', title: 'Success', text: 'Task added!' });
-        addActivityFeed('Task added: ' + task.text);
+        addActivityFeed(`Task "${task.text}" added to project`, 'task');
         await fetchTasks(task.projectId);
         updateSummaryCards();
     } catch (err) {
@@ -1047,7 +1065,13 @@ async function updateTaskInDB(taskId, data, projectId) {
             body: JSON.stringify(data)
         });
         if (!res.ok) throw new Error('Task update failed');
-        addActivityFeed('Task updated: ' + (data.text || taskId));
+        // Generate specific message based on what was updated
+        if (data.completed !== undefined) {
+            const status = data.completed ? 'completed' : 'marked as pending';
+            addActivityFeed(`Task "${data.text || taskId}" ${status}`, 'task');
+        } else {
+            addActivityFeed(`Task "${data.text || taskId}" details updated`, 'update');
+        }
         showAlert({ icon: 'success', title: 'Success', text: 'Task updated!' });
         await fetchTasks(projectId);
     } catch (err) {
@@ -1062,7 +1086,9 @@ async function deleteTaskFromDB(taskId, projectId) {
         const res = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
         if (!res.ok) throw new Error('Task delete failed');
         showAlert({ icon: 'success', title: 'Success', text: 'Task deleted!' });
-        addActivityFeed('Task deleted: ' + taskId);
+        // Get task name before deletion for activity feed
+        const taskName = taskList.find(t => t._id === taskId)?.text || taskId;
+        addActivityFeed(`Task "${taskName}" removed from project`, 'delete');
         await fetchTasks(projectId);
     } catch (err) {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to delete task!' });
@@ -1092,7 +1118,7 @@ async function markProjectComplete(projectId) {
         showAlert({ icon: 'success', title: 'Project Completed', text: 'Project marked as complete!' });
         await fetchProjects();
         renderProjectDetails();
-        addActivityFeed('Project completed: ' + project.name);
+        addActivityFeed(`Project "${project.name}" marked as completed! 🎉`, 'complete');
         updateSummaryCards();
     } else {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to mark project complete!' });
@@ -1111,7 +1137,7 @@ async function markProjectIncomplete(projectId) {
         showAlert({ icon: 'success', title: 'Project Incomplete', text: 'Project marked as incomplete!' });
         await fetchProjects();
         renderProjectDetails();
-        addActivityFeed('Project marked as incomplete: ' + project.name);
+        addActivityFeed(`Project "${project.name}" marked as incomplete`, 'update');
         updateSummaryCards();
     } else {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to mark project incomplete!' });
@@ -1128,6 +1154,7 @@ async function saveProjectNotes(projectId, notes) {
     });
     if (res.ok) {
         showAlert({ icon: 'success', title: 'Notes Saved', text: 'Project notes updated!' });
+        addActivityFeed(`Project notes updated for "${project.name}"`, 'update');
         await fetchProjects();
     } else {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to save notes!' });
@@ -1144,6 +1171,7 @@ async function saveProjectDeadline(projectId, deadline) {
     });
     if (res.ok) {
         showAlert({ icon: 'success', title: 'Deadline Saved', text: 'Project deadline updated!' });
+        addActivityFeed(`Project deadline updated for "${project.name}"`, 'update');
         await fetchProjects();
     } else {
         showAlert({ icon: 'error', title: 'Error', text: 'Failed to save deadline!' });
@@ -1550,22 +1578,65 @@ function updateUpcomingDeadlines() {
     });
 }
 // Activity feed update/add karta hai
-function addActivityFeed(msg) {
-    activityFeedArr.unshift({ msg, time: new Date() });
+function addActivityFeed(msg, type = 'info') {
+    activityFeedArr.unshift({ msg, time: new Date(), type });
     if (activityFeedArr.length > 20) activityFeedArr.pop();
     updateActivityFeed();
 }
+
+// Helper function to format relative time
+function formatRelativeTime(date) {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) {
+        return 'Just now';
+    } else if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `${minutes} min${minutes > 1 ? 's' : ''} ago`;
+    } else if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    } else if (diffInSeconds < 172800) {
+        return 'Yesterday';
+    } else {
+        const days = Math.floor(diffInSeconds / 86400);
+        return `${days} day${days > 1 ? 's' : ''} ago`;
+    }
+}
+
 function updateActivityFeed() {
     const ul = document.getElementById('activityFeed');
     if (!ul) return;
     ul.innerHTML = '';
     if (activityFeedArr.length === 0) {
-        ul.innerHTML = '<li>No recent activity</li>';
+        ul.innerHTML = '<li class="text-gray-500 italic">No recent activity</li>';
         return;
     }
     activityFeedArr.forEach(a => {
         const li = document.createElement('li');
-        li.innerHTML = `<span>${a.msg}</span> <span class="text-gray-400 text-xs ml-2">${a.time.toLocaleTimeString()}</span>`;
+        li.className = 'flex items-center justify-between py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors';
+        
+        // Activity type icons
+        const icons = {
+            'project': '📁',
+            'task': '✅',
+            'todo': '📝',
+            'complete': '🎉',
+            'delete': '🗑️',
+            'update': '✏️',
+            'info': 'ℹ️'
+        };
+        
+        const icon = icons[a.type] || icons.info;
+        
+        li.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span class="text-lg">${icon}</span>
+                <span class="text-sm text-gray-700">${a.msg}</span>
+            </div>
+            <span class="text-xs text-gray-400 font-medium">${formatRelativeTime(a.time)}</span>
+        `;
         ul.appendChild(li);
     });
 }
@@ -1599,7 +1670,7 @@ async function deleteProject(idx) {
             const res = await fetch(`/api/projects/${project._id}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('Project delete failed');
             showAlert({ icon: 'success', title: 'Success', text: 'Project deleted!' });
-            addActivityFeed('Project deleted: ' + project.name);
+            addActivityFeed(`Project "${project.name}" deleted permanently`, 'delete');
             await fetchProjects();
             // Agar delete hua project selected tha toh details hata do
             if (selectedProjectIndex === idx) {
@@ -1634,24 +1705,24 @@ async function fetchAndRenderTasksWithFilters() {
     const projectId = getSelectedProjectId();
     if (!projectId) return;
     const q = document.getElementById('taskSearch').value;
-    const priority = document.getElementById('filterPriority').value;
-    const status = document.getElementById('filterStatus').value;
-    const due = document.getElementById('filterDue').value;
-    const params = new URLSearchParams({ projectId, q, priority, status, due });
+    const tag = document.getElementById('taskTagFilter').value;
+    const priority = document.getElementById('taskPriorityFilter').value;
+    const params = new URLSearchParams({ projectId, q, tag, priority });
     const res = await fetch(`/api/tasks/search?${params.toString()}`);
     taskList = await res.json();
-    renderTasks();
+    renderTasks(q, tag, priority);
 }
 // Add event listeners for task filters (with null checks)
-const taskSearchEl = document.getElementById('taskSearch');
-const filterPriorityEl = document.getElementById('filterPriority');
-const filterStatusEl = document.getElementById('filterStatus');
-const filterDueEl = document.getElementById('filterDue');
+// Note: These are commented out as we have separate event listeners above
+// const taskSearchEl = document.getElementById('taskSearch');
+// const filterPriorityEl = document.getElementById('filterPriority');
+// const filterStatusEl = document.getElementById('filterStatus');
+// const filterDueEl = document.getElementById('filterDue');
 
-if (taskSearchEl) taskSearchEl.addEventListener('input', fetchAndRenderTasksWithFilters);
-if (filterPriorityEl) filterPriorityEl.addEventListener('change', fetchAndRenderTasksWithFilters);
-if (filterStatusEl) filterStatusEl.addEventListener('change', fetchAndRenderTasksWithFilters);
-if (filterDueEl) filterDueEl.addEventListener('change', fetchAndRenderTasksWithFilters);
+// if (taskSearchEl) taskSearchEl.addEventListener('input', fetchAndRenderTasksWithFilters);
+// if (filterPriorityEl) filterPriorityEl.addEventListener('change', fetchAndRenderTasksWithFilters);
+// if (filterStatusEl) filterStatusEl.addEventListener('change', fetchAndRenderTasksWithFilters);
+// if (filterDueEl) filterDueEl.addEventListener('change', fetchAndRenderTasksWithFilters);
 
 // Project select by id (for filtered/search lists)
 function selectProjectById(id) {

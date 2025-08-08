@@ -135,7 +135,7 @@ function renderHubNavigation() {
 // Debounce helper
 function debounce(fn, delay) {
     let timeout;
-    return function(...args) {
+    return function (...args) {
         clearTimeout(timeout);
         timeout = setTimeout(() => fn.apply(this, args), delay);
     };
@@ -187,15 +187,15 @@ async function renderUserSearchSection() {
         }).join('');
         // Connect button logic
         Array.from(resultsDiv.getElementsByClassName('connectBtn')).forEach(btn => {
-            btn.addEventListener('click', async function() {
+            btn.addEventListener('click', async function () {
                 btn.disabled = true;
                 btn.innerText = 'Sending...';
                 try {
                     const res = await fetch('/api/userdata/send-connection-request', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ toUserId: btn.getAttribute('data-userid') })
-                });
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ toUserId: btn.getAttribute('data-userid') })
+                    });
                     if (res.ok) {
                         btn.innerText = 'Sent!';
                         btn.classList.add('bg-green-500');
@@ -212,7 +212,7 @@ async function renderUserSearchSection() {
     // Initial render: show all users
     renderList(allUsers);
     // Filter on input
-    input.addEventListener('input', function() {
+    input.addEventListener('input', function () {
         const q = input.value.trim().toLowerCase();
         if (!q) {
             renderList(allUsers);
@@ -251,15 +251,15 @@ async function renderFriendRequestsSection() {
         }).join('');
         // Accept button logic
         Array.from(listDiv.getElementsByClassName('acceptBtn')).forEach(btn => {
-            btn.addEventListener('click', async function() {
+            btn.addEventListener('click', async function () {
                 btn.disabled = true;
                 btn.innerText = 'Accepting...';
                 try {
                     const res = await fetch('/api/userdata/accept-connection-request', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fromUserId: btn.getAttribute('data-userid') })
-                });
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ fromUserId: btn.getAttribute('data-userid') })
+                    });
                     if (res.ok) {
                         btn.innerText = 'Accepted!';
                         btn.classList.add('bg-blue-500');
@@ -288,7 +288,7 @@ async function renderMyFriendsSection() {
         const res = await fetch('/api/userdata/connections');
         const friends = await res.json();
         if (!friends.length) {
-        listDiv.innerHTML = '<div class="text-gray-400 text-center">No friends yet.</div>';
+            listDiv.innerHTML = '<div class="text-gray-400 text-center">No friends yet.</div>';
             return;
         }
         listDiv.innerHTML = friends.map(user => {
@@ -303,15 +303,15 @@ async function renderMyFriendsSection() {
         }).join('');
         // Remove button logic
         Array.from(listDiv.getElementsByClassName('removeFriendBtn')).forEach(btn => {
-            btn.addEventListener('click', async function(e) {
+            btn.addEventListener('click', async function (e) {
                 e.stopPropagation();
                 if (!confirm('Are you sure you want to remove this friend?')) return;
                 btn.disabled = true;
                 btn.innerText = 'Removing...';
                 try {
                     const res = await fetch('/api/userdata/remove-connection', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ userId: btn.getAttribute('data-userid') })
                     });
                     if (res.ok) {
@@ -347,7 +347,7 @@ async function showFriendPublicProjectsModal(friendId) {
         modal.className = 'fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50';
         document.body.appendChild(modal);
     }
-        modal.innerHTML = `
+    modal.innerHTML = `
             <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg relative flex flex-col" style="max-height:90vh;">
                 <button id="closeFriendProjectsModalBtn" class="absolute top-3 right-3 text-gray-400 hover:text-blue-500">
                     <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -452,7 +452,7 @@ async function renderMyProjectSharingSection() {
         try {
             const res = await fetch(`/api/projects/${p._id}/sharing-details`);
             if (res.ok) sharingDetails = await res.json();
-        } catch {}
+        } catch { }
         // Render project card
         const card = document.createElement('div');
         card.className = 'bg-white rounded-xl shadow p-4 border border-blue-100 mb-4';
@@ -466,7 +466,7 @@ async function renderMyProjectSharingSection() {
         const usersListDiv = card.querySelector(`#sharingUsersList_${p._id}`);
         if (sharingDetails.friends.length === 0) {
             usersListDiv.innerHTML = '<div class="text-gray-400">No friends to share with.</div>';
-                    } else {
+        } else {
             usersListDiv.innerHTML = sharingDetails.friends.map(f => `
         <div class='flex items-center justify-between bg-blue-50 rounded-xl px-3 py-2 mb-1 border border-blue-100'>
             <div>
@@ -485,61 +485,61 @@ async function renderMyProjectSharingSection() {
     `).join('');
             // Change access logic (on Change button click)
             Array.from(usersListDiv.getElementsByClassName('changeAccessBtn')).forEach(btn => {
-                btn.addEventListener('click', async function() {
-            const userId = this.getAttribute('data-userid');
-            const projectId = this.getAttribute('data-projectid');
+                btn.addEventListener('click', async function () {
+                    const userId = this.getAttribute('data-userid');
+                    const projectId = this.getAttribute('data-projectid');
                     const sel = usersListDiv.querySelector(`.changeAccessSelect[data-userid='${userId}'][data-projectid='${projectId}']`);
                     const newAccess = sel.value;
                     btn.disabled = true;
                     btn.innerText = 'Changing...';
-            try {
-                const res = await fetch('/api/projects/change-access', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ projectId, userId, access: newAccess })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    await renderMyProjectSharingSection();
-                    await fetchNotificationCounts(); // Refresh counts when project access is changed
+                    try {
+                        const res = await fetch('/api/projects/change-access', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ projectId, userId, access: newAccess })
+                        });
+                        const data = await res.json();
+                        if (res.ok && data.success) {
+                            await renderMyProjectSharingSection();
+                            await fetchNotificationCounts(); // Refresh counts when project access is changed
                         } else {
                             btn.innerText = 'Error';
                         }
                     } catch {
                         btn.innerText = 'Error';
-                }
+                    }
                     btn.disabled = false;
                     btn.innerText = 'Change';
-        });
-    });
-    // Revoke access logic
-            Array.from(usersListDiv.getElementsByClassName('revokeAccessBtn')).forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const userId = this.getAttribute('data-userid');
-            const projectId = this.getAttribute('data-projectid');
-            btn.disabled = true;
-            btn.innerText = 'Revoking...';
-            try {
-                const res = await fetch('/api/projects/revoke-access', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ projectId, userId })
                 });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    await renderMyProjectSharingSection();
-                    await fetchNotificationCounts(); // Refresh counts when project access is revoked
+            });
+            // Revoke access logic
+            Array.from(usersListDiv.getElementsByClassName('revokeAccessBtn')).forEach(btn => {
+                btn.addEventListener('click', async function () {
+                    const userId = this.getAttribute('data-userid');
+                    const projectId = this.getAttribute('data-projectid');
+                    btn.disabled = true;
+                    btn.innerText = 'Revoking...';
+                    try {
+                        const res = await fetch('/api/projects/revoke-access', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ projectId, userId })
+                        });
+                        const data = await res.json();
+                        if (res.ok && data.success) {
+                            await renderMyProjectSharingSection();
+                            await fetchNotificationCounts(); // Refresh counts when project access is revoked
                         } else {
                             btn.innerText = 'Error';
                         }
                     } catch {
                         btn.innerText = 'Error';
-                }
-            btn.disabled = false;
-            btn.innerText = 'Revoke';
-        });
-    });
-}
+                    }
+                    btn.disabled = false;
+                    btn.innerText = 'Revoke';
+                });
+            });
+        }
     }
 }
 
@@ -706,7 +706,7 @@ async function renderAccessRequestsSection() {
         <div id="accessRequestsList" class="space-y-2"></div>`;
     const listDiv = document.getElementById('accessRequestsList');
     listDiv.innerHTML = '<div class="text-blue-400 text-center">Loading...</div>';
-    
+
     // Refresh notification counts when this section is rendered
     await fetchNotificationCounts();
     try {
@@ -720,14 +720,14 @@ async function renderAccessRequestsSection() {
             const project = req.project || {};
             const user = req.requestedBy || {};
             const email = user.emails && user.emails[0] ? user.emails[0].email : '';
-            
+
             let actionButtons = '';
             if (req.status === 'pending') {
                 actionButtons = `
                     <button class="approveAccessBtn bg-green-500 text-white px-3 py-1 rounded-lg font-semibold hover:bg-green-600 transition" data-requestid="${req._id}" data-access="${req.access}">Approve</button>
                     <button class="rejectAccessBtn bg-red-500 text-white px-3 py-1 rounded-lg font-semibold hover:bg-red-600 transition" data-requestid="${req._id}">Reject</button>
                 `;
-        } else {
+            } else {
                 const statusText = req.status.charAt(0).toUpperCase() + req.status.slice(1);
                 const statusColor = req.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
                 actionButtons = `<span class="px-3 py-1 rounded-full font-semibold ${statusColor}">${statusText}</span>`;
@@ -744,7 +744,7 @@ async function renderAccessRequestsSection() {
                 </div>
             </div>`;
         }).join('');
-        
+
         // Re-attach logic for buttons
         Array.from(listDiv.getElementsByClassName('approveAccessBtn')).forEach(btn => {
             btn.addEventListener('click', async function () {
@@ -823,10 +823,10 @@ async function renderHubContent(tabId) {
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', initializeConnectionsHub);
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const backBtn = document.getElementById('backToDashboardBtn');
     if (backBtn) {
-        backBtn.addEventListener('click', function() {
+        backBtn.addEventListener('click', function () {
             const modal = document.getElementById('connectionsHubModal');
             if (modal) {
                 modal.style.transform = 'translateX(100%)';
@@ -838,7 +838,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Real-time updates with Socket.io
 let socket;
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
     socket = io();
     let currentUserId = null;
     try {
@@ -848,7 +848,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             currentUserId = data.id;
             window.currentUserId = currentUserId;
         }
-    } catch {}
+    } catch { }
     if (socket && currentUserId) {
         socket.on('project-access-changed', (data) => {
             if (data.userId === currentUserId) {
@@ -858,14 +858,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                 fetchNotificationCounts(); // Refresh counts on real-time updates
             }
         });
-        
+
         // Listen for friend request updates
         socket.on('friend-request-sent', (data) => {
             if (data.toUserId === currentUserId) {
                 fetchNotificationCounts(); // Refresh counts when new friend request is received
             }
         });
-        
+
         // Listen for access request updates
         socket.on('access-request-sent', (data) => {
             if (data.projectOwnerId === currentUserId) {
