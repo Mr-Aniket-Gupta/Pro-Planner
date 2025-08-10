@@ -128,7 +128,7 @@ async function renderProjectDetails() {
         projectQuickNotes.style.height = 'auto';
         projectQuickNotes.style.height = (projectQuickNotes.scrollHeight) + 'px';
     }
-    
+
     // Show Quick Notes section in project overview (not in add/edit form)
     const quickNotesSection = document.getElementById('quickNotesSection');
     if (quickNotesSection && !document.getElementById('projectModal').classList.contains('hidden')) {
@@ -266,14 +266,14 @@ function openProjectAddModal() {
     if (quickNotesSection) {
         quickNotesSection.style.display = 'none';
     }
-    
+
     // Clear notes and prevent auto-focus
     const projectQuickNotes = document.getElementById('projectQuickNotes');
     if (projectQuickNotes) {
         projectQuickNotes.value = '';
         projectQuickNotes.blur(); // Remove focus from Quick Notes
     }
-    
+
     // Focus on project name input instead
     setTimeout(() => {
         const projectNameInput = document.getElementById('projectName');
@@ -303,14 +303,14 @@ function openProjectEditModal(p, access, isOwner, isSharedEdit) {
     if (quickNotesSection) {
         quickNotesSection.style.display = 'none';
     }
-    
+
     // Prefill notes if available and prevent auto-focus
     const projectQuickNotes = document.getElementById('projectQuickNotes');
     if (projectQuickNotes) {
         projectQuickNotes.value = p.notes || '';
         projectQuickNotes.blur(); // Remove focus from Quick Notes
     }
-    
+
     // Focus on project name input instead
     setTimeout(() => {
         const projectNameInput = document.getElementById('projectName');
@@ -462,7 +462,7 @@ function renderTasks(filter = '', tag = '', priority = '') {
             const colorClass = priorityColors[task.priority] || 'bg-gray-100 text-gray-700 border-gray-200';
             priorityBadge = `<span class="text-xs px-2 py-1 rounded-full border ${colorClass} ml-2">${task.priority}</span>`;
         }
-        
+
         li.innerHTML = `
             <div class="flex items-center gap-2">
               <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})" class="accent-blue-500" ${(project.isShared && access === 'read' && !isOwner) ? 'disabled' : ''}>
@@ -553,7 +553,7 @@ async function editTask(index) {
         return;
     }
     const task = taskList[index];
-    
+
     // Enhanced themed Edit Task modal
     Swal.fire({
         title: '<div class="flex items-center gap-2"><svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#3B82F6" stroke-width="2"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#3B82F6" stroke-width="2"/></svg><span class="text-blue-600 font-bold">Edit Task</span></div>',
@@ -616,13 +616,13 @@ async function editTask(index) {
     }).then(async result => {
         if (result.isConfirmed) {
             try {
-                await updateTaskInDB(task._id, { 
-                    text: result.value.text, 
-                    tag: result.value.tag, 
-                    priority: result.value.priority, 
-                    dueDate: result.value.dueDate 
+                await updateTaskInDB(task._id, {
+                    text: result.value.text,
+                    tag: result.value.tag,
+                    priority: result.value.priority,
+                    dueDate: result.value.dueDate
                 }, task.projectId);
-                
+
                 // Show success message
                 Swal.fire({
                     icon: 'success',
@@ -634,7 +634,7 @@ async function editTask(index) {
                     timer: 2000,
                     showConfirmButton: false
                 });
-                
+
                 // Refresh task list
                 await fetchAndRenderTasksWithFilters();
             } catch (error) {
@@ -795,15 +795,17 @@ const sunIcon = document.getElementById('sunIcon');
 
 // save theme in localStorage 
 function setTheme(isDark) {
+    const moonEl = document.getElementById('moonIcon');
+    const sunEl = document.getElementById('sunIcon');
     if (isDark) {
         document.body.classList.add('dark-theme');
-        moonIcon.style.display = 'none';
-        sunIcon.style.display = 'block';
+        if (moonEl) moonEl.style.display = 'none';
+        if (sunEl) sunEl.style.display = 'block';
         localStorage.setItem('theme', 'dark');
     } else {
         document.body.classList.remove('dark-theme');
-        moonIcon.style.display = 'block';
-        sunIcon.style.display = 'none';
+        if (moonEl) moonEl.style.display = 'block';
+        if (sunEl) sunEl.style.display = 'none';
         localStorage.setItem('theme', 'light');
     }
 }
@@ -864,19 +866,19 @@ async function addSidebarTodo() {
     const val = input.value.trim();
     if (!val) return;
     sidebarTodos.push({ text: val, done: false });
-            addActivityFeed(`Todo "${val}" added to personal list`, 'todo');
+    addActivityFeed(`Todo "${val}" added to personal list`, 'todo');
     await saveSidebarTodos('add');
     input.value = '';
     renderSidebarTodos();
 }
 async function toggleSidebarTodo(idx) {
     sidebarTodos[idx].done = !sidebarTodos[idx].done;
-            addActivityFeed(`Todo "${sidebarTodos[idx].text}" marked as ${sidebarTodos[idx].done ? 'completed' : 'pending'}`, 'todo');
+    addActivityFeed(`Todo "${sidebarTodos[idx].text}" marked as ${sidebarTodos[idx].done ? 'completed' : 'pending'}`, 'todo');
     await saveSidebarTodos('update');
     renderSidebarTodos();
 }
 async function deleteSidebarTodo(idx) {
-            addActivityFeed(`Todo "${sidebarTodos[idx].text}" removed from personal list`, 'delete');
+    addActivityFeed(`Todo "${sidebarTodos[idx].text}" removed from personal list`, 'delete');
     sidebarTodos.splice(idx, 1);
     await saveSidebarTodos('delete');
     renderSidebarTodos();
@@ -1192,7 +1194,7 @@ async function exportProjectPDF(projectId) {
             `;
             exportBtn.disabled = true;
         }
-        
+
         const project = projects.find(p => p._id === projectId);
         if (!project) {
             showAlert({ icon: 'error', title: 'Project Not Found', text: 'Unable to find project for PDF export.' });
@@ -1201,49 +1203,49 @@ async function exportProjectPDF(projectId) {
 
         const tasks = taskList.filter(t => t.projectId === projectId);
         const doc = new window.jspdf.jsPDF();
-        
+
         // Set font and styling
         doc.setFont('helvetica');
         doc.setFontSize(12);
-        
+
         let yPosition = 25;
         const leftMargin = 25;
         const rightMargin = 185;
         const lineHeight = 8;
         const sectionSpacing = 20;
-        
+
         // ===== HEADER =====
         doc.setFontSize(24);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(30, 64, 175); // Blue color
         doc.text('PROJECT REPORT', 105, yPosition, { align: 'center' });
-        
+
         yPosition += 25;
-        
+
         // ===== PROJECT NAME =====
         doc.setFontSize(18);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(30, 64, 175);
         doc.text('Project Name', leftMargin, yPosition);
         yPosition += 8;
-        
+
         doc.setFontSize(14);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(0, 0, 0);
         doc.text(project.name, leftMargin + 5, yPosition);
         yPosition += sectionSpacing;
-        
+
         // ===== PROJECT DESCRIPTION =====
         doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(30, 64, 175);
         doc.text('Project Description', leftMargin, yPosition);
         yPosition += 8;
-        
+
         doc.setFontSize(12);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(0, 0, 0);
-        
+
         // Handle long descriptions with word wrapping
         const descLines = doc.splitTextToSize(project.desc || 'No description available', rightMargin - leftMargin - 10);
         descLines.forEach(line => {
@@ -1251,23 +1253,23 @@ async function exportProjectPDF(projectId) {
             yPosition += 6;
         });
         yPosition += sectionSpacing;
-        
+
         // ===== FEATURES SECTION (TWO COLUMN LAYOUT) =====
         const hasBasicFeatures = project.basic && project.basic.length > 0;
         const hasAdvancedFeatures = project.advanced && project.advanced.length > 0;
-        
+
         if (hasBasicFeatures || hasAdvancedFeatures) {
             doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(30, 64, 175);
             doc.text('Project Features', leftMargin, yPosition);
             yPosition += 15;
-            
+
             // Calculate column positions
             const colWidth = (rightMargin - leftMargin - 10) / 2;
             const leftColX = leftMargin + 5;
             const rightColX = leftMargin + 5 + colWidth + 10;
-            
+
             // Basic Features Column
             if (hasBasicFeatures) {
                 doc.setFontSize(12);
@@ -1275,11 +1277,11 @@ async function exportProjectPDF(projectId) {
                 doc.setTextColor(30, 64, 175);
                 doc.text('Basic Features:', leftColX, yPosition);
                 yPosition += 8;
-                
+
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(0, 0, 0);
-                
+
                 project.basic.forEach(feature => {
                     if (feature && feature.trim()) {
                         doc.text(`• ${feature.trim()}`, leftColX + 5, yPosition);
@@ -1287,21 +1289,21 @@ async function exportProjectPDF(projectId) {
                     }
                 });
             }
-            
+
             // Advanced Features Column
             if (hasAdvancedFeatures) {
                 // Calculate the starting Y position for advanced features
                 const advancedStartY = yPosition - (hasBasicFeatures ? project.basic.length * 5 + 8 : 0);
-                
+
                 doc.setFontSize(12);
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(30, 64, 175);
                 doc.text('Advanced Features:', rightColX, advancedStartY);
-                
+
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(0, 0, 0);
-                
+
                 let advancedY = advancedStartY + 8;
                 project.advanced.forEach(feature => {
                     if (feature && feature.trim()) {
@@ -1309,29 +1311,29 @@ async function exportProjectPDF(projectId) {
                         advancedY += 5;
                     }
                 });
-                
+
                 // Update main Y position to the maximum of both columns
                 yPosition = Math.max(yPosition, advancedY);
             }
-            
+
             // Move to next section
             yPosition += sectionSpacing;
         }
-        
+
         // ===== PROJECT DEADLINE =====
         doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(30, 64, 175);
         doc.text('Project Deadline', leftMargin, yPosition);
         yPosition += 8;
-        
+
         doc.setFontSize(12);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(0, 0, 0);
         const deadline = project.deadline ? new Date(project.deadline).toLocaleDateString() : 'No deadline set';
         doc.text(deadline, leftMargin + 5, yPosition);
         yPosition += sectionSpacing;
-        
+
         // ===== PROJECT PROGRESS =====
         const progress = getProjectProgress(projectId);
         doc.setFontSize(16);
@@ -1339,13 +1341,13 @@ async function exportProjectPDF(projectId) {
         doc.setTextColor(30, 64, 175);
         doc.text('Project Progress', leftMargin, yPosition);
         yPosition += 8;
-        
+
         doc.setFontSize(12);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(0, 0, 0);
         doc.text(`${progress}% Complete`, leftMargin + 5, yPosition);
         yPosition += sectionSpacing;
-        
+
         // ===== TASKS TABLE =====
         if (tasks.length > 0) {
             doc.setFontSize(16);
@@ -1353,14 +1355,14 @@ async function exportProjectPDF(projectId) {
             doc.setTextColor(30, 64, 175);
             doc.text('Project Tasks', leftMargin, yPosition);
             yPosition += 8;
-            
+
             // Add task count
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(107, 114, 128);
             doc.text(`Total Tasks: ${tasks.length} | Completed: ${tasks.filter(t => t.completed).length} | Pending: ${tasks.filter(t => !t.completed).length}`, leftMargin + 5, yPosition);
             yPosition += 15;
-            
+
             // Calculate column widths for better fit
             const tableWidth = rightMargin - leftMargin;
             const taskNameWidth = tableWidth * 0.35;
@@ -1368,13 +1370,13 @@ async function exportProjectPDF(projectId) {
             const priorityWidth = tableWidth * 0.20;
             const dueDateWidth = tableWidth * 0.15;
             const statusWidth = tableWidth * 0.10;
-            
+
             // Table headers
             doc.setFontSize(9);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(255, 255, 255);
             doc.setFillColor(59, 130, 246); // Blue background
-            
+
             // Header row
             doc.rect(leftMargin, yPosition - 8, tableWidth, 8, 'F');
             doc.text('Task Name', leftMargin + 3, yPosition - 2);
@@ -1382,15 +1384,15 @@ async function exportProjectPDF(projectId) {
             doc.text('Priority', leftMargin + taskNameWidth + tagWidth + 3, yPosition - 2);
             doc.text('Due Date', leftMargin + taskNameWidth + tagWidth + priorityWidth + 3, yPosition - 2);
             doc.text('Status', leftMargin + taskNameWidth + tagWidth + priorityWidth + dueDateWidth + 3, yPosition - 2);
-            
+
             yPosition += 2;
-            
+
             // Table content
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(0, 0, 0);
             doc.setFillColor(255, 255, 255);
-            
+
             tasks.forEach((task, index) => {
                 // Alternate row colors
                 if (index % 2 === 0) {
@@ -1398,18 +1400,18 @@ async function exportProjectPDF(projectId) {
                 } else {
                     doc.setFillColor(255, 255, 255); // White
                 }
-                
+
                 doc.rect(leftMargin, yPosition - 8, tableWidth, 8, 'F');
-                
+
                 // Task name (truncated if too long)
                 const maxTaskNameLength = Math.floor(taskNameWidth / 4); // Approximate characters per unit
                 const taskName = task.text.length > maxTaskNameLength ? task.text.substring(0, maxTaskNameLength - 3) + '...' : task.text;
                 doc.text(taskName, leftMargin + 3, yPosition - 2);
-                
+
                 // Tag (truncated if too long)
                 const tag = (task.tag || 'General').substring(0, 8);
                 doc.text(tag, leftMargin + taskNameWidth + 3, yPosition - 2);
-                
+
                 // Priority with color coding
                 const priority = (task.priority || 'Low').substring(0, 6);
                 if (priority === 'High') {
@@ -1421,22 +1423,22 @@ async function exportProjectPDF(projectId) {
                 }
                 doc.text(priority, leftMargin + taskNameWidth + tagWidth + 3, yPosition - 2);
                 doc.setTextColor(0, 0, 0);
-                
+
                 // Due date (shortened format)
                 const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-GB') : 'N/A';
                 doc.text(dueDate, leftMargin + taskNameWidth + tagWidth + priorityWidth + 3, yPosition - 2);
-                
+
                 // Status
                 const status = task.completed ? 'Done' : 'Pending';
                 doc.text(status, leftMargin + taskNameWidth + tagWidth + priorityWidth + dueDateWidth + 3, yPosition - 2);
-                
+
                 yPosition += 8;
-                
+
                 // Check if we need a new page
                 if (yPosition > 250) {
                     doc.addPage();
                     yPosition = 20;
-                    
+
                     // Add header to new page
                     doc.setFontSize(12);
                     doc.setFont('helvetica', 'bold');
@@ -1445,10 +1447,10 @@ async function exportProjectPDF(projectId) {
                     yPosition += 15;
                 }
             });
-            
+
             yPosition += sectionSpacing;
         }
-        
+
         // ===== QUICK NOTES =====
         if (project.notes && project.notes.trim()) {
             doc.setFontSize(16);
@@ -1456,11 +1458,11 @@ async function exportProjectPDF(projectId) {
             doc.setTextColor(30, 64, 175);
             doc.text('Quick Notes', leftMargin, yPosition);
             yPosition += 8;
-            
+
             doc.setFontSize(11);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(0, 0, 0);
-            
+
             // Handle long notes with word wrapping and proper padding
             const notesLines = doc.splitTextToSize(project.notes, rightMargin - leftMargin - 20);
             notesLines.forEach(line => {
@@ -1469,31 +1471,31 @@ async function exportProjectPDF(projectId) {
             });
             yPosition += sectionSpacing;
         }
-        
+
         // ===== FOOTER =====
         doc.setFontSize(10);
         doc.setFont('helvetica', 'italic');
         doc.setTextColor(107, 114, 128); // Gray
         doc.text(`Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, 105, 280, { align: 'center' });
         doc.text('ProPlanner - Professional Project Management', 105, 285, { align: 'center' });
-        
+
         // Save the PDF
         const fileName = `${project.name.replace(/[^a-zA-Z0-9]/g, '_')}_project_report.pdf`;
         doc.save(fileName);
-        
+
         // Show success message
-        showAlert({ 
-            icon: 'success', 
-            title: 'PDF Exported Successfully!', 
-            text: `Project report has been saved as "${fileName}"` 
+        showAlert({
+            icon: 'success',
+            title: 'PDF Exported Successfully!',
+            text: `Project report has been saved as "${fileName}"`
         });
-        
+
     } catch (error) {
         console.error('PDF Export Error:', error);
-        showAlert({ 
-            icon: 'error', 
-            title: 'Export Failed', 
-            text: 'Failed to generate PDF. Please try again.' 
+        showAlert({
+            icon: 'error',
+            title: 'Export Failed',
+            text: 'Failed to generate PDF. Please try again.'
         });
     } finally {
         // Restore button state
@@ -1588,7 +1590,7 @@ function addActivityFeed(msg, type = 'info') {
 function formatRelativeTime(date) {
     const now = new Date();
     const diffInSeconds = Math.floor((now - date) / 1000);
-    
+
     if (diffInSeconds < 60) {
         return 'Just now';
     } else if (diffInSeconds < 3600) {
@@ -1616,7 +1618,7 @@ function updateActivityFeed() {
     activityFeedArr.forEach(a => {
         const li = document.createElement('li');
         li.className = 'flex items-center justify-between py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors';
-        
+
         // Activity type icons
         const icons = {
             'project': '📁',
@@ -1627,9 +1629,9 @@ function updateActivityFeed() {
             'update': '✏️',
             'info': 'ℹ️'
         };
-        
+
         const icon = icons[a.type] || icons.info;
-        
+
         li.innerHTML = `
             <div class="flex items-center gap-2">
                 <span class="text-lg">${icon}</span>
@@ -1847,9 +1849,7 @@ function renderEmailList() {
                 ${emailObj.verified && !emailObj.isPrimary ? `
                     <button onclick="setPrimaryEmail('${emailObj.email}')" class="text-green-500 hover:text-green-700 text-sm">Set Primary</button>
                 ` : ''}
-                ${emailObj.verified ? `
-                    <button onclick="removeEmail('${emailObj.email}')" class="text-red-500 hover:text-red-700 text-sm">Remove</button>
-                ` : ''}
+                <button onclick="removeEmail('${emailObj.email}')" class="text-red-500 hover:text-red-700 text-sm">Remove</button>
             </div>
         `;
 
@@ -2090,7 +2090,10 @@ async function verifyOtp() {
         Swal.fire({ icon: 'warning', title: 'Invalid OTP', text: 'Please enter a valid 6-digit OTP.' });
         return;
     }
-    document.getElementById('verifyOtpBtn').disabled = true;
+    const verifyBtn = document.getElementById('verifyOtpBtn');
+    const prevText = verifyBtn.innerHTML;
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<span class="inline-flex items-center gap-2 justify-center w-full"><svg class="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> Verifying...</span>';
     try {
         const res = await fetch('/api/userdata/email/verify-otp', {
             method: 'POST',
@@ -2104,11 +2107,13 @@ async function verifyOtp() {
             await loadUserEmails();
         } else {
             Swal.fire({ icon: 'error', title: 'Error', text: data.message });
-            document.getElementById('verifyOtpBtn').disabled = false;
+            verifyBtn.disabled = false;
+            verifyBtn.innerHTML = prevText;
         }
     } catch (error) {
         Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to verify OTP. Please try again.' });
-        document.getElementById('verifyOtpBtn').disabled = false;
+        verifyBtn.disabled = false;
+        verifyBtn.innerHTML = prevText;
     }
 }
 
@@ -2863,9 +2868,9 @@ function getProjectSocialLink(projectId) {
 
 // Render only social media links (not project links)
 function renderSocialLinks() {
-  const list = document.getElementById('socialLinksList');
-  if (!list) return;
-  list.innerHTML = '';
+    const list = document.getElementById('socialLinksList');
+    if (!list) return;
+    list.innerHTML = '';
 
     // Only render social links (not project links)
     const socialOnlyLinks = socialLinks.filter(link => link.type === 'social');
@@ -2876,7 +2881,7 @@ function renderSocialLinks() {
     }
 
     socialOnlyLinks.forEach((link, idx) => {
-      const row = document.createElement('div');
+        const row = document.createElement('div');
         row.className = 'flex flex-col sm:flex-row items-center gap-2 social-link-row bg-white dark:bg-gray-800 p-3 rounded-lg border border-purple-200 dark:border-purple-700';
         row.innerHTML = `
       <input type="text" placeholder="Name (e.g. LinkedIn, GitHub, Portfolio)" value="${link.name || ''}" class="border border-purple-200 dark:border-purple-600 p-2 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex-1 w-full sm:w-auto text-purple-700 dark:text-purple-300 placeholder-purple-400 dark:placeholder-purple-500" data-idx="${idx}" data-type="name" />
@@ -2894,17 +2899,17 @@ function renderSocialLinks() {
         </svg>
           </button>
     `;
-    list.appendChild(row);
-  });
+        list.appendChild(row);
+    });
 }
 
 // Update input/change handlers for social link editing
 window.addEventListener('input', function (e) {
-  // Social link edit
-  if (e.target.closest('#socialLinksList') && e.target.dataset.idx !== undefined) {
-    const idx = e.target.dataset.idx;
-    const type = e.target.dataset.type;
-    if (type && idx !== undefined) {
+    // Social link edit
+    if (e.target.closest('#socialLinksList') && e.target.dataset.idx !== undefined) {
+        const idx = e.target.dataset.idx;
+        const type = e.target.dataset.type;
+        if (type && idx !== undefined) {
             const socialOnlyLinks = socialLinks.filter(link => link.type === 'social');
             const linkToUpdate = socialOnlyLinks[idx];
             const actualIndex = socialLinks.findIndex(link => link === linkToUpdate);
@@ -2916,40 +2921,40 @@ window.addEventListener('input', function (e) {
 });
 window.addEventListener('click', function (e) {
     // Open link (social media)
-  if (e.target.closest('[data-action="open-link"]')) {
-    const idx = e.target.closest('[data-action="open-link"]').dataset.idx;
+    if (e.target.closest('[data-action="open-link"]')) {
+        const idx = e.target.closest('[data-action="open-link"]').dataset.idx;
         const socialOnlyLinks = socialLinks.filter(link => link.type === 'social');
         const url = socialOnlyLinks[idx].url;
-    if (url && /^https?:\/\//.test(url)) {
-      window.open(url, '_blank');
-    } else {
+        if (url && /^https?:\/\//.test(url)) {
+            window.open(url, '_blank');
+        } else {
             Swal.fire({ icon: 'warning', title: 'Invalid URL', text: 'Please enter a valid URL (starting with http:// or https://)' });
+        }
     }
-  }
     // Remove social link
-  if (e.target.closest('[data-action="remove-link"]')) {
-    const idx = e.target.closest('[data-action="remove-link"]').dataset.idx;
+    if (e.target.closest('[data-action="remove-link"]')) {
+        const idx = e.target.closest('[data-action="remove-link"]').dataset.idx;
         const socialOnlyLinks = socialLinks.filter(link => link.type === 'social');
         const linkToRemove = socialOnlyLinks[idx];
         const actualIndex = socialLinks.findIndex(link => link === linkToRemove);
         if (actualIndex !== -1) {
             socialLinks.splice(actualIndex, 1);
-    renderSocialLinks();
+            renderSocialLinks();
         }
-  }
-  // Add more social (custom)
-  if (e.target.closest('#addMoreSocialBtn')) {
+    }
+    // Add more social (custom)
+    if (e.target.closest('#addMoreSocialBtn')) {
         socialLinks.push({ type: 'social', name: '', url: '' });
-    renderSocialLinks();
-  }
+        renderSocialLinks();
+    }
 });
 
 // Initial render when settings modal opens
 function openSettingsModal() {
-  // ...existing code...
-  renderSocialLinks();
+    // ...existing code...
+    renderSocialLinks();
     renderProjectList(); // ensure URL icons are shown
-  // ...rest of your code...
+    // ...rest of your code...
 }
 
 // Event Listeners

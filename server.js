@@ -16,10 +16,12 @@ const MongoStore = require('connect-mongo');
 const User = require('./models/User');
 const Project = require('./models/Project');
 const Task = require('./models/task');
+const Message = require('./models/Message');
 
 const projectRoutes = require('./routes/projectRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const userDataRoutes = require('./routes/userDataRoutes');
+const messagesRoutes = require('./routes/messages');
 
 dotenv.config();
 const app = express();
@@ -31,41 +33,164 @@ const userIdToSockets = new Map();
 
 // Initialize socket connection
 io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
+    // console.log('A user connected:', socket.id);
 
     // Client should immediately register with their userId
-    socket.on('register', (userId) => {
-        if (!userId) return;
+    socket.on('register', async (userId) => {
+        if (!userId) {
+            console.warn('No userId provided for registration');
+            return;
+        }
         socket.userId = userId;
         const set = userIdToSockets.get(userId) || new Set();
         set.add(socket);
         userIdToSockets.set(userId, set);
         socket.emit('registered', { ok: true });
+
+        // Send unread messages in bulk and unread counts when a user connects
+        try {
+            const unread = await Message.find({ to: new mongoose.Types.ObjectId(userId), read: false }).sort({ ts: 1 }).limit(500);
+            if (unread.length) socket.emit('chat:bulk', unread);
+            const counts = await Message.aggregate([
+                { $match: { to: new mongoose.Types.ObjectId(userId), read: false } },
+                { $group: { _id: '$from', count: { $sum: 1 } } }
+            ]);
+            socket.emit('chat:unreadCounts', counts);
+        } catch (e) {
+            console.error('register unread sync error', e);
+        }
     });
 
-    // Handle outgoing chat messages: { to, text }
-    socket.on('chat:send', (payload) => {
+    // Handle outgoing chat messages: { to, text, clientId }
+    socket.on('chat:send', async (payload) => {
         try {
-            if (!payload || !payload.to || typeof payload.text !== 'string') return;
+            if (!payload || !payload.to || typeof payload.text !== 'string' || payload.text.trim().length === 0) {
+                console.warn('Invalid chat:send payload:', payload);
+                return;
+            }
             const from = socket.userId;
-            if (!from) return;
+            if (!from) {
+                console.warn('No userId for socket:', socket.id);
+                return;
+            }
             const to = payload.to;
             const message = {
                 id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
                 from,
                 to,
-                text: payload.text,
+                text: payload.text.trim(),
                 ts: Date.now(),
+                clientId: payload.clientId // pass through for dedupe
             };
-            // Echo back to sender for confirmation
+            // Echo back to sender for confirmation (client will dedupe using clientId)
             socket.emit('chat:message', message);
             // Deliver to recipient if online
             const recipientSockets = userIdToSockets.get(to);
-            if (recipientSockets) {
-                recipientSockets.forEach(s => s.emit('chat:message', message));
+            const isOnline = !!recipientSockets && recipientSockets.size > 0;
+            if (isOnline) recipientSockets.forEach(s => s.emit('chat:message', message));
+
+            // Persist message
+            try {
+                await Message.create({
+                    messageId: message.id,
+                    clientId: payload.clientId,
+                    from: new mongoose.Types.ObjectId(from),
+                    to: new mongoose.Types.ObjectId(to),
+                    text: payload.text.trim(),
+                    ts: new Date(message.ts),
+                    delivered: isOnline,
+                    read: false
+                });
+            } catch (dbErr) {
+                // ignore duplicate clientId errors
+                if (dbErr?.code !== 11000) console.error('save message error', dbErr);
+            }
+
+            // Send email if recipient offline
+            if (!isOnline) {
+                try {
+                    const toUser = await User.findById(to);
+                    const email = toUser?.emails?.find(e => e.verified && e.isPrimary)?.email || toUser?.emails?.[0]?.email;
+                    if (email) {
+                        await transporter.sendMail({
+                            from: process.env.SMTP_USER || 'aniketgupta721910@gmail.com',
+                            to: email,
+                            subject: 'New message on ProPlanner',
+                            text: `You have a new message from ${from}:\n\n${payload.text}\n\nOpen ProPlanner to reply.`
+                        });
+                    }
+                } catch (mailErr) {
+                    console.error('offline mail error', mailErr);
+                }
             }
         } catch (e) {
             console.error('chat:send error', e);
+        }
+    });
+
+    // Mark messages as read in a conversation
+    socket.on('chat:read', async ({ withUserId }) => {
+        try {
+            if (!socket.userId || !withUserId) {
+                console.warn('Invalid chat:read request:', { userId: socket.userId, withUserId });
+                return;
+            }
+            await Message.updateMany(
+                { 
+                    from: new mongoose.Types.ObjectId(withUserId), 
+                    to: new mongoose.Types.ObjectId(socket.userId), 
+                    read: false 
+                }, 
+                { $set: { read: true, readAt: new Date() } }
+            );
+        } catch (e) {
+            console.error('chat:read error', e);
+        }
+    });
+
+    // Delete a message
+    socket.on('chat:deleteMessage', async ({ messageId }) => {
+        try {
+            if (!socket.userId || !messageId) {
+                console.warn('Invalid chat:deleteMessage request:', { userId: socket.userId, messageId });
+                return;
+            }
+
+            // Find the message and verify ownership
+            const message = await Message.findOne({
+                $or: [
+                    { messageId: messageId },
+                    { clientId: messageId },
+                    { _id: mongoose.Types.ObjectId.isValid(messageId) ? new mongoose.Types.ObjectId(messageId) : null }
+                ]
+            });
+
+            if (!message) {
+                socket.emit('chat:deleteError', { message: 'Message not found' });
+                return;
+            }
+
+            // Check if user is the sender of the message
+            if (message.from.toString() !== socket.userId) {
+                socket.emit('chat:deleteError', { message: 'You can only delete your own messages' });
+                return;
+            }
+
+            // Delete the message from database
+            await Message.findByIdAndDelete(message._id);
+
+            // Notify all connected users about the message deletion
+            io.emit('chat:messageDeleted', {
+                messageId: messageId,
+                fromUserId: message.from.toString(),
+                toUserId: message.to.toString()
+            });
+
+            socket.emit('chat:deleteSuccess', { messageId: messageId });
+
+        } catch (e) {
+            console.error('chat:deleteMessage error', e);
+            socket.emit('chat:deleteError', { message: 'Failed to delete message' });
         }
     });
 
@@ -76,7 +201,7 @@ io.on('connection', (socket) => {
             set.delete(socket);
             if (set.size === 0) userIdToSockets.delete(userId);
         }
-        console.log('A user disconnected:', socket.id);
+        // console.log('A user disconnected:', socket.id);
     });
 });
 
@@ -266,6 +391,7 @@ app.get('/contact', (req, res) => {
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/userdata', userDataRoutes);
+app.use('/api/messages', messagesRoutes);
 
 // Email transporter configuration
 const transporter = nodemailer.createTransport({
@@ -335,14 +461,14 @@ cron.schedule('09 17 * * *', async () => {
                             subject: "Today's & Upcoming Task/Project Deadline Reminder",
                             text: emailContent
                         });
-                        console.log(`Reminder sent to ${email}`);
+                        // console.log(`Reminder sent to ${email}`);
                     } catch (err) {
                         console.error(`Failed to send reminder to ${email}:`, err);
                     }
                 }
             }
         }
-        console.log('All reminders sent successfully!');
+        // console.log('All reminders sent successfully!');
     } catch (err) {
         console.error('Error sending deadline reminders:', err);
     }

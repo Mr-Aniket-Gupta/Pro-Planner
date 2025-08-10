@@ -26,6 +26,74 @@ router.put('/todos', userDataController.updateTodos);
 // Update notes
 router.put('/notes', userDataController.updateNotes);
 
+// Chat System Endpoints
+// Get current user for chat
+router.get('/current-user', async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+        
+        const user = await User.findById(req.session.userId).select('_id name emails');
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        
+        const primaryEmail = user.emails?.find(e => e.isPrimary)?.email;
+        const firstEmail = user.emails?.[0]?.email;
+        const email = primaryEmail || firstEmail || '';
+        
+        res.json({
+            success: true,
+            _id: user._id,
+            name: user.name || 'User',
+            email: email
+        });
+    } catch (error) {
+        console.error('Get current user error:', error);
+        res.status(500).json({ success: false, message: 'Failed to get user data' });
+    }
+});
+
+// Get friends list for chat
+router.get('/friends', async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+        
+        const user = await User.findById(req.session.userId).populate('connections', '_id name emails');
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        
+        // Get connected friends with chat data
+        const friends = (user.connections || []).map(friend => ({
+            _id: friend._id,
+            name: friend.name || 'User',
+            email: friend.emails?.find(e => e.isPrimary)?.email || friend.emails?.[0]?.email || '',
+            online: Math.random() > 0.3, // Random online status for demo
+            lastMsg: 'Start a conversation!',
+            lastTime: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            avatar: generateAvatar(friend.name || 'User'),
+            messages: []
+        }));
+        
+        res.json(friends);
+    } catch (error) {
+        console.error('Get friends error:', error);
+        res.status(500).json({ success: false, message: 'Failed to get friends data' });
+    }
+});
+
+// Helper function to generate avatar
+function generateAvatar(name) {
+    const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+    const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+    const color = colors[name.length % colors.length];
+    return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect width="40" height="40" fill="${color}"/><text x="20" y="25" font-family="Arial" font-size="16" fill="white" text-anchor="middle">${initials}</text></svg>`;
+}
+
 // Gemini AI Chat API
 router.post('/ai/chat', async (req, res) => {
     try {
