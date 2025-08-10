@@ -26,9 +26,58 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
+// In-memory map of userId -> Set of sockets for real-time chat
+const userIdToSockets = new Map();
+
 // Initialize socket connection
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
+
+    // Client should immediately register with their userId
+    socket.on('register', (userId) => {
+        if (!userId) return;
+        socket.userId = userId;
+        const set = userIdToSockets.get(userId) || new Set();
+        set.add(socket);
+        userIdToSockets.set(userId, set);
+        socket.emit('registered', { ok: true });
+    });
+
+    // Handle outgoing chat messages: { to, text }
+    socket.on('chat:send', (payload) => {
+        try {
+            if (!payload || !payload.to || typeof payload.text !== 'string') return;
+            const from = socket.userId;
+            if (!from) return;
+            const to = payload.to;
+            const message = {
+                id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                from,
+                to,
+                text: payload.text,
+                ts: Date.now(),
+            };
+            // Echo back to sender for confirmation
+            socket.emit('chat:message', message);
+            // Deliver to recipient if online
+            const recipientSockets = userIdToSockets.get(to);
+            if (recipientSockets) {
+                recipientSockets.forEach(s => s.emit('chat:message', message));
+            }
+        } catch (e) {
+            console.error('chat:send error', e);
+        }
+    });
+
+    socket.on('disconnect', () => {
+        const { userId } = socket;
+        if (userId && userIdToSockets.has(userId)) {
+            const set = userIdToSockets.get(userId);
+            set.delete(socket);
+            if (set.size === 0) userIdToSockets.delete(userId);
+        }
+        console.log('A user disconnected:', socket.id);
+    });
 });
 
 // Export socket instance for use in other files
