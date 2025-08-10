@@ -5,6 +5,7 @@ function initializeAIBot() {
         recognition.continuous = false;
         recognition.interimResults = false;
         recognition.lang = 'en-US';
+        recognition.maxAlternatives = 1;
 
         recognition.onresult = function (event) {
             const transcript = event.results[0][0].transcript;
@@ -15,8 +16,22 @@ function initializeAIBot() {
 
         recognition.onerror = function (event) {
             console.error('Speech recognition error:', event.error);
+            // Handle specific errors more gracefully
+            if (event.error === 'no-speech') {
+                showAlert && showAlert({ icon: 'warning', title: 'No Speech Detected', text: "We couldn't hear you. Please try speaking again." });
+                // Optional auto-restart
+                if (window._autoRestartNoSpeech) {
+                    try {
+                        startVoiceRecording();
+                        return;
+                    } catch (_) {}
+                }
+            } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                showAlert && showAlert({ icon: 'error', title: 'Microphone Blocked', text: 'Please allow microphone access in your browser settings and try again.' });
+            } else {
+                showAlert && showAlert({ icon: 'error', title: 'Voice Error', text: 'Voice recognition failed: ' + event.error });
+            }
             stopVoiceRecording();
-            showAlert({ icon: 'error', title: 'Voice Error', text: 'Voice recognition failed: ' + event.error });
         };
 
         recognition.onend = function () {
@@ -43,6 +58,20 @@ function startVoiceRecording() {
     }
 
     try {
+        // Check mic permissions
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'microphone' }).then(result => {
+                if (result.state === 'denied') {
+                    showAlert && showAlert({ icon: 'error', title: 'Microphone Blocked', text: 'Please allow microphone access in your browser settings.' });
+                }
+            }).catch(() => {});
+        }
+
+        // Optional inactivity timeout (e.g., 6 seconds)
+        if (window._voiceInactivityTimer) {
+            clearTimeout(window._voiceInactivityTimer);
+        }
+
         recognition.start();
         isRecording = true;
 
@@ -58,6 +87,19 @@ function startVoiceRecording() {
         if (voiceStatus) voiceStatus.classList.remove('hidden');
         if (voiceStatusText) voiceStatusText.textContent = 'Listening... Speak now!';
         if (voiceBtn) voiceBtn.classList.add('text-red-500', 'recording');
+
+        // Show a subtle loader indicator in status
+        if (voiceStatusText) {
+            voiceStatusText.innerHTML = 'Listening<span class="inline-flex ml-2"><span class="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce"></span><span class="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce ml-1" style="animation-delay:0.1s"></span><span class="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce ml-1" style="animation-delay:0.2s"></span></span>';
+        }
+
+        // Auto-stop if no speech within X seconds
+        window._voiceInactivityTimer = setTimeout(() => {
+            if (isRecording) {
+                recognition.stop();
+                showAlert && showAlert({ icon: 'warning', title: 'No Speech Detected', text: "We couldn't hear you. Please try speaking again." });
+            }
+        }, window._voiceMaxWaitMs || 6000);
     } catch (error) {
         console.error('Error starting voice recognition:', error);
         showAlert({ icon: 'error', title: 'Voice Error', text: 'Could not start voice recognition: ' + error.message });
@@ -68,6 +110,10 @@ function startVoiceRecording() {
 function stopVoiceRecording() {
     if (recognition && isRecording) recognition.stop();
     isRecording = false;
+    if (window._voiceInactivityTimer) {
+        clearTimeout(window._voiceInactivityTimer);
+        window._voiceInactivityTimer = null;
+    }
 
     // Reset UI to default
     const micIcon = document.getElementById('micIcon');
@@ -93,7 +139,116 @@ function openAiBotModal() {
 }
 window.openAiBotModal = openAiBotModal;
 
-// Sends user's message to backend AI API
+// Global ai typing controller for interruptible animation
+let aiTypewriterController = { abort: false };
+
+function typewriterAppend(containerEl, fullHtml, onDone) {
+    // Interrupt if requested
+    aiTypewriterController.abort = false;
+    const localController = { aborted: false };
+    aiTypewriterController.current = localController;
+
+    // Create a shadow element to parse HTML safely
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<div>${fullHtml}</div>`, 'text/html');
+    const nodes = Array.from(doc.body.firstChild.childNodes);
+
+    function appendNode(node) {
+        if (localController.aborted) return;
+        if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent || '';
+            const span = document.createElement('span');
+            containerEl.appendChild(span);
+            let i = 0;
+            const step = () => {
+                if (localController.aborted) return;
+                if (i < text.length) {
+                    span.textContent += text.charAt(i++);
+                    requestAnimationFrame(step);
+                } else {
+                    iterate();
+                }
+            };
+            step();
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            const el = document.createElement(node.tagName.toLowerCase());
+            // copy attributes
+            for (const attr of node.attributes) el.setAttribute(attr.name, attr.value);
+            containerEl.appendChild(el);
+            // recursively animate children
+            const childNodes = Array.from(node.childNodes);
+            let idx = 0;
+            const stepChild = () => {
+                if (localController.aborted) return;
+                if (idx < childNodes.length) {
+                    appendNodeInto(el, childNodes[idx++], stepChild);
+                } else {
+                    iterate();
+                }
+            };
+            stepChild();
+        } else {
+            iterate();
+        }
+    }
+
+    function appendNodeInto(parentEl, node, cb) {
+        if (localController.aborted) return;
+        if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent || '';
+            const span = document.createElement('span');
+            parentEl.appendChild(span);
+            let i = 0;
+            const step = () => {
+                if (localController.aborted) return;
+                if (i < text.length) {
+                    span.textContent += text.charAt(i++);
+                    requestAnimationFrame(step);
+                } else {
+                    cb && cb();
+                }
+            };
+            step();
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            const el = document.createElement(node.tagName.toLowerCase());
+            for (const attr of node.attributes) el.setAttribute(attr.name, attr.value);
+            parentEl.appendChild(el);
+            const childNodes = Array.from(node.childNodes);
+            let idx = 0;
+            const stepChild = () => {
+                if (localController.aborted) return;
+                if (idx < childNodes.length) {
+                    appendNodeInto(el, childNodes[idx++], stepChild);
+                } else {
+                    cb && cb();
+                }
+            };
+            stepChild();
+        } else {
+            cb && cb();
+        }
+    }
+
+    let nIndex = 0;
+    function iterate() {
+        if (localController.aborted) return;
+        if (nIndex < nodes.length) {
+            appendNode(nodes[nIndex++]);
+        } else {
+            onDone && onDone();
+        }
+    }
+
+    iterate();
+}
+
+function skipTypewriter() {
+    if (aiTypewriterController && aiTypewriterController.current) {
+        aiTypewriterController.current.aborted = true;
+    }
+}
+
+// Sends user's message to backend AI API (with language and loading state)
 async function sendAiMessage() {
     window.showLoader && window.showLoader();
 
@@ -108,7 +263,17 @@ async function sendAiMessage() {
 
         addMessageToChat('user', message);
         messageInput.value = '';
-        const typingId = addTypingIndicator();
+        let typingId = addTypingIndicator();
+
+        const sendBtn = document.getElementById('sendAiMessageBtn');
+        const prevBtnHtml = sendBtn ? sendBtn.innerHTML : '';
+        if (sendBtn) {
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg> Sending...</span>';
+        }
+
+        const langSelect = document.getElementById('aiLanguageSelect');
+        const language = langSelect ? langSelect.value : 'en';
 
         let projectContext = '';
         if (selectedProjectIndex !== null && projects[selectedProjectIndex]) {
@@ -119,28 +284,36 @@ async function sendAiMessage() {
         const response = await fetch('/api/userdata/ai/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message, projectContext })
+            body: JSON.stringify({ message, projectContext, language })
         });
 
         const data = await response.json();
         removeTypingIndicator(typingId);
 
         if (data.success) {
-            addMessageToChat('ai', data.response);
+            addMessageToChat('ai', data.response, { animate: true });
         } else {
             addMessageToChat('ai', 'Sorry, I encountered an error. Please try again later.');
         }
     } catch (err) {
+        try { if (typeof removeTypingIndicator === 'function' && typeof typingId !== 'undefined') removeTypingIndicator(typingId); } catch (_) {}
         showAlert && showAlert({ icon: 'error', title: 'Error', text: err.message || 'AI response failed!' });
         console.error(err);
+        // Also append a graceful AI error message into chat
+        addMessageToChat('ai', 'Sorry, I could not process that request. Please try again in a moment.');
     } finally {
         window.hideLoader && window.hideLoader();
+        const sendBtn = document.getElementById('sendAiMessageBtn');
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = 'Send';
+        }
     }
 }
 window.sendAiMessage = sendAiMessage;
 
 // Appends user/AI message to chat UI
-function addMessageToChat(sender, message) {
+function addMessageToChat(sender, message, options = {}) {
     const chatArea = document.getElementById('aiChatArea');
     const messageDiv = document.createElement('div');
     messageDiv.className = 'flex items-start gap-3';
@@ -167,15 +340,43 @@ function addMessageToChat(sender, message) {
                 </svg>
             </div>
             <div class="bg-white border border-purple-200 rounded-xl p-4 max-w-md shadow-sm">
-                <div class="prose prose-sm max-w-none">
-                    ${formattedMessage}
-                </div>
+                <div class="prose prose-sm max-w-none ai-message-content"></div>
             </div>
         `;
     }
 
     chatArea.appendChild(messageDiv);
     chatArea.scrollTop = chatArea.scrollHeight;
+
+    // Attach typewriter animation if AI message and requested
+    if (sender !== 'user') {
+        const contentEl = messageDiv.querySelector('.ai-message-content');
+        if (contentEl) {
+            const formattedMessage = formatAIResponse(message);
+            if (options.animate) {
+                let skipBound = false;
+                const bindSkip = () => {
+                    if (skipBound) return;
+                    skipBound = true;
+                    const skip = () => {
+                        skipTypewriter();
+                        contentEl.innerHTML = formattedMessage;
+                        document.removeEventListener('keydown', skip);
+                        document.removeEventListener('click', skip);
+                    };
+                    document.addEventListener('keydown', skip, { once: true });
+                    document.addEventListener('click', skip, { once: true });
+                };
+                bindSkip();
+                typewriterAppend(contentEl, formattedMessage, () => {
+                    document.removeEventListener('keydown', skipTypewriter);
+                    document.removeEventListener('click', skipTypewriter);
+                });
+            } else {
+                contentEl.innerHTML = formattedMessage;
+            }
+        }
+    }
 }
 
 // Formats AI message content with styling for UI
@@ -269,8 +470,19 @@ document.addEventListener('DOMContentLoaded', function () {
         messageInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
+                skipTypewriter();
                 sendAiMessage();
             }
         });
+        messageInput.addEventListener('input', function () {
+            // If the user starts typing, skip any running animation
+            skipTypewriter();
+        });
+    }
+
+    const sendBtn = document.getElementById('sendAiMessageBtn');
+    if (sendBtn && !sendBtn.hasAttribute('data-listener-added')) {
+        sendBtn.addEventListener('click', function () { skipTypewriter(); });
+        sendBtn.setAttribute('data-listener-added', 'true');
     }
 });
