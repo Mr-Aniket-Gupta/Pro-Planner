@@ -33,16 +33,16 @@ router.get('/current-user', async (req, res) => {
         if (!req.session.userId) {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
-        
+
         const user = await User.findById(req.session.userId).select('_id name emails');
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
-        
+
         const primaryEmail = user.emails?.find(e => e.isPrimary)?.email;
         const firstEmail = user.emails?.[0]?.email;
         const email = primaryEmail || firstEmail || '';
-        
+
         res.json({
             success: true,
             _id: user._id,
@@ -61,12 +61,12 @@ router.get('/friends', async (req, res) => {
         if (!req.session.userId) {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
-        
+
         const user = await User.findById(req.session.userId).populate('connections', '_id name emails');
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
-        
+
         // Get connected friends with chat data
         const friends = (user.connections || []).map(friend => ({
             _id: friend._id,
@@ -78,7 +78,7 @@ router.get('/friends', async (req, res) => {
             avatar: generateAvatar(friend.name || 'User'),
             messages: []
         }));
-        
+
         res.json(friends);
     } catch (error) {
         console.error('Get friends error:', error);
@@ -97,7 +97,7 @@ function generateAvatar(name) {
 // Gemini AI Chat API
 router.post('/ai/chat', async (req, res) => {
     try {
-        const { message, projectContext } = req.body;
+        const { message, projectContext, language } = req.body;
         if (!req.session.userId) {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
@@ -105,7 +105,8 @@ router.post('/ai/chat', async (req, res) => {
         if (!user) {
             return res.status(401).json({ success: false, message: 'User not found' });
         }
-        let contextPrompt = `You are ProPlanner AI Assistant, a helpful project management assistant. \n\nUser: ${user.name}\nCurrent Message: ${message}\n\nPlease provide helpful, concise responses in both Hindi and English with proper formatting. You can help with:\n- Project planning and task management advice\n- Productivity tips\n- Time management suggestions\n- Project organization recommendations\n- General questions about ProPlanner features\n\n**Format your responses like this:**\n\n**English:** [Your English response with proper formatting]\n- Use **bold** for important points\n- Use *italic* for emphasis\n- Use bullet points for lists\n- Use numbered lists for steps\n- Use \`code\` for technical terms\n\n**Hindi:** [Your Hindi response with proper formatting]\n- Use **bold** for important points\n- Use *italic* for emphasis\n- Use bullet points for lists\n- Use numbered lists for steps\n\nKeep responses friendly, practical, and actionable. Use proper markdown formatting for better readability.`;
+        const lang = (language === 'hi' || language === 'en') ? language : 'en';
+        let contextPrompt = `You are ProPlanner AI Assistant, a helpful project management assistant.\n\nUser: ${user.name}\nCurrent Message: ${message}\n\nPlease answer ONLY in ${lang === 'hi' ? 'Hindi' : 'English'} with proper markdown formatting, concise and actionable. You can help with:\n- Project planning and task management advice\n- Productivity tips\n- Time management suggestions\n- Project organization recommendations\n- General questions about ProPlanner features`;
         if (projectContext) {
             contextPrompt += `\n\nProject Context: ${projectContext}`;
         }

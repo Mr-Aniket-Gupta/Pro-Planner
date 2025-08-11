@@ -338,8 +338,14 @@ main {
         max-width: 100%;
     }
 
-    .contact-split { grid-template-columns: repeat(6, 1fr); }
-    .contact-info-card, .contact-form-card { grid-column: span 6; }
+    .contact-split {
+        grid-template-columns: repeat(6, 1fr);
+    }
+
+    .contact-info-card,
+    .contact-form-card {
+        grid-column: span 6;
+    }
 
     .contact-info-card,
     .contact-form-card {

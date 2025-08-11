@@ -20,4 +20,9 @@ const projectSchema = new mongoose.Schema({
   }]
 });
 
+// Add indexes for better query performance
+projectSchema.index({ userId: 1, created: -1 });
+projectSchema.index({ 'sharedWith.user': 1 });
+projectSchema.index({ isPublic: 1 });
+
 module.exports = mongoose.model('Project', projectSchema);

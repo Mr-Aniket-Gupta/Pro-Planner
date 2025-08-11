@@ -37,10 +37,11 @@ io.on('connection', (socket) => {
 
     // Client should immediately register with their userId
     socket.on('register', async (userId) => {
-        if (!userId) {
-            console.warn('No userId provided for registration');
-            return;
-        }
+        try {
+            if (!userId) {
+                console.warn('No userId provided for registration');
+                return;
+            }
         socket.userId = userId;
         const set = userIdToSockets.get(userId) || new Set();
         set.add(socket);
@@ -58,6 +59,9 @@ io.on('connection', (socket) => {
             socket.emit('chat:unreadCounts', counts);
         } catch (e) {
             console.error('register unread sync error', e);
+        }
+        } catch (error) {
+            console.error('Error during socket registration:', error);
         }
     });
 
@@ -136,11 +140,11 @@ io.on('connection', (socket) => {
                 return;
             }
             await Message.updateMany(
-                { 
-                    from: new mongoose.Types.ObjectId(withUserId), 
-                    to: new mongoose.Types.ObjectId(socket.userId), 
-                    read: false 
-                }, 
+                {
+                    from: new mongoose.Types.ObjectId(withUserId),
+                    to: new mongoose.Types.ObjectId(socket.userId),
+                    read: false
+                },
                 { $set: { read: true, readAt: new Date() } }
             );
         } catch (e) {
@@ -213,6 +217,15 @@ mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('MongoDB connected successfully'))
     .catch(err => console.error(err));
 
+// Security middleware
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+});
+
 // Middleware setup
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -235,6 +248,28 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Temporary in-memory OTP store
 const otpStore = {}; // Structure: { email: { otp, expiresAt, data } }
+
+// Basic rate limiting for OTP requests
+const otpRateLimit = new Map(); // Structure: { email: { count, resetTime } }
+const MAX_OTP_REQUESTS = 5; // Maximum 5 OTP requests per hour
+const OTP_RESET_TIME = 60 * 60 * 1000; // 1 hour in milliseconds
+
+function checkOtpRateLimit(email) {
+    const now = Date.now();
+    const userLimit = otpRateLimit.get(email);
+    
+    if (!userLimit || now > userLimit.resetTime) {
+        otpRateLimit.set(email, { count: 1, resetTime: now + OTP_RESET_TIME });
+        return true;
+    }
+    
+    if (userLimit.count >= MAX_OTP_REQUESTS) {
+        return false;
+    }
+    
+    userLimit.count++;
+    return true;
+}
 
 // Generate a 6-digit OTP
 function generateOTP() {
@@ -260,121 +295,216 @@ app.get('/auth', (req, res) => res.render('auth'));
 
 // Signup - Step 1: Send OTP or direct sign up for Super Admin
 app.post('/signup', async (req, res) => {
-    const { name, email, password, confirmPassword } = req.body;
-    if (password !== confirmPassword) return res.send('Passwords do not match');
+    try {
+        const { name, email, password, confirmPassword } = req.body;
+        
+        // Input validation
+        if (!name || !email || !password || !confirmPassword) {
+            return res.status(400).send('All fields are required');
+        }
+        
+        if (password.length < 6) {
+            return res.status(400).send('Password must be at least 6 characters long');
+        }
+        
+        if (password !== confirmPassword) {
+            return res.status(400).send('Passwords do not match');
+        }
+        
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).send('Please enter a valid email address');
+        }
 
-    const existingUser = await User.findOne({ 'emails.email': email });
-    if (existingUser) return res.send('Email already exists');
+        const existingUser = await User.findOne({ 'emails.email': email });
+        if (existingUser) return res.status(400).send('Email already exists');
 
     if (email === 'admin@gmail.com') {
-        const hashed = await bcrypt.hash(password, 10);
-        const newUser = new User({
-            name,
-            password: hashed,
-            emails: [{ email, verified: true, isPrimary: true, addedAt: new Date() }]
-        });
-        await newUser.save();
-        req.session.userId = newUser._id;
-        return res.send('Signup successful!');
+        try {
+            const hashed = await bcrypt.hash(password, 10);
+            const newUser = new User({
+                name,
+                password: hashed,
+                emails: [{ email, verified: true, isPrimary: true, addedAt: new Date() }]
+            });
+            await newUser.save();
+            req.session.userId = newUser._id;
+            return res.send('Signup successful!');
+        } catch (userError) {
+            console.error('Error creating admin user:', userError);
+            return res.status(500).send('Failed to create user. Please try again.');
+        }
     }
 
+    // Check rate limit
+    if (!checkOtpRateLimit(email)) {
+        return res.status(429).send('Too many OTP requests. Please try again later.');
+    }
+    
     const otp = generateOTP();
     otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000, data: { name, email, password } };
-    await transporter.sendMail({
-        from: 'aniketgupta721910@gmail.com',
-        to: email,
-        subject: 'ProPlanner Signup OTP',
-        text: `Your OTP for ProPlanner signup is: ${otp}\nThis OTP is valid for 5 minutes.`
-    });
-    res.send('OTP sent to your email. Please verify.');
+    
+    try {
+        await transporter.sendMail({
+            from: process.env.SMTP_USER || 'aniketgupta721910@gmail.com',
+            to: email,
+            subject: 'ProPlanner Signup OTP',
+            text: `Your OTP for ProPlanner signup is: ${otp}\nThis OTP is valid for 5 minutes.`
+        });
+        res.send('OTP sent to your email. Please verify.');
+    } catch (emailError) {
+        console.error('Failed to send signup OTP:', emailError);
+        res.status(500).send('Failed to send OTP. Please try again.');
+    }
+    } catch (error) {
+        console.error('Error during signup:', error);
+        res.status(500).send('Failed to process signup. Please try again.');
+    }
 });
 
 // Signup - Step 2: Verify OTP
 app.post('/verify-signup-otp', async (req, res) => {
-    const { email, otp } = req.body;
-    const record = otpStore[email];
-    if (!record || record.otp !== otp || record.expiresAt < Date.now()) {
-        return res.send('Invalid or expired OTP');
-    }
+    try {
+        const { email, otp } = req.body;
+        
+        if (!email || !otp) {
+            return res.status(400).send('Email and OTP are required');
+        }
+        
+        const record = otpStore[email];
+        if (!record || record.otp !== otp || record.expiresAt < Date.now()) {
+            return res.status(400).send('Invalid or expired OTP');
+        }
 
-    const hashed = await bcrypt.hash(record.data.password, 10);
-    const newUser = new User({
-        name: record.data.name,
-        password: hashed,
-        emails: [{ email, verified: true, isPrimary: true, addedAt: new Date() }]
-    });
-    await newUser.save();
-    delete otpStore[email];
-    req.session.userId = newUser._id;
-    res.send('Signup successful!');
+        const hashed = await bcrypt.hash(record.data.password, 10);
+        const newUser = new User({
+            name: record.data.name,
+            password: hashed,
+            emails: [{ email, verified: true, isPrimary: true, addedAt: new Date() }]
+        });
+        await newUser.save();
+        delete otpStore[email];
+        req.session.userId = newUser._id;
+        res.send('Signup successful!');
+    } catch (error) {
+        console.error('Error during OTP verification:', error);
+        res.status(500).send('Failed to verify OTP. Please try again.');
+    }
 });
 
 // Login - Step 1: Send OTP or direct login for Super Admin
 app.post('/login', async (req, res) => {
-    const { email, password, remember } = req.body;
-    const user = await User.findOne({ 'emails.email': email, 'emails.verified': true });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.send('Invalid email or password');
+    try {
+        const { email, password, remember } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
+        
+        const user = await User.findOne({ 'emails.email': email, 'emails.verified': true });
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        if (email === 'admin@gmail.com') {
+            req.session.userId = user._id;
+            req.session.cookie.maxAge = remember ? 14 * 24 * 60 * 60 * 1000 : null;
+
+            const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'supersecretjwtkey', {
+                expiresIn: remember ? '14d' : '1d'
+            });
+            return res.json({ message: 'Login successful!', token });
+        }
+
+        // Check rate limit
+        if (!checkOtpRateLimit(email)) {
+            return res.status(429).json({ error: 'Too many OTP requests. Please try again later.' });
+        }
+        
+        const otp = generateOTP();
+        otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000, data: { userId: user._id, remember } };
+        
+        try {
+            await transporter.sendMail({
+                from: process.env.SMTP_USER || 'aniketgupta721910@gmail.com',
+                to: email,
+                subject: 'ProPlanner Login OTP',
+                text: `Your OTP for ProPlanner login is: ${otp}\nThis OTP is valid for 5 minutes.`
+            });
+            res.json({ message: 'OTP sent to your email. Please verify.' });
+        } catch (emailError) {
+            console.error('Failed to send login OTP:', emailError);
+            res.status(500).json({ error: 'Failed to send OTP. Please try again.' });
+        }
+    } catch (error) {
+        console.error('Error during login:', error);
+        res.status(500).json({ error: 'Failed to process login. Please try again.' });
     }
-
-    if (email === 'admin@gmail.com') {
-        req.session.userId = user._id;
-        req.session.cookie.maxAge = remember ? 14 * 24 * 60 * 60 * 1000 : null;
-
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'supersecretjwtkey', {
-            expiresIn: remember ? '14d' : '1d'
-        });
-        return res.json({ message: 'Login successful!', token });
-    }
-
-    const otp = generateOTP();
-    otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000, data: { userId: user._id, remember } };
-    await transporter.sendMail({
-        from: 'aniketgupta721910@gmail.com',
-        to: email,
-        subject: 'ProPlanner Login OTP',
-        text: `Your OTP for ProPlanner login is: ${otp}\nThis OTP is valid for 5 minutes.`
-    });
-    res.json({ message: 'OTP sent to your email. Please verify.' });
 });
 
 // Login - Step 2: Verify OTP
 app.post('/verify-login-otp', async (req, res) => {
-    const { email, otp } = req.body;
-    const record = otpStore[email];
-    if (!record || record.otp !== otp || record.expiresAt < Date.now()) {
-        return res.send('Invalid or expired OTP');
+    try {
+        const { email, otp } = req.body;
+        
+        if (!email || !otp) {
+            return res.status(400).json({ error: 'Email and OTP are required' });
+        }
+        
+        const record = otpStore[email];
+        if (!record || record.otp !== otp || record.expiresAt < Date.now()) {
+            return res.status(400).json({ error: 'Invalid or expired OTP' });
+        }
+
+        req.session.userId = record.data.userId;
+        req.session.cookie.maxAge = record.data.remember ? 14 * 24 * 60 * 60 * 1000 : null;
+
+        const token = jwt.sign({ userId: record.data.userId }, process.env.JWT_SECRET || 'supersecretjwtkey', {
+            expiresIn: record.data.remember ? '14d' : '1d'
+        });
+        delete otpStore[email];
+        res.json({ message: 'Login successful!', token });
+    } catch (error) {
+        console.error('Error during login OTP verification:', error);
+        res.status(500).json({ error: 'Failed to verify OTP. Please try again.' });
     }
-
-    req.session.userId = record.data.userId;
-    req.session.cookie.maxAge = record.data.remember ? 14 * 24 * 60 * 60 * 1000 : null;
-
-    const token = jwt.sign({ userId: record.data.userId }, process.env.JWT_SECRET || 'supersecretjwtkey', {
-        expiresIn: record.data.remember ? '14d' : '1d'
-    });
-    delete otpStore[email];
-    res.json({ message: 'Login successful!', token });
 });
 
 // Auto-login using JWT token
 app.post('/auto-login', async (req, res) => {
-    const { token } = req.body;
     try {
+        const { token } = req.body;
+        
+        if (!token) {
+            return res.status(400).json({ error: 'Token is required' });
+        }
+        
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretjwtkey');
         const user = await User.findById(decoded.userId);
         if (!user) return res.status(401).json({ error: 'Invalid token' });
         req.session.userId = user._id;
         return res.json({ message: 'Auto-login successful!' });
-    } catch {
+    } catch (error) {
+        console.error('Auto-login error:', error);
         return res.status(401).json({ error: 'Invalid or expired token' });
     }
 });
 
 // Dashboard page (session required)
 app.get('/dashboard', async (req, res) => {
-    if (!req.session.userId) return res.redirect('/auth');
-    const user = await User.findById(req.session.userId);
-    res.render('dashboard', { user });
+    try {
+        if (!req.session.userId) return res.redirect('/auth');
+        const user = await User.findById(req.session.userId);
+        if (!user) {
+            req.session.destroy();
+            return res.redirect('/auth');
+        }
+        res.render('dashboard', { user });
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
+        res.status(500).render('error', { message: 'Failed to load dashboard' });
+    }
 });
 
 // Logout
@@ -387,6 +517,11 @@ app.get('/contact', (req, res) => {
     res.render('contact');
 });
 
+// Error page
+app.get('/error', (req, res) => {
+    res.render('error', { message: req.query.message || 'An error occurred' });
+});
+
 // API routes
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
@@ -397,14 +532,24 @@ app.use('/api/messages', messagesRoutes);
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'aniketgupta721910@gmail.com',
-        pass: 'ngwf udjw pgui rvbt'
+        user: process.env.SMTP_USER || 'aniketgupta721910@gmail.com',
+        pass: process.env.SMTP_PASS || 'ngwf udjw pgui rvbt'
+    }
+});
+
+// Verify transporter configuration
+transporter.verify(function(error, success) {
+    if (error) {
+        console.error('Email transporter verification failed:', error);
+    } else {
+        console.log('Email server is ready to send messages');
     }
 });
 
 // Daily cron job to email task reminders at 5:09 PM
 cron.schedule('09 17 * * *', async () => {
     try {
+        console.log('Starting daily task reminder cron job...');
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
@@ -413,6 +558,8 @@ cron.schedule('09 17 * * *', async () => {
         nextWeek.setDate(today.getDate() + 7);
 
         const users = await User.find({});
+        console.log(`Found ${users.length} users for task reminders`);
+        
         for (const user of users) {
             const projects = await Project.find({ userId: user._id, completed: false });
             let emailContent = `Hello ${user.name || ''},\n\nHere are your projects and tasks with deadlines today:\n`;
@@ -456,22 +603,33 @@ cron.schedule('09 17 * * *', async () => {
                 for (const email of verifiedEmails) {
                     try {
                         await transporter.sendMail({
-                            from: 'aniketgupta721910@gmail.com',
+                            from: process.env.SMTP_USER || 'aniketgupta721910@gmail.com',
                             to: email,
                             subject: "Today's & Upcoming Task/Project Deadline Reminder",
                             text: emailContent
                         });
-                        // console.log(`Reminder sent to ${email}`);
+                        console.log(`Reminder sent to ${email}`);
                     } catch (err) {
                         console.error(`Failed to send reminder to ${email}:`, err);
                     }
                 }
             }
         }
-        // console.log('All reminders sent successfully!');
+        console.log('Daily task reminder cron job completed successfully!');
     } catch (err) {
         console.error('Error sending deadline reminders:', err);
     }
+});
+
+// 404 handler
+app.use((req, res) => {
+    res.status(404).render('error', { message: 'Page not found' });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+    console.error('Global error handler:', err);
+    res.status(500).render('error', { message: 'Internal server error' });
 });
 
 // Start server

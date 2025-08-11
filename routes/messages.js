@@ -8,23 +8,23 @@ router.get('/history', async (req, res) => {
     try {
         const userId = req.session.userId;
         const { withUserId, cursor, limit = 50 } = req.query;
-        
+
         if (!userId || !withUserId) {
             return res.status(400).json({ error: 'Missing userId or withUserId' });
         }
-        
+
         // Validate ObjectIds
         if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(withUserId)) {
             return res.status(400).json({ error: 'Invalid user ID format' });
         }
-        
+
         const q = {
             $or: [
                 { from: new mongoose.Types.ObjectId(userId), to: new mongoose.Types.ObjectId(withUserId) },
                 { from: new mongoose.Types.ObjectId(withUserId), to: new mongoose.Types.ObjectId(userId) }
             ]
         };
-        
+
         if (cursor) {
             const cursorDate = new Date(Number(cursor));
             if (isNaN(cursorDate.getTime())) {
@@ -32,7 +32,7 @@ router.get('/history', async (req, res) => {
             }
             q.ts = { $lt: cursorDate };
         }
-        
+
         const items = await Message.find(q).sort({ ts: -1 }).limit(Math.min(+limit, 100));
         return res.json({ items, nextCursor: items.at(-1)?.ts?.getTime() });
     } catch (e) {
@@ -48,11 +48,11 @@ router.get('/unread-counts', async (req, res) => {
         if (!userId) {
             return res.status(401).json({ error: 'Unauthorized' });
         }
-        
+
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ error: 'Invalid user ID format' });
         }
-        
+
         const rows = await Message.aggregate([
             { $match: { to: new mongoose.Types.ObjectId(userId), read: false } },
             { $group: { _id: '$from', count: { $sum: 1 } } }
@@ -69,19 +69,19 @@ router.delete('/:messageId', async (req, res) => {
     try {
         const userId = req.session.userId;
         const { messageId } = req.params;
-        
+
         if (!userId) {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
-        
+
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ success: false, message: 'Invalid user ID format' });
         }
-        
+
         if (!messageId) {
             return res.status(400).json({ success: false, message: 'Message ID is required' });
         }
-        
+
         // Find the message and verify ownership
         const message = await Message.findOne({
             $or: [
@@ -90,19 +90,19 @@ router.delete('/:messageId', async (req, res) => {
                 { _id: mongoose.Types.ObjectId.isValid(messageId) ? new mongoose.Types.ObjectId(messageId) : null }
             ]
         });
-        
+
         if (!message) {
             return res.status(404).json({ success: false, message: 'Message not found' });
         }
-        
+
         // Check if user is the sender of the message
         if (message.from.toString() !== userId) {
             return res.status(403).json({ success: false, message: 'You can only delete your own messages' });
         }
-        
+
         // Delete the message from database
         await Message.findByIdAndDelete(message._id);
-        
+
         // Emit socket event to notify other users about message deletion
         const io = require('../server').io;
         if (io) {
@@ -112,13 +112,13 @@ router.delete('/:messageId', async (req, res) => {
                 toUserId: message.to.toString()
             });
         }
-        
-        res.json({ 
-            success: true, 
+
+        res.json({
+            success: true,
             message: 'Message deleted successfully',
             deletedMessageId: messageId
         });
-        
+
     } catch (e) {
         console.error('Delete message error:', e);
         res.status(500).json({ success: false, message: 'Failed to delete message' });

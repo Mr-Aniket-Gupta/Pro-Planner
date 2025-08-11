@@ -81,12 +81,12 @@ class ChatSystem {
     return [
       {
         _id: '1',
-    name: 'Aniket Gupta',
-    online: true,
-    lastMsg: 'You: Thanks a lot',
-    lastTime: 'Jul 15',
+        name: 'Aniket Gupta',
+        online: true,
+        lastMsg: 'You: Thanks a lot',
+        lastTime: 'Jul 15',
         avatar: '',
-    messages: [
+        messages: [
           { fromMe: false, text: 'Hi! How are you?', time: '9:01 PM', timestamp: Date.now() - 3600000 },
           { fromMe: true, text: 'I am good, thanks!', time: '9:03 PM', timestamp: Date.now() - 3540000 },
           { fromMe: false, text: 'Great to hear!', time: '9:04 PM', timestamp: Date.now() - 3480000 }
@@ -94,10 +94,10 @@ class ChatSystem {
       },
       {
         _id: '2',
-    name: 'Ayush Taware',
-    online: false,
-    lastMsg: 'Ayush: No it\'s not fake',
-    lastTime: 'Jul 15',
+        name: 'Ayush Taware',
+        online: false,
+        lastMsg: 'Ayush: No it\'s not fake',
+        lastTime: 'Jul 15',
         avatar: '',
         messages: [
           { fromMe: true, text: 'Is this internship real?', time: '9:10 PM', timestamp: Date.now() - 7200000 },
@@ -111,7 +111,7 @@ class ChatSystem {
         lastMsg: 'Priya: Project deadline is tomorrow',
         lastTime: '2:30 PM',
         avatar: '',
-    messages: [
+        messages: [
           { fromMe: false, text: 'Hey! How\'s the project going?', time: '2:25 PM', timestamp: Date.now() - 300000 },
           { fromMe: true, text: 'Going well, almost done!', time: '2:28 PM', timestamp: Date.now() - 120000 },
           { fromMe: false, text: 'Project deadline is tomorrow', time: '2:30 PM', timestamp: Date.now() - 60000 }
@@ -217,11 +217,11 @@ class ChatSystem {
           const { messageId, fromUserId, toUserId } = data;
           const friendId = fromUserId === this.myUserId ? toUserId : fromUserId;
           const friend = this.friends.find(f => f._id === friendId);
-          
+
           if (friend) {
             // Remove message from friend's messages array
             friend.messages = friend.messages.filter(msg => msg.id !== messageId);
-            
+
             // Update last message and time if the deleted message was the last one
             if (friend.messages.length > 0) {
               const lastMsg = friend.messages[friend.messages.length - 1];
@@ -499,7 +499,7 @@ class ChatSystem {
     // Avatar node
     const slot = chatWindow.querySelector('.avatar-slot');
     slot.appendChild(this.getAvatarNode(friend, 36));
-    
+
     return chatWindow;
   }
 
@@ -584,7 +584,7 @@ class ChatSystem {
   renderChatMessages(chatWindow, friend) {
     const messagesContainer = chatWindow.querySelector('.chat-messages');
     if (!messagesContainer) return;
-    
+
     messagesContainer.innerHTML = '';
 
     if (!friend.messages || friend.messages.length === 0) {
@@ -684,7 +684,7 @@ class ChatSystem {
       // Use socket for real-time deletion
       if (this.socket && this.isSocketReady) {
         this.socket.emit('chat:deleteMessage', { messageId });
-        
+
         // Listen for success/error responses
         const successHandler = (data) => {
           if (data.messageId === messageId) {
@@ -692,15 +692,15 @@ class ChatSystem {
             this.socket.off('chat:deleteSuccess', successHandler);
           }
         };
-        
+
         const errorHandler = (data) => {
           alert('Failed to delete message: ' + data.message);
           this.socket.off('chat:deleteError', errorHandler);
         };
-        
+
         this.socket.on('chat:deleteSuccess', successHandler);
         this.socket.on('chat:deleteError', errorHandler);
-        
+
         // Fallback to API if socket fails
         setTimeout(() => {
           this.socket.off('chat:deleteSuccess', successHandler);
@@ -753,7 +753,7 @@ class ChatSystem {
 
     // Remove message from friend's messages array
     friend.messages = friend.messages.filter(msg => msg.id !== messageId);
-    
+
     // Update last message and time if the deleted message was the last one
     if (friend.messages.length > 0) {
       const lastMsg = friend.messages[friend.messages.length - 1];
@@ -815,18 +815,18 @@ class ChatSystem {
             <div class="friend-status ${friend.online ? 'online' : 'offline'}"></div>
           </div>
           <span class="chat-badge"></span>`;
-        
+
         // avatar node
         const avatarSlot = friendEl.querySelector('.avatar-slot');
         if (avatarSlot) {
           avatarSlot.appendChild(this.getAvatarNode(friend, 40));
         }
-        
+
         // safe textContent assignments to avoid HTML injection artifacts
         const nameEl = friendEl.querySelector('.friend-name');
         const lastMsgEl = friendEl.querySelector('.friend-last-message');
         const timeEl = friendEl.querySelector('.friend-time');
-        
+
         if (nameEl) nameEl.textContent = friend.name || 'User';
         if (lastMsgEl) lastMsgEl.textContent = friend.lastMsg || '';
         if (timeEl) timeEl.textContent = friend.lastTime || '';
@@ -921,7 +921,7 @@ class ChatSystem {
 
     // Add bulk delete mode class
     chatWindow.classList.add('bulk-delete-mode');
-    
+
     // Add checkboxes to messages
     const messages = chatWindow.querySelectorAll('.chat-message');
     messages.forEach((msgEl, index) => {
@@ -954,7 +954,7 @@ class ChatSystem {
     // Select all functionality
     const selectAllCheckbox = bulkControls.querySelector('#select-all-messages');
     const messageCheckboxes = bulkControls.parentElement.querySelectorAll('.message-checkbox');
-    
+
     selectAllCheckbox.addEventListener('change', () => {
       messageCheckboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
     });
@@ -965,7 +965,7 @@ class ChatSystem {
       const selectedMessages = Array.from(messageCheckboxes)
         .filter(cb => cb.checked)
         .map(cb => cb.dataset.messageId);
-      
+
       if (selectedMessages.length === 0) {
         alert('Please select messages to delete');
         return;
@@ -986,11 +986,11 @@ class ChatSystem {
 
   exitBulkDeleteMode(chatWindow) {
     chatWindow.classList.remove('bulk-delete-mode');
-    
+
     // Remove checkboxes
     const checkboxes = chatWindow.querySelectorAll('.message-checkbox');
     checkboxes.forEach(cb => cb.remove());
-    
+
     // Remove bulk controls
     const bulkControls = chatWindow.querySelector('.bulk-delete-controls');
     if (bulkControls) bulkControls.remove();

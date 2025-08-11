@@ -13,6 +13,19 @@ let currentOtpEmail = '';
 let otpTimerInterval = null;
 let otpTimeLeft = 120;
 
+// Toast instance for consistent notifications
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.onmouseenter = Swal.stopTimer;
+    toast.onmouseleave = Swal.resumeTimer;
+  }
+});
+
 // Project List Render
 // Projects ko list me render karta hai
 function renderProjectList() {
@@ -624,28 +637,17 @@ async function editTask(index) {
                 }, task.projectId);
 
                 // Show success message
-                Swal.fire({
+                Toast.fire({
                     icon: 'success',
-                    title: 'Task Updated!',
-                    text: 'Task has been successfully updated.',
-                    background: '#f0f6ff',
-                    color: '#1e40af',
-                    confirmButtonColor: '#3B82F6',
-                    timer: 2000,
-                    showConfirmButton: false
+                    title: 'Task Updated!'
                 });
 
                 // Refresh task list
                 await fetchAndRenderTasksWithFilters();
             } catch (error) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Update Failed',
-                    text: 'Failed to update task. Please try again.',
-                    background: '#fef2f2',
-                    color: '#dc2626',
-                    confirmButtonColor: '#dc2626'
-                });
+                // Only show error if request actually failed
+                const message = toReadableMessage(error?.message || error);
+                Toast.fire({ icon: 'error', title: message || 'Failed to update task. Please try again.' });
             }
         }
     });
@@ -763,9 +765,29 @@ function addAdvancedInput(val = '') {
     div.innerHTML = `<input type="text" class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 advanced-input" placeholder="Advanced Feature" value="${val}"><button type="button" onclick="this.parentNode.remove()" class="text-red-400 hover:text-red-600 px-2 transition-colors">✖</button>`;
     document.getElementById('advancedInputs').appendChild(div);
 }
+// Utility: Convert any error-like value into a readable string
+function toReadableMessage(value) {
+    try {
+        if (value == null) return '';
+        if (typeof value === 'string') return value;
+        if (value instanceof Error) return value.message || String(value);
+        if (typeof value === 'object') {
+            // Common API response shapes
+            if (value.message) return value.message;
+            if (value.error) return value.error;
+            if (value.errors && Array.isArray(value.errors)) return value.errors.map(e => e.message || e).join(', ');
+            return JSON.stringify(value);
+        }
+        return String(value);
+    } catch (_) {
+        return 'Unknown error occurred';
+    }
+}
+
 // Modern alert (Swal) show karta hai
 function showAlert({ icon = 'success', title = '', text = '', color = '#2563eb', bg = '#f0f6ff' }) {
-    Swal.fire({ icon, title, text, background: bg, color, confirmButtonColor: '#2563eb' });
+    const readable = toReadableMessage(title || text);
+    Toast.fire({ icon, title: readable });
 }
 // Logout par Swal confirmation
 function logoutUser() {
@@ -1034,7 +1056,14 @@ async function deleteProject(idx) {
 async function fetchTasks(projectId) {
     window.showLoader();
     const res = await fetch(`/api/tasks/${projectId}`);
-    taskList = await res.json();
+    try {
+        const data = await res.json();
+        if (Array.isArray(data)) taskList = data;
+        else if (data && Array.isArray(data.tasks)) taskList = data.tasks;
+        else taskList = [];
+    } catch (_) {
+        taskList = [];
+    }
     renderTasks();
     updateDashboardOverview();
     window.hideLoader();
@@ -1066,7 +1095,14 @@ async function updateTaskInDB(taskId, data, projectId) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        if (!res.ok) throw new Error('Task update failed');
+        if (!res.ok) {
+            let errMsg = 'Task update failed';
+            try {
+                const errData = await res.json();
+                errMsg = toReadableMessage(errData);
+            } catch (_) { }
+            throw new Error(errMsg);
+        }
         // Generate specific message based on what was updated
         if (data.completed !== undefined) {
             const status = data.completed ? 'completed' : 'marked as pending';
@@ -1074,10 +1110,10 @@ async function updateTaskInDB(taskId, data, projectId) {
         } else {
             addActivityFeed(`Task "${data.text || taskId}" details updated`, 'update');
         }
-        showAlert({ icon: 'success', title: 'Success', text: 'Task updated!' });
+        showAlert({ icon: 'success', title: 'Task updated!' });
         await fetchTasks(projectId);
     } catch (err) {
-        showAlert({ icon: 'error', title: 'Error', text: 'Failed to update task!' });
+        showAlert({ icon: 'error', title: toReadableMessage(err) || 'Failed to update task!' });
     } finally {
         window.hideLoader();
     }
@@ -1711,7 +1747,14 @@ async function fetchAndRenderTasksWithFilters() {
     const priority = document.getElementById('taskPriorityFilter').value;
     const params = new URLSearchParams({ projectId, q, tag, priority });
     const res = await fetch(`/api/tasks/search?${params.toString()}`);
-    taskList = await res.json();
+    try {
+        const data = await res.json();
+        if (Array.isArray(data)) taskList = data;
+        else if (data && Array.isArray(data.tasks)) taskList = data.tasks;
+        else taskList = [];
+    } catch (_) {
+        taskList = [];
+    }
     renderTasks(q, tag, priority);
 }
 // Add event listeners for task filters (with null checks)
@@ -1774,7 +1817,7 @@ if (profileForm) {
         const name = document.getElementById('settingsName').value;
 
         if (!name.trim()) {
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Please enter a name.' });
+            Toast.fire({ icon: 'error', title: 'Please enter a name.' });
             return;
         }
 
@@ -1786,14 +1829,14 @@ if (profileForm) {
             });
             const data = await res.json();
             if (data.success) {
-                Swal.fire({ icon: 'success', title: 'Updated!', text: 'Profile updated successfully.' });
+                Toast.fire({ icon: 'success', title: 'Profile updated successfully.' });
                 prefillSettingsModal();
             } else {
-                Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Update failed.' });
+                Toast.fire({ icon: 'error', title: data.message || 'Update failed.' });
             }
         } catch (error) {
             console.error('Profile update error:', error);
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update profile. Please try again.' });
+            Toast.fire({ icon: 'error', title: 'Failed to update profile. Please try again.' });
         }
     });
 }
@@ -1864,10 +1907,10 @@ if (addEmailBtn) {
         const emailInput = document.getElementById('addEmailInput');
         const email = emailInput.value.trim();
 
-        if (!email) {
-            Swal.fire({ icon: 'warning', title: 'Error', text: 'Please enter an email address.' });
-            return;
-        }
+                        if (!email) {
+                    Toast.fire({ icon: 'warning', title: 'Please enter an email address.' });
+                    return;
+                }
 
         try {
             const res = await fetch('/api/userdata/email/send-otp', {
@@ -1881,12 +1924,12 @@ if (addEmailBtn) {
             if (data.success) {
                 openOtpModal(email);
                 emailInput.value = '';
-            } else {
-                Swal.fire({ icon: 'error', title: 'Error', text: data.message });
-            }
-        } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to send OTP. Please try again.' });
-        }
+                                } else {
+                        Toast.fire({ icon: 'error', title: data.message });
+                    }
+                } catch (error) {
+                    Toast.fire({ icon: 'error', title: 'Failed to send OTP. Please try again.' });
+                }
     });
 }
 
@@ -1902,15 +1945,15 @@ async function verifyEmailOTP(email, otp) {
         const data = await res.json();
 
         if (data.success) {
-            Swal.fire({ icon: 'success', title: 'Success!', text: 'Email verified successfully.' });
+            Toast.fire({ icon: 'success', title: 'Email verified successfully.' });
             closeOtpModal();
             await loadUserEmails();
         } else {
-            Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+            Toast.fire({ icon: 'error', title: data.message });
             document.getElementById('verifyOtpBtn').disabled = false;
         }
     } catch (error) {
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to verify OTP. Please try again.' });
+        Toast.fire({ icon: 'error', title: 'Failed to verify OTP. Please try again.' });
         document.getElementById('verifyOtpBtn').disabled = false;
     }
 }
@@ -1927,10 +1970,10 @@ async function resendOTP(email) {
         if (data.success) {
             openOtpModal(email);
         } else {
-            Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+            Toast.fire({ icon: 'error', title: data.message });
         }
     } catch (error) {
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to resend OTP. Please try again.' });
+        Toast.fire({ icon: 'error', title: 'Failed to resend OTP. Please try again.' });
     }
 }
 
@@ -1946,13 +1989,13 @@ async function setPrimaryEmail(email) {
         const data = await res.json();
 
         if (data.success) {
-            Swal.fire({ icon: 'success', title: 'Success!', text: 'Primary email updated successfully.' });
+            Toast.fire({ icon: 'success', title: 'Primary email updated successfully.' });
             await loadUserEmails();
         } else {
-            Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+            Toast.fire({ icon: 'error', title: data.message });
         }
     } catch (error) {
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update primary email. Please try again.' });
+        Toast.fire({ icon: 'error', title: 'Failed to update primary email. Please try again.' });
     }
 }
 
@@ -1974,15 +2017,15 @@ async function removeEmail(email) {
                 body: JSON.stringify({ email })
             });
             const data = await res.json();
-            if (data.success) {
-                Swal.fire({ icon: 'success', title: 'Success!', text: 'Email removed successfully.' });
-                await loadUserEmails();
-            } else {
-                Swal.fire({ icon: 'error', title: 'Error', text: data.message });
-            }
-        } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to remove email. Please try again.' });
+                    if (data.success) {
+            Toast.fire({ icon: 'success', title: 'Email removed successfully.' });
+            await loadUserEmails();
+        } else {
+            Toast.fire({ icon: 'error', title: data.message });
         }
+    } catch (error) {
+        Toast.fire({ icon: 'error', title: 'Failed to remove email. Please try again.' });
+    }
     }
 }
 // Prefill settings modal with user data
@@ -2087,7 +2130,7 @@ function updateOtpTimer() {
 async function verifyOtp() {
     const otp = document.getElementById('otpInput').value.trim();
     if (otp.length !== 6) {
-        Swal.fire({ icon: 'warning', title: 'Invalid OTP', text: 'Please enter a valid 6-digit OTP.' });
+        Toast.fire({ icon: 'warning', title: 'Please enter a valid 6-digit OTP.' });
         return;
     }
     const verifyBtn = document.getElementById('verifyOtpBtn');
@@ -2102,16 +2145,16 @@ async function verifyOtp() {
         });
         const data = await res.json();
         if (data.success) {
-            Swal.fire({ icon: 'success', title: 'Success!', text: 'Email verified successfully.' });
+            Toast.fire({ icon: 'success', title: 'Email verified successfully.' });
             closeOtpModal();
             await loadUserEmails();
         } else {
-            Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+            Toast.fire({ icon: 'error', title: data.message });
             verifyBtn.disabled = false;
             verifyBtn.innerHTML = prevText;
         }
     } catch (error) {
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to verify OTP. Please try again.' });
+        Toast.fire({ icon: 'error', title: 'Failed to verify OTP. Please try again.' });
         verifyBtn.disabled = false;
         verifyBtn.innerHTML = prevText;
     }
@@ -2127,14 +2170,14 @@ async function resendOtpFromModal() {
         });
         const data = await res.json();
         if (data.success) {
-            Swal.fire({ icon: 'success', title: 'Success!', text: 'OTP resent! Please check your email.' });
+            Toast.fire({ icon: 'success', title: 'OTP resent! Please check your email.' });
             startOtpTimer();
         } else {
-            Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+            Toast.fire({ icon: 'error', title: data.message });
             document.getElementById('resendOtpBtn').disabled = false;
         }
     } catch (error) {
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to resend OTP. Please try again.' });
+        Toast.fire({ icon: 'error', title: 'Failed to resend OTP. Please try again.' });
         document.getElementById('resendOtpBtn').disabled = false;
     }
 }
@@ -2344,7 +2387,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 // सिर्फ वही टास्क्स जो दिख रहे हैं (फिल्टर के बाद)
                 let filter = document.getElementById('taskSearch')?.value || '';
                 let tag = document.getElementById('taskTagFilter')?.value || '';
-                let filtered = taskList.filter(task =>
+                const safeList = Array.isArray(taskList) ? taskList : [];
+                let filtered = safeList.filter(task =>
                     (selectedProjectIndex === null || task.projectId === projects[selectedProjectIndex]?._id) &&
                     task.text.toLowerCase().includes(filter ? filter.toLowerCase() : '') &&
                     (tag === '' || task.tag === tag)
@@ -2355,7 +2399,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // (सिर्फ दिख रहे टास्क्स का ऑर्डर बदलेगा)
                 // पूरे taskList में भी ऑर्डर बदलना हो तो IDs से री-ऑर्डर करें
                 let newOrder = filtered.map(t => t._id);
-                taskList = taskList.sort((a, b) => {
+                taskList = safeList.sort((a, b) => {
                     let ai = newOrder.indexOf(a._id);
                     let bi = newOrder.indexOf(b._id);
                     if (ai === -1) ai = 9999;
@@ -2493,7 +2537,7 @@ function renderSettingsContent(tabId) {
                 e.preventDefault();
                 const name = document.getElementById('settingsName').value;
                 if (!name.trim()) {
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'Please enter a name.' });
+                    Toast.fire({ icon: 'error', title: 'Please enter a name.' });
                     return;
                 }
                 try {
@@ -2504,13 +2548,13 @@ function renderSettingsContent(tabId) {
                     });
                     const data = await res.json();
                     if (data.success) {
-                        Swal.fire({ icon: 'success', title: 'Updated!', text: 'Profile updated successfully.' });
+                        Toast.fire({ icon: 'success', title: 'Profile updated successfully.' });
                         prefillSettingsModal();
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Update failed.' });
+                        Toast.fire({ icon: 'error', title: data.message || 'Update failed.' });
                     }
                 } catch (error) {
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update profile. Please try again.' });
+                    Toast.fire({ icon: 'error', title: 'Failed to update profile. Please try again.' });
                 }
             });
             break;
@@ -2531,10 +2575,10 @@ function renderSettingsContent(tabId) {
             document.getElementById('addEmailBtn').addEventListener('click', async function () {
                 const emailInput = document.getElementById('addEmailInput');
                 const email = emailInput.value.trim();
-                if (!email) {
-                    Swal.fire({ icon: 'warning', title: 'Error', text: 'Please enter an email address.' });
-                    return;
-                }
+                        if (!email) {
+            Toast.fire({ icon: 'warning', title: 'Please enter an email address.' });
+            return;
+        }
                 try {
                     const res = await fetch('/api/userdata/email/send-otp', {
                         method: 'POST',
@@ -2546,10 +2590,10 @@ function renderSettingsContent(tabId) {
                         openOtpModal(email);
                         emailInput.value = '';
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+                        Toast.fire({ icon: 'error', title: data.message });
                     }
                 } catch (error) {
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to send OTP. Please try again.' });
+                    Toast.fire({ icon: 'error', title: 'Failed to send OTP. Please try again.' });
                 }
             });
             break;
@@ -2704,17 +2748,17 @@ function renderSettingsContent(tabId) {
                     });
                     const data = await res.json();
                     if (data.socialLinks) {
-                        Swal.fire({ icon: 'success', title: 'Saved!', text: 'Social links updated.' });
+                        Toast.fire({ icon: 'success', title: 'Social links updated.' });
                         socialLinks = data.socialLinks;
                         renderSocialLinks();
                         renderProjectUrlsList();
                         renderProjectList(); // update URL icons in project list
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Failed to save social links.' });
+                        Toast.fire({ icon: 'error', title: data.error || 'Failed to save social links.' });
                     }
                 } catch (err) {
                     console.error('Save error:', err);
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save social links.' });
+                    Toast.fire({ icon: 'error', title: 'Failed to save social links.' });
                 }
             };
             break;
@@ -2793,17 +2837,17 @@ function addProjectUrl() {
     const url = document.getElementById('projectUrlInput').value.trim();
 
     if (!projectId) {
-        Swal.fire({ icon: 'warning', title: 'Select Project', text: 'Please select a project first.' });
+        Toast.fire({ icon: 'warning', title: 'Please select a project first.' });
         return;
     }
 
     if (!url) {
-        Swal.fire({ icon: 'warning', title: 'Enter URL', text: 'Please enter a project URL.' });
+        Toast.fire({ icon: 'warning', title: 'Please enter a project URL.' });
         return;
     }
 
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        Swal.fire({ icon: 'warning', title: 'Invalid URL', text: 'Please enter a valid URL starting with http:// or https://' });
+        Toast.fire({ icon: 'warning', title: 'Please enter a valid URL starting with http:// or https://' });
         return;
     }
 
@@ -2834,7 +2878,7 @@ function addProjectUrl() {
     renderSocialLinks();
     renderProjectList(); // update URL icons in project list
 
-    Swal.fire({ icon: 'success', title: 'Added!', text: 'Project URL added successfully.' });
+    Toast.fire({ icon: 'success', title: 'Project URL added successfully.' });
 }
 
 function removeProjectUrl(index) {
@@ -2847,7 +2891,7 @@ function removeProjectUrl(index) {
         renderProjectUrlsList();
         renderSocialLinks();
         renderProjectList(); // update URL icons in project list
-        Swal.fire({ icon: 'success', title: 'Removed!', text: 'Project URL removed successfully.' });
+        Toast.fire({ icon: 'success', title: 'Project URL removed successfully.' });
     }
 }
 
@@ -2928,7 +2972,7 @@ window.addEventListener('click', function (e) {
         if (url && /^https?:\/\//.test(url)) {
             window.open(url, '_blank');
         } else {
-            Swal.fire({ icon: 'warning', title: 'Invalid URL', text: 'Please enter a valid URL (starting with http:// or https://)' });
+            Toast.fire({ icon: 'warning', title: 'Please enter a valid URL (starting with http:// or https://)' });
         }
     }
     // Remove social link

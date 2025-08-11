@@ -19,7 +19,7 @@ exports.getNotificationCounts = async (req, res) => {
         if (!user) return res.status(404).json({ error: 'User not found' });
 
         // Count pending access requests where current user is the project owner
-        const accessRequestsCount = user.projectAccessRequests ? 
+        const accessRequestsCount = user.projectAccessRequests ?
             user.projectAccessRequests.filter(req => req.status === 'pending').length : 0;
 
 

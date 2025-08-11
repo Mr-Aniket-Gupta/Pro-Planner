@@ -4,7 +4,8 @@ function initializeAIBot() {
         recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.continuous = false;
         recognition.interimResults = false;
-        recognition.lang = 'en-US';
+        // Support both Hindi and English dynamically
+        recognition.lang = (window._aiSpeechLang || 'en-US');
         recognition.maxAlternatives = 1;
 
         recognition.onresult = function (event) {
@@ -24,7 +25,7 @@ function initializeAIBot() {
                     try {
                         startVoiceRecording();
                         return;
-                    } catch (_) {}
+                    } catch (_) { }
                 }
             } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
                 showAlert && showAlert({ icon: 'error', title: 'Microphone Blocked', text: 'Please allow microphone access in your browser settings and try again.' });
@@ -64,13 +65,22 @@ function startVoiceRecording() {
                 if (result.state === 'denied') {
                     showAlert && showAlert({ icon: 'error', title: 'Microphone Blocked', text: 'Please allow microphone access in your browser settings.' });
                 }
-            }).catch(() => {});
+            }).catch(() => { });
         }
 
         // Optional inactivity timeout (e.g., 6 seconds)
         if (window._voiceInactivityTimer) {
             clearTimeout(window._voiceInactivityTimer);
         }
+
+        // Determine language based on user selection or content
+        try {
+            const langSelect = document.getElementById('aiLanguageSelect');
+            const preferred = langSelect ? langSelect.value : null;
+            if (preferred === 'hi') recognition.lang = 'hi-IN';
+            else if (preferred === 'en') recognition.lang = 'en-US';
+            else recognition.lang = (window._aiSpeechLang || 'en-US');
+        } catch (_) { }
 
         recognition.start();
         isRecording = true;
@@ -273,7 +283,7 @@ async function sendAiMessage() {
         }
 
         const langSelect = document.getElementById('aiLanguageSelect');
-        const language = langSelect ? langSelect.value : 'en';
+        const language = langSelect ? langSelect.value : ((/^[\u0900-\u097F]/.test(message)) ? 'hi' : 'en');
 
         let projectContext = '';
         if (selectedProjectIndex !== null && projects[selectedProjectIndex]) {
@@ -296,7 +306,7 @@ async function sendAiMessage() {
             addMessageToChat('ai', 'Sorry, I encountered an error. Please try again later.');
         }
     } catch (err) {
-        try { if (typeof removeTypingIndicator === 'function' && typeof typingId !== 'undefined') removeTypingIndicator(typingId); } catch (_) {}
+        try { if (typeof removeTypingIndicator === 'function' && typeof typingId !== 'undefined') removeTypingIndicator(typingId); } catch (_) { }
         showAlert && showAlert({ icon: 'error', title: 'Error', text: err.message || 'AI response failed!' });
         console.error(err);
         // Also append a graceful AI error message into chat

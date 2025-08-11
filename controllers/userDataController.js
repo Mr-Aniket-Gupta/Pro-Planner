@@ -52,7 +52,7 @@ exports.searchUsers = async (req, res) => {
         const users = await User.find({
             $and: [
                 { _id: { $ne: userId } },
-                { $or: [ { name: regex }, { 'emails.email': regex } ] }
+                { $or: [{ name: regex }, { 'emails.email': regex }] }
             ]
         }).select('name emails');
         res.json(users);
@@ -173,7 +173,7 @@ exports.updateSocialLinks = async (req, res) => {
     try {
         const userId = req.session.userId;
         const { socialLinks } = req.body;
-        
+
         // Validate the social links structure
         if (Array.isArray(socialLinks)) {
             for (const link of socialLinks) {
@@ -188,13 +188,13 @@ exports.updateSocialLinks = async (req, res) => {
                 }
             }
         }
-        
+
         const user = await User.findByIdAndUpdate(
             userId,
             { socialLinks: socialLinks || [] },
             { new: true }
         ).select('socialLinks');
-        
+
         if (!user) return res.status(404).json({ error: 'User not found' });
         res.json({ socialLinks: user.socialLinks });
     } catch (err) {

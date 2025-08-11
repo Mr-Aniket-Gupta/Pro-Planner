@@ -1,3 +1,16 @@
+// Toast instance for consistent notifications
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.onmouseenter = Swal.stopTimer;
+    toast.onmouseleave = Swal.resumeTimer;
+  }
+});
+
 // Switch between login and signup tabs
 function showTab(tab) {
     document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
@@ -68,13 +81,9 @@ document.getElementById('loginForm').addEventListener('submit', async function (
         }
     } catch (err) {
         hideLoader();
-        Swal.fire({
+        Toast.fire({
             icon: 'error',
-            title: 'Network Error',
-            text: 'Server se connect nahi ho pa rahe.',
-            background: '#f0f6ff',
-            color: '#ef4444',
-            confirmButtonColor: '#2563eb'
+            title: 'Server se connect nahi ho pa rahe.'
         });
         return;
     }
@@ -89,13 +98,9 @@ document.getElementById('loginForm').addEventListener('submit', async function (
         this.classList.add('hidden');
         document.getElementById('loginOtpForm').classList.remove('hidden');
         setTimeout(() => {
-            Swal.fire({
+            Toast.fire({
                 icon: 'info',
-                title: 'OTP Sent',
-                text: 'OTP aapke email par bheja gaya hai.',
-                background: '#f0f6ff',
-                color: '#2563eb',
-                confirmButtonColor: '#2563eb'
+                title: 'OTP aapke email par bheja gaya hai.'
             });
         }, 100);
         return;
@@ -105,13 +110,9 @@ document.getElementById('loginForm').addEventListener('submit', async function (
     if (data && data.message && data.token) {
         if (remember) localStorage.setItem('proplanner_token', data.token);
         else localStorage.removeItem('proplanner_token');
-        Swal.fire({
+        Toast.fire({
             icon: 'success',
-            title: 'Login Success',
-            text: 'Login successful!',
-            background: '#f0f6ff',
-            color: '#2563eb',
-            confirmButtonColor: '#2563eb'
+            title: 'Login successful!'
         }).then(() => {
             window.location.href = '/dashboard';
         });
@@ -119,14 +120,8 @@ document.getElementById('loginForm').addEventListener('submit', async function (
     }
 
     // Login failed
-    Swal.fire({
-        icon: 'error',
-        title: 'Login Failed',
-        text: (data && data.message) ? data.message : data,
-        background: '#f0f6ff',
-        color: '#ef4444',
-        confirmButtonColor: '#2563eb'
-    });
+        const readable = (data && (data.error || data.message)) ? (data.error || data.message) : (typeof data === 'string' ? data : 'Login failed');
+        Toast.fire({ icon: 'error', title: readable });
 });
 
 // Handle login OTP verification
@@ -156,13 +151,9 @@ document.getElementById('loginOtpForm').addEventListener('submit', async functio
     if (data && data.message && data.token) {
         if (remember) localStorage.setItem('proplanner_token', data.token);
         else localStorage.removeItem('proplanner_token');
-        Swal.fire({
+        Toast.fire({
             icon: 'success',
-            title: 'Login Success',
-            text: 'Login successful!',
-            background: '#f0f6ff',
-            color: '#2563eb',
-            confirmButtonColor: '#2563eb'
+            title: 'Login successful!'
         }).then(() => {
             window.location.href = '/dashboard';
         });
@@ -170,13 +161,9 @@ document.getElementById('loginOtpForm').addEventListener('submit', async functio
     }
 
     // OTP verification failed
-    Swal.fire({
+    Toast.fire({
         icon: 'error',
-        title: 'OTP Failed',
-        text: (data && data.message) ? data.message : data,
-        background: '#f0f6ff',
-        color: '#ef4444',
-        confirmButtonColor: '#2563eb'
+        title: (data && data.message) ? data.message : data
     });
 });
 
@@ -219,29 +206,20 @@ document.getElementById('signupForm').addEventListener('submit', async function 
         body: JSON.stringify({ name, email, password, confirmPassword })
     });
 
-    const text = await res.text();
+    let text;
+    try { text = await res.text(); } catch(_) { text = 'Signup failed'; }
     hideLoader();
 
-    if (text.includes('OTP sent')) {
+    if (typeof text === 'string' && text.includes('OTP sent')) {
         this.classList.add('hidden');
         document.getElementById('signupOtpForm').classList.remove('hidden');
-        Swal.fire({
+        Toast.fire({
             icon: 'info',
-            title: 'OTP Sent',
-            text: 'OTP aapke email par bheja gaya hai.',
-            background: '#f0f6ff',
-            color: '#2563eb',
-            confirmButtonColor: '#2563eb'
+            title: 'OTP aapke email par bheja gaya hai.'
         });
     } else {
-        Swal.fire({
-            icon: 'error',
-            title: 'Signup Failed',
-            text: text,
-            background: '#f0f6ff',
-            color: '#ef4444',
-            confirmButtonColor: '#2563eb'
-        });
+        const readable = (typeof text === 'string') ? text : (text && (text.error || text.message)) ? (text.error || text.message) : 'Signup failed';
+        Toast.fire({ icon: 'error', title: readable });
     }
 });
 
@@ -263,24 +241,16 @@ document.getElementById('signupOtpForm').addEventListener('submit', async functi
     hideLoader();
 
     if (text.includes('Signup successful')) {
-        Swal.fire({
+        Toast.fire({
             icon: 'success',
-            title: 'Signup Success',
-            text: 'Signup successful!',
-            background: '#f0f6ff',
-            color: '#2563eb',
-            confirmButtonColor: '#2563eb'
+            title: 'Signup successful!'
         }).then(() => {
             window.location.href = '/dashboard';
         });
     } else {
-        Swal.fire({
+        Toast.fire({
             icon: 'error',
-            title: 'OTP Failed',
-            text: text,
-            background: '#f0f6ff',
-            color: '#ef4444',
-            confirmButtonColor: '#2563eb'
+            title: text
         });
     }
 });

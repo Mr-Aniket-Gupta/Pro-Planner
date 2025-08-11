@@ -5,6 +5,12 @@ const Project = require('../models/Project');
 exports.createTask = async (req, res) => {
     try {
         const { text, tag, projectId, dueDate, priority, isPublic } = req.body;
+        
+        // Input validation
+        if (!text || !projectId) {
+            return res.status(400).json({ error: 'Task text and project ID are required' });
+        }
+        
         const project = await Project.findById(projectId);
         if (!project) return res.status(404).json({ error: 'Project not found' });
         const userId = req.session.userId;
@@ -46,6 +52,12 @@ exports.getTasks = async (req, res) => {
 exports.updateTask = async (req, res) => {
     try {
         const { completed, text, tag, dueDate, priority, isPublic } = req.body;
+        
+        // Input validation
+        if (text !== undefined && (!text || text.trim().length === 0)) {
+            return res.status(400).json({ error: 'Task text cannot be empty' });
+        }
+        
         const task = await Task.findById(req.params.taskId);
         if (!task) return res.status(404).json({ error: 'Task not found' });
         const project = await Project.findById(task.projectId);

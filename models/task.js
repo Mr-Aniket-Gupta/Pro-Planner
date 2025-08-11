@@ -14,4 +14,9 @@ const taskSchema = new mongoose.Schema({
     projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true }
 });
 
+// Add indexes for better query performance
+taskSchema.index({ projectId: 1, created: -1 });
+taskSchema.index({ projectId: 1, completed: 1 });
+taskSchema.index({ projectId: 1, dueDate: 1 });
+
 module.exports = mongoose.model('Task', taskSchema);

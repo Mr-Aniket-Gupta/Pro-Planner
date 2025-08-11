@@ -277,8 +277,14 @@ body {
         font-size: 1.1rem !important;
     }
 
-    .text-5xl, .text-6xl { font-size: 1.6rem !important; }
-    .text-4xl { font-size: 1.1rem !important; }
+    .text-5xl,
+    .text-6xl {
+        font-size: 1.6rem !important;
+    }
+
+    .text-4xl {
+        font-size: 1.1rem !important;
+    }
 
     .footer-bg {
         padding: 1.2rem 0.2rem !important;
