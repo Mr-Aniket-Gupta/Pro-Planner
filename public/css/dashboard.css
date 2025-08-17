@@ -1889,3 +1889,129 @@ input:checked+.slider:before {
 .chat-window.bulk-delete-mode .chat-messages {
   padding-bottom: 80px;
 }
+
+/* ======= Drag Mode Visual Feedback ======= */
+.drag-mode-enabled {
+    cursor: grabbing !important;
+    background-color: #dbeafe !important;
+    border: 2px solid #3b82f6 !important;
+    transition: all 0.2s ease;
+}
+
+.drag-mode-enabled:hover {
+    background-color: #bfdbfe !important;
+    transform: scale(1.02);
+}
+
+/* Drag mode notification styles */
+.drag-notification {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 9999;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+.drag-notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.drag-notification.success {
+    background-color: #10b981;
+    color: white;
+}
+
+.drag-notification.info {
+    background-color: #3b82f6;
+    color: white;
+}
+
+/* Improve touch targets for mobile */
+@media (max-width: 768px) {
+    #projectList li,
+    #taskList li,
+    #sidebarTodoList li {
+        min-height: 44px;
+        padding: 0.75rem 1rem;
+        touch-action: pan-y; /* Allow vertical scrolling */
+    }
+    
+    /* Prevent accidental drag on mobile */
+    #projectList li:not(.drag-mode-enabled),
+    #taskList li:not(.drag-mode-enabled),
+    #sidebarTodoList li:not(.drag-mode-enabled) {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+    }
+    
+    /* Show drag hint on mobile */
+    .drag-hint {
+        position: absolute;
+        top: 0.25rem;
+        right: 0.25rem;
+        font-size: 0.75rem;
+        color: #6b7280;
+        opacity: 0.7;
+    }
+}
+
+/* Add subtle hint for double-click to enable drag */
+#projectList li,
+#taskList li,
+#sidebarTodoList li {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+#projectList li:hover,
+#taskList li:hover,
+#sidebarTodoList li:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Show subtle indicator that double-click enables drag */
+#projectList li::after,
+#taskList li::after,
+#sidebarTodoList li::after {
+    content: '↕';
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+#projectList li:hover::after,
+#taskList li:hover::after,
+#sidebarTodoList li:hover::after {
+    opacity: 0.5;
+}
+
+/* Hide the indicator when drag mode is enabled */
+.drag-mode-enabled::after {
+    display: none !important;
+}
+
+/* Dark theme support for drag mode */
+.dark-theme .drag-mode-enabled {
+    background-color: #1e3a8a !important;
+    border-color: #60a5fa !important;
+}
+
+.dark-theme .drag-mode-enabled:hover {
+    background-color: #1e40af !important;
+}

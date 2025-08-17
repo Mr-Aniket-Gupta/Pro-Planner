@@ -1757,17 +1757,6 @@ async function fetchAndRenderTasksWithFilters() {
     }
     renderTasks(q, tag, priority);
 }
-// Add event listeners for task filters (with null checks)
-// Note: These are commented out as we have separate event listeners above
-// const taskSearchEl = document.getElementById('taskSearch');
-// const filterPriorityEl = document.getElementById('filterPriority');
-// const filterStatusEl = document.getElementById('filterStatus');
-// const filterDueEl = document.getElementById('filterDue');
-
-// if (taskSearchEl) taskSearchEl.addEventListener('input', fetchAndRenderTasksWithFilters);
-// if (filterPriorityEl) filterPriorityEl.addEventListener('change', fetchAndRenderTasksWithFilters);
-// if (filterStatusEl) filterStatusEl.addEventListener('change', fetchAndRenderTasksWithFilters);
-// if (filterDueEl) filterDueEl.addEventListener('change', fetchAndRenderTasksWithFilters);
 
 // Project select by id (for filtered/search lists)
 function selectProjectById(id) {
@@ -2368,20 +2357,62 @@ document.addEventListener('DOMContentLoaded', function () {
 
 document.addEventListener('DOMContentLoaded', function () {
     if (window.Sortable) {
-        // Projects Drag & Drop
-        new Sortable(document.getElementById('projectList'), {
+        // Declare Sortable instances at top level for access by other functions
+        let projectsSortable, tasksSortable, todosSortable;
+        
+        // Projects Drag & Drop with double-click activation
+        projectsSortable = new Sortable(document.getElementById('projectList'), {
             animation: 150,
+            disabled: true, // Initially disabled
             onEnd: function (evt) {
                 if (evt.oldIndex === evt.newIndex) return;
                 const moved = projects.splice(evt.oldIndex, 1)[0];
                 projects.splice(evt.newIndex, 0, moved);
                 renderProjectList();
+                // Disable dragging after operation is complete
+                projectsSortable.option('disabled', true);
+                showDragModeNotification('Drag mode disabled', 'info');
                 // TODO: Backend में ऑर्डर सेव करना हो तो यहाँ API कॉल करें
             }
         });
-        // Tasks Drag & Drop
-        new Sortable(document.getElementById('taskList'), {
+
+        // Enable dragging on double-click for projects
+        document.getElementById('projectList').addEventListener('dblclick', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.target.closest('li')) {
+                projectsSortable.option('disabled', false);
+                // Show visual feedback that dragging is enabled
+                const listItem = e.target.closest('li');
+                listItem.classList.add('drag-mode-enabled');
+                showDragModeNotification('Drag mode enabled - Drag to reorder projects', 'success');
+                // Auto-disable after 5 seconds if no drag occurs
+                setTimeout(() => {
+                    projectsSortable.option('disabled', true);
+                    document.querySelectorAll('#projectList li').forEach(li => {
+                        li.classList.remove('drag-mode-enabled');
+                    });
+                    showDragModeNotification('Drag mode disabled', 'info');
+                }, 5000);
+            }
+        });
+
+        // Cancel drag mode when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#projectList li') && !e.target.closest('#taskList li') && !e.target.closest('#sidebarTodoList li')) {
+                if (projectsSortable) projectsSortable.option('disabled', true);
+                if (tasksSortable) tasksSortable.option('disabled', true);
+                if (todosSortable) todosSortable.option('disabled', true);
+                document.querySelectorAll('#projectList li, #taskList li, #sidebarTodoList li').forEach(li => {
+                    li.classList.remove('drag-mode-enabled');
+                });
+            }
+        });
+
+        // Tasks Drag & Drop with double-click activation
+        tasksSortable = new Sortable(document.getElementById('taskList'), {
             animation: 150,
+            disabled: true, // Initially disabled
             onEnd: function (evt) {
                 if (evt.oldIndex === evt.newIndex) return;
                 // सिर्फ वही टास्क्स जो दिख रहे हैं (फिल्टर के बाद)
@@ -2407,24 +2438,73 @@ document.addEventListener('DOMContentLoaded', function () {
                     return ai - bi;
                 });
                 renderTasks(filter, tag);
+                // Disable dragging after operation is complete
+                tasksSortable.option('disabled', true);
+                showDragModeNotification('Drag mode disabled', 'info');
                 // TODO: Backend में ऑर्डर सेव करना हो तो यहाँ API कॉल करें
+            }
+        });
+
+        // Enable dragging on double-click for tasks
+        document.getElementById('taskList').addEventListener('dblclick', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.target.closest('li')) {
+                tasksSortable.option('disabled', false);
+                // Show visual feedback that dragging is enabled
+                const listItem = e.target.closest('li');
+                listItem.classList.add('drag-mode-enabled');
+                showDragModeNotification('Drag mode enabled - Drag to reorder tasks', 'success');
+                // Auto-disable after 5 seconds if no drag occurs
+                setTimeout(() => {
+                    tasksSortable.option('disabled', true);
+                    document.querySelectorAll('#taskList li').forEach(li => {
+                        li.classList.remove('drag-mode-enabled');
+                    });
+                    showDragModeNotification('Drag mode disabled', 'info');
+                }, 5000);
             }
         });
     }
 });
 
-// ======= Sidebar Todos Drag & Drop =======
+// ======= Sidebar Todos Drag & Drop with double-click activation =======
 document.addEventListener('DOMContentLoaded', function () {
     if (window.Sortable) {
         // पहले से प्रोजेक्ट्स/टास्क्स के लिए Sortable है, अब Todos के लिए:
-        new Sortable(document.getElementById('sidebarTodoList'), {
+        todosSortable = new Sortable(document.getElementById('sidebarTodoList'), {
             animation: 150,
+            disabled: true, // Initially disabled
             onEnd: function (evt) {
                 if (evt.oldIndex === evt.newIndex) return;
                 const moved = sidebarTodos.splice(evt.oldIndex, 1)[0];
                 sidebarTodos.splice(evt.newIndex, 0, moved);
                 renderSidebarTodos();
                 saveSidebarTodos('update');
+                // Disable dragging after operation is complete
+                todosSortable.option('disabled', true);
+                showDragModeNotification('Drag mode disabled', 'info');
+            }
+        });
+
+        // Enable dragging on double-click for todos
+        document.getElementById('sidebarTodoList').addEventListener('dblclick', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.target.closest('li')) {
+                todosSortable.option('disabled', false);
+                // Show visual feedback that dragging is enabled
+                const listItem = e.target.closest('li');
+                listItem.classList.add('drag-mode-enabled');
+                showDragModeNotification('Drag mode enabled - Drag to reorder todos', 'success');
+                // Auto-disable after 5 seconds if no drag occurs
+                setTimeout(() => {
+                    todosSortable.option('disabled', true);
+                    document.querySelectorAll('#sidebarTodoList li').forEach(li => {
+                        li.classList.remove('drag-mode-enabled');
+                    });
+                    showDragModeNotification('Drag mode disabled', 'info');
+                }, 5000);
             }
         });
     }
@@ -3044,3 +3124,29 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
+// Helper function to show drag mode notifications
+function showDragModeNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `drag-notification ${type}`;
+    notification.textContent = message;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}
