@@ -5,29 +5,35 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ProPlanner - Smart Project & Task Management Tool</title>
+
   <meta name="description"
     content="ProPlanner helps you organize projects, manage tasks, set deadlines, and boost productivity with smart reminders. Secure, fast, and free!" />
   <meta name="keywords"
     content="project management, task manager, productivity, team collaboration, reminders, deadlines, secure, OTP, cloud, free, Hindi, English" />
   <meta name="robots" content="index, follow" />
+
   <link rel="canonical" href="https://proplanner.example.com/" />
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+
   <!-- Open Graph -->
   <meta property="og:title" content="ProPlanner - Smart Project & Task Management Tool" />
   <meta property="og:description" content="Organize your projects and tasks effortlessly. Secure, fast, and free!" />
   <meta property="og:image" content="/img/og-proplanner.png" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://proplanner.example.com/" />
+
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="ProPlanner - Smart Project & Task Management Tool" />
   <meta name="twitter:description" content="Organize your projects and tasks effortlessly. Secure, fast, and free!" />
   <meta name="twitter:image" content="/img/og-proplanner.png" />
+
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@motionone/dom/dist/motion.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
+
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/landing.css">
 </head>
@@ -36,11 +42,16 @@
   <div id="universalLoader" class="loader-overlay" style="display:none;">
     <div class="loader-spinner"></div>
   </div>
+
   <canvas id="stars-bg" class="fixed inset-0 w-full h-full z-0 pointer-events-none"></canvas>
   <canvas id="matter-bg"></canvas>
   <div class="bg-animated"></div>
+
+
   <!-- Neon Cursor Trail -->
   <div id="cursorTrail"></div>
+
+
   <!-- Navbar -->
   <nav class="navbar-glass flex justify-between items-center px-4 md:px-8 py-4 mx-auto max-w-7xl relative z-20">
     <div class="flex items-center gap-2">
@@ -61,9 +72,9 @@
     <!-- Nav Links (Desktop) -->
     <div id="navLinks" class="hidden md:flex items-center gap-6 text-white text-lg font-semibold">
       <a href="#features" class="hover:text-blue-400 transition">Features</a>
-      <a href="#how" class="hover:text-blue-400 transition">How it Works</a>
       <a href="#security" class="hover:text-blue-400 transition">Security</a>
       <a href="/contact" class="hover:text-blue-400 transition">Contact Us</a>
+
       <% if (isLoggedIn) { %>
         <a href="/dashboard" class="glow-btn px-6 py-2 ml-4"><span>Dashboard</span></a>
         <% } else { %>
@@ -99,7 +110,10 @@
       <div class="flex-1" onclick="closeMobileNav()"></div>
     </div>
   </nav>
+
+
   <div style="height:6rem"></div>
+
   <!-- Hero Section -->
   <section
     class="hero-section relative flex flex-col md:flex-row items-center justify-between px-4 md:px-8 py-20 md:py-28 max-w-7xl mx-auto z-10">
@@ -143,313 +157,767 @@
     </div>
     <div class="section-glow" style="top:0;"></div>
   </section>
-  <!-- Features Section -->
-  <section id="features" class="relative py-20 bg-gradient-to-b from-slate-800 to-slate-900">
-    <div class="max-w-6xl mx-auto px-4">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Powerful Features</h2>
-        <p class="text-xl text-gray-300 max-w-3xl mx-auto">Everything you need to manage projects efficiently and
-          achieve your goals faster.</p>
-      </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <!-- Feature Card 1 -->
-        <div
-          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20">
-          <div
-            class="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+  <!-- Modern Tech Stack Marquee -->
+  <section class="relative overflow-hidden">
+    <div class="marquee-container relative">
+      <div class="marquee-track flex items-center space-x-16 animate-marquee">
+        <!-- Tech Stack Items -->
+        <div class="tech-item flex items-center space-x-3 text-white">
+          <div class="tech-icon w-8 h-8 flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
           </div>
-          <div class="relative z-10">
-            <div
-              class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <h3 class="text-2xl font-bold text-white mb-4">Smart Project Management</h3>
-            <p class="text-gray-300 leading-relaxed">Create unlimited projects with detailed requirements, deadlines,
-              and progress tracking. Our AI helps you stay organized and focused.</p>
-          </div>
+          <span class="text-lg font-semibold">OpenGL</span>
         </div>
 
-        <!-- Feature Card 2 -->
-        <div
-          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/20">
-          <div
-            class="absolute inset-0 bg-gradient-to-br from-green-600/20 to-blue-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        <div class="tech-item flex items-center space-x-3 text-white">
+          <div class="tech-icon w-8 h-8 flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" />
+            </svg>
           </div>
-          <div class="relative z-10">
-            <div
-              class="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 class="text-2xl font-bold text-white mb-4">Time Tracking & Deadlines</h3>
-            <p class="text-gray-300 leading-relaxed">Set priorities, track time, and never miss deadlines. Get smart
-              notifications and reminders to keep your projects on schedule.</p>
-          </div>
+          <span class="text-lg font-semibold">React</span>
         </div>
 
-        <!-- Feature Card 3 -->
-        <div
-          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20">
-          <div
-            class="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        <div class="tech-item flex items-center space-x-3 text-white">
+          <div class="tech-icon w-8 h-8 flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 12h18M3 6h18M3 18h18" />
+            </svg>
           </div>
-          <div class="relative z-10">
-            <div
-              class="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <h3 class="text-2xl font-bold text-white mb-4">Analytics & Insights</h3>
-            <p class="text-gray-300 leading-relaxed">Visualize your progress with beautiful charts and analytics.
-              Understand your productivity patterns and optimize your workflow.</p>
-          </div>
+          <span class="text-lg font-semibold">Tailwind CSS</span>
         </div>
 
-        <!-- Feature Card 4 -->
-        <div
-          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-yellow-500/20">
-          <div
-            class="absolute inset-0 bg-gradient-to-br from-yellow-600/20 to-orange-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        <div class="tech-item flex items-center space-x-3 text-white">
+          <div class="tech-icon w-8 h-8 flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 3h18v18H3z" />
+              <path d="M9 9h6v6H9z" fill="currentColor" />
+            </svg>
           </div>
-          <div class="relative z-10">
-            <div
-              class="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-            </div>
-            <h3 class="text-2xl font-bold text-white mb-4">AI Assistant</h3>
-            <p class="text-gray-300 leading-relaxed">Get instant help from our AI assistant. Ask questions, get
-              suggestions, and receive personalized project management advice.</p>
-          </div>
+          <span class="text-lg font-semibold">Three.js</span>
         </div>
 
-        <!-- Feature Card 5 -->
-        <div
-          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-red-500/20">
-          <div
-            class="absolute inset-0 bg-gradient-to-br from-red-600/20 to-pink-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        <div class="tech-item flex items-center space-x-3 text-white">
+          <div class="tech-icon w-8 h-8 bg-white rounded flex items-center justify-center">
+            <span class="text-blue-600 font-bold text-sm">TS</span>
           </div>
-          <div class="relative z-10">
-            <div
-              class="w-16 h-16 bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            </div>
-            <h3 class="text-2xl font-bold text-white mb-4">Secure & Private</h3>
-            <p class="text-gray-300 leading-relaxed">Your data is protected with enterprise-grade security. Multiple
-              email verification and secure authentication ensure your privacy.</p>
-          </div>
+          <span class="text-lg font-semibold">TypeScript</span>
         </div>
 
-        <!-- Feature Card 6 -->
-        <div
-          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/20">
-          <div
-            class="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-blue-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        <div class="tech-item flex items-center space-x-3 text-white">
+          <div class="tech-icon w-8 h-8 flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
           </div>
-          <div class="relative z-10">
-            <div
-              class="w-16 h-16 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-            </div>
-            <h3 class="text-2xl font-bold text-white mb-4">User-Friendly Design</h3>
-            <p class="text-gray-300 leading-relaxed">Beautiful, intuitive interface designed for productivity. Dark mode
-              support and responsive design work perfectly on all devices.</p>
+          <span class="text-lg font-semibold">GSAP</span>
+        </div>
+
+        <div class="tech-item flex items-center space-x-3 text-white">
+          <div class="tech-icon w-8 h-8 flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
           </div>
+          <span class="text-lg font-semibold">NEXT.js</span>
+        </div>
+
+        <!-- Duplicate items for seamless loop -->
+        <div class="tech-item flex items-center space-x-3 text-white">
+          <div class="tech-icon w-8 h-8 flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+          </div>
+          <span class="text-lg font-semibold">OpenGL</span>
+        </div>
+
+        <div class="tech-item flex items-center space-x-3 text-white">
+          <div class="tech-icon w-8 h-8 flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" />
+            </svg>
+          </div>
+          <span class="text-lg font-semibold">React</span>
+        </div>
+
+        <div class="tech-item flex items-center space-x-3 text-white">
+          <div class="tech-icon w-8 h-8 flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 12h18M3 6h18M3 18h18" />
+            </svg>
+          </div>
+          <span class="text-lg font-semibold">Tailwind CSS</span>
+        </div>
+
+        <div class="tech-item flex items-center space-x-3 text-white">
+          <div class="tech-icon w-8 h-8 flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 3h18v18H3z" />
+              <path d="M9 9h6v6H9z" fill="currentColor" />
+            </svg>
+          </div>
+          <span class="text-lg font-semibold">Three.js</span>
+        </div>
+
+        <div class="tech-item flex items-center space-x-3 text-white">
+          <div class="tech-icon w-8 h-8 bg-white rounded flex items-center justify-center">
+            <span class="text-blue-600 font-bold text-sm">TS</span>
+          </div>
+          <span class="text-lg font-semibold">TypeScript</span>
+        </div>
+
+        <div class="tech-item flex items-center space-x-3 text-white">
+          <div class="tech-icon w-8 h-8 flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+          </div>
+          <span class="text-lg font-semibold">GSAP</span>
+        </div>
+
+        <div class="tech-item flex items-center space-x-3 text-white">
+          <div class="tech-icon w-8 h-8 flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+          </div>
+          <span class="text-lg font-semibold">NEXT.js</span>
         </div>
       </div>
     </div>
   </section>
-  <!-- How It Works Section -->
-  <section id="how" class="relative py-20 max-w-6xl mx-auto px-4 z-10">
-    <div class="text-center mb-16">
-      <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">How It Works</h2>
-      <p class="text-xl text-gray-300 max-w-3xl mx-auto">Get started with ProPlanner in just three simple steps. It's
-        designed to be intuitive and powerful.</p>
+
+
+
+  <!-- Premium Features Section -->
+  <section id="features" class="relative py-24 overflow-hidden">
+    <!-- Background Elements -->
+    <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(99,102,241,0.1),transparent_50%)]"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(168,85,247,0.1),transparent_50%)]"></div>
+
+    <!-- Floating Elements -->
+    <div
+      class="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-3xl animate-float">
+    </div>
+    <div
+      class="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl animate-float-delay">
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <!-- Step 1 -->
-      <div
-        class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20">
+    <div class="relative z-10 max-w-7xl mx-auto px-4">
+      <!-- Header Section -->
+      <div class="text-center mb-20">
         <div
-          class="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          class="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 mb-6">
+          <span class="text-blue-400 text-sm font-semibold">✨ Premium Features</span>
         </div>
-        <div class="relative z-10 text-center">
+        <h2 class="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+          Everything you need to
+          <span
+            class="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">succeed</span>
+        </h2>
+        <p class="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          Powerful tools designed for modern teams. Boost productivity, streamline workflows, and achieve your goals
+          faster than ever.
+        </p>
+      </div>
+
+      <!-- Features Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        <!-- Feature Card 1: Smart Project Management -->
+        <div class="group relative feature-card">
           <div
-            class="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-3xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-2xl">
-            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            class="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500">
+          </div>
+          <div
+            class="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-8 h-full hover:border-blue-500/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20">
+            <div class="flex items-start justify-between mb-6">
+              <div
+                class="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <div class="text-xs font-semibold text-blue-400 bg-blue-500/20 px-3 py-1 rounded-full">PRO</div>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4 group-hover:text-blue-400 transition-colors">Smart Project
+              Management</h3>
+            <p class="text-gray-300 leading-relaxed mb-6">Create unlimited projects with AI-powered insights, detailed
+              requirements, and intelligent progress tracking.</p>
+            <div class="flex items-center text-sm text-blue-400 font-medium">
+              <span>Learn more</span>
+              <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Card 2: Time Tracking & Deadlines -->
+        <div class="group relative feature-card">
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500">
+          </div>
+          <div
+            class="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-8 h-full hover:border-green-500/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/20">
+            <div class="flex items-start justify-between mb-6">
+              <div
+                class="w-14 h-14 bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div class="text-xs font-semibold text-green-400 bg-green-500/20 px-3 py-1 rounded-full">NEW</div>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4 group-hover:text-green-400 transition-colors">Time Tracking &
+              Deadlines</h3>
+            <p class="text-gray-300 leading-relaxed mb-6">Set priorities, track time automatically, and never miss
+              deadlines with smart notifications and reminders.</p>
+            <div class="flex items-center text-sm text-green-400 font-medium">
+              <span>Learn more</span>
+              <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Card 3: Analytics & Insights -->
+        <div class="group relative feature-card">
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500">
+          </div>
+          <div
+            class="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-8 h-full hover:border-purple-500/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20">
+            <div class="flex items-start justify-between mb-6">
+              <div
+                class="w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div class="text-xs font-semibold text-purple-400 bg-purple-500/20 px-3 py-1 rounded-full">AI</div>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4 group-hover:text-purple-400 transition-colors">Analytics &
+              Insights</h3>
+            <p class="text-gray-300 leading-relaxed mb-6">Visualize your progress with beautiful charts and AI-powered
+              insights to optimize your workflow.</p>
+            <div class="flex items-center text-sm text-purple-400 font-medium">
+              <span>Learn more</span>
+              <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Card 4: AI Assistant -->
+        <div class="group relative feature-card">
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500">
+          </div>
+          <div
+            class="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-8 h-full hover:border-yellow-500/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-yellow-500/20">
+            <div class="flex items-start justify-between mb-6">
+              <div
+                class="w-14 h-14 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <div class="text-xs font-semibold text-yellow-400 bg-yellow-500/20 px-3 py-1 rounded-full">BETA</div>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4 group-hover:text-yellow-400 transition-colors">AI Assistant
+            </h3>
+            <p class="text-gray-300 leading-relaxed mb-6">Get instant help from our AI assistant. Ask questions, get
+              suggestions, and receive personalized advice.</p>
+            <div class="flex items-center text-sm text-yellow-400 font-medium">
+              <span>Learn more</span>
+              <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Card 5: Secure & Private -->
+        <div class="group relative feature-card">
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500">
+          </div>
+          <div
+            class="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-8 h-full hover:border-red-500/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-red-500/20">
+            <div class="flex items-start justify-between mb-6">
+              <div
+                class="w-14 h-14 bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <div class="text-xs font-semibold text-red-400 bg-red-500/20 px-3 py-1 rounded-full">SECURE</div>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4 group-hover:text-red-400 transition-colors">Secure & Private
+            </h3>
+            <p class="text-gray-300 leading-relaxed mb-6">Your data is protected with enterprise-grade security,
+              end-to-end encryption, and secure authentication.</p>
+            <div class="flex items-center text-sm text-red-400 font-medium">
+              <span>Learn more</span>
+              <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Card 6: User-Friendly Design -->
+        <div class="group relative feature-card">
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-blue-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500">
+          </div>
+          <div
+            class="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-8 h-full hover:border-indigo-500/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/20">
+            <div class="flex items-start justify-between mb-6">
+              <div
+                class="w-14 h-14 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </div>
+              <div class="text-xs font-semibold text-indigo-400 bg-indigo-500/20 px-3 py-1 rounded-full">FREE</div>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4 group-hover:text-indigo-400 transition-colors">User-Friendly
+              Design</h3>
+            <p class="text-gray-300 leading-relaxed mb-6">Beautiful, intuitive interface designed for productivity with
+              dark mode support and responsive design.</p>
+            <div class="flex items-center text-sm text-indigo-400 font-medium">
+              <span>Learn more</span>
+              <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA Section -->
+      <div class="text-center">
+        <div class="inline-flex items-center gap-4 cta-section rounded-2xl p-6">
+          <div
+            class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <div
-            class="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full border-4 border-white shadow-lg mx-auto mb-6 animate-pulse">
+          <div class="text-left">
+            <h3 class="text-xl font-bold text-white mb-1">Ready to get started?</h3>
+            <p class="text-gray-300">Join thousands of users already using ProPlanner</p>
           </div>
-          <h3 class="text-2xl font-bold text-white mb-4">Sign Up & Create</h3>
-          <div class="font-semibold text-blue-300 mb-4 text-lg">Start your journey</div>
-          <p class="text-gray-300 leading-relaxed">Register with secure OTP verification, create your first project, and
-            set your goals in seconds. Our streamlined onboarding makes it effortless.</p>
-        </div>
-      </div>
-
-      <!-- Step 2 -->
-      <div
-        class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/20">
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-green-600/20 to-blue-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-        </div>
-        <div class="relative z-10 text-center">
-          <div
-            class="w-20 h-20 bg-gradient-to-r from-green-500 to-blue-500 rounded-3xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-2xl">
-            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4" />
-            </svg>
-          </div>
-          <div
-            class="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-400 rounded-full border-4 border-white shadow-lg mx-auto mb-6 animate-pulse">
-          </div>
-          <h3 class="text-2xl font-bold text-white mb-4">Add Tasks & Deadlines</h3>
-          <div class="font-semibold text-green-300 mb-4 text-lg">Stay on track</div>
-          <p class="text-gray-300 leading-relaxed">Add unlimited tasks with priorities, set realistic deadlines, and
-            never miss important milestones with our smart reminder system.</p>
-        </div>
-      </div>
-
-      <!-- Step 3 -->
-      <div
-        class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20">
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-        </div>
-        <div class="relative z-10 text-center">
-          <div
-            class="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-2xl">
-            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <div
-            class="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full border-4 border-white shadow-lg mx-auto mb-6 animate-pulse">
-          </div>
-          <h3 class="text-2xl font-bold text-white mb-4">Track & Succeed</h3>
-          <div class="font-semibold text-purple-300 mb-4 text-lg">Celebrate wins</div>
-          <p class="text-gray-300 leading-relaxed">Monitor your progress with beautiful analytics, receive intelligent
-            notifications, and celebrate your achievements as you reach your goals!</p>
+          <a href="/auth" class="glow-btn px-6 py-3 text-lg font-semibold rounded-xl">
+            <span>Start Free Trial</span>
+          </a>
         </div>
       </div>
     </div>
-
-    <!-- Connecting Lines (Desktop Only) -->
-    <div class="hidden md:block relative mt-16">
-      <div
-        class="absolute top-1/2 left-1/4 right-1/4 h-1 bg-gradient-to-r from-blue-400 via-green-400 to-purple-400 rounded-full transform -translate-y-1/2 animate-pulse">
-      </div>
-      <div
-        class="absolute top-1/2 left-1/4 w-4 h-4 bg-blue-400 rounded-full transform -translate-y-1/2 -translate-x-1/2 animate-bounce">
-      </div>
-      <div
-        class="absolute top-1/2 right-1/4 w-4 h-4 bg-purple-400 rounded-full transform -translate-y-1/2 translate-x-1/2 animate-bounce delay-1000">
-      </div>
-    </div>
-
-    <div class="absolute inset-0 pointer-events-none" style="z-index:0;">
-      <div class="w-full h-full bg-gradient-to-br from-blue-900/10 via-purple-900/10 to-pink-900/10 blur-2xl"></div>
-    </div>
-    <div class="section-glow" style="top:80%;"></div>
   </section>
-  <!-- Security Section -->
-  <section id="security" class="relative py-20 bg-gradient-to-b from-slate-800 to-slate-900">
-    <div class="max-w-6xl mx-auto px-4">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Security & Privacy</h2>
-        <p class="text-xl text-gray-300 max-w-3xl mx-auto">Your data security is our top priority. We use
-          industry-leading encryption and security practices.</p>
+
+
+  <!-- Enhanced Security & Privacy Section -->
+  <section id="security" class="relative py-24 overflow-hidden">
+    <!-- Background Elements -->
+    <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(34,197,94,0.1),transparent_50%)]"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.1),transparent_50%)]"></div>
+
+    <!-- Floating Elements -->
+    <div
+      class="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-full blur-3xl animate-float">
+    </div>
+    <div
+      class="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-3xl animate-float-delay">
+    </div>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-4">
+      <!-- Header Section -->
+      <div class="text-center mb-20">
+        <div
+          class="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/30 mb-6">
+          <span class="text-green-400 text-sm font-semibold">🔒 Enterprise Security</span>
+        </div>
+        <h2 class="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+          Your data is
+          <span class="bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">100%
+            secure</span>
+        </h2>
+        <p class="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          We implement industry-leading security measures to protect your data. Your privacy and security are our top
+          priorities.
+        </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <!-- Security Card 1 -->
-        <div
-          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/20">
+      <!-- Security Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        <!-- Security Card 1: End-to-End Encryption -->
+        <div class="group relative feature-card">
           <div
-            class="absolute inset-0 bg-gradient-to-br from-green-600/20 to-emerald-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+            class="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500">
           </div>
-          <div class="relative z-10">
+          <div
+            class="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-8 h-full hover:border-green-500/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/20">
+            <div class="flex items-start justify-between mb-6">
+              <div
+                class="w-14 h-14 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <div class="text-xs font-semibold text-green-400 bg-green-500/20 px-3 py-1 rounded-full">AES-256</div>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4 group-hover:text-green-400 transition-colors">End-to-End
+              Encryption</h3>
+            <p class="text-gray-300 leading-relaxed mb-6">All your data is encrypted using military-grade AES-256
+              encryption, ensuring maximum security and privacy protection.</p>
+            <div class="flex items-center text-sm text-green-400 font-medium">
+              <span>Learn more</span>
+              <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security Card 2: Multi-Factor Authentication -->
+        <div class="group relative feature-card">
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500">
+          </div>
+          <div
+            class="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-8 h-full hover:border-blue-500/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20">
+            <div class="flex items-start justify-between mb-6">
+              <div
+                class="w-14 h-14 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <div class="text-xs font-semibold text-blue-400 bg-blue-500/20 px-3 py-1 rounded-full">MFA</div>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4 group-hover:text-blue-400 transition-colors">Multi-Factor
+              Authentication</h3>
+            <p class="text-gray-300 leading-relaxed mb-6">Secure your account with OTP verification, multiple email
+              addresses, and advanced authentication methods.</p>
+            <div class="flex items-center text-sm text-blue-400 font-medium">
+              <span>Learn more</span>
+              <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security Card 3: Lightning Fast Performance -->
+        <div class="group relative feature-card">
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-violet-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500">
+          </div>
+          <div
+            class="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-8 h-full hover:border-purple-500/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20">
+            <div class="flex items-start justify-between mb-6">
+              <div
+                class="w-14 h-14 bg-gradient-to-r from-purple-500 to-violet-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div class="text-xs font-semibold text-purple-400 bg-purple-500/20 px-3 py-1 rounded-full">FAST</div>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4 group-hover:text-purple-400 transition-colors">Lightning Fast
+              Performance</h3>
+            <p class="text-gray-300 leading-relaxed mb-6">Built with modern technologies for instant loading and
+              seamless user experience across all devices.</p>
+            <div class="flex items-center text-sm text-purple-400 font-medium">
+              <span>Learn more</span>
+              <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security Card 4: GDPR Compliance -->
+        <div class="group relative feature-card">
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500">
+          </div>
+          <div
+            class="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-8 h-full hover:border-yellow-500/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-yellow-500/20">
+            <div class="flex items-start justify-between mb-6">
+              <div
+                class="w-14 h-14 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <div class="text-xs font-semibold text-yellow-400 bg-yellow-500/20 px-3 py-1 rounded-full">GDPR</div>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4 group-hover:text-yellow-400 transition-colors">GDPR Compliance
+            </h3>
+            <p class="text-gray-300 leading-relaxed mb-6">Full compliance with GDPR regulations. You have complete
+              control over your data and privacy settings.</p>
+            <div class="flex items-center text-sm text-yellow-400 font-medium">
+              <span>Learn more</span>
+              <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security Card 5: Regular Security Audits -->
+        <div class="group relative feature-card">
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500">
+          </div>
+          <div
+            class="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-8 h-full hover:border-red-500/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-red-500/20">
+            <div class="flex items-start justify-between mb-6">
+              <div
+                class="w-14 h-14 bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div class="text-xs font-semibold text-red-400 bg-red-500/20 px-3 py-1 rounded-full">AUDIT</div>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4 group-hover:text-red-400 transition-colors">Regular Security
+              Audits</h3>
+            <p class="text-gray-300 leading-relaxed mb-6">We conduct regular security audits and penetration testing to
+              ensure your data remains protected at all times.</p>
+            <div class="flex items-center text-sm text-red-400 font-medium">
+              <span>Learn more</span>
+              <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security Card 6: Data Backup & Recovery -->
+        <div class="group relative feature-card">
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-blue-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500">
+          </div>
+          <div
+            class="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-8 h-full hover:border-indigo-500/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/20">
+            <div class="flex items-start justify-between mb-6">
+              <div
+                class="w-14 h-14 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+              </div>
+              <div class="text-xs font-semibold text-indigo-400 bg-indigo-500/20 px-3 py-1 rounded-full">BACKUP</div>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-4 group-hover:text-indigo-400 transition-colors">Data Backup &
+              Recovery</h3>
+            <p class="text-gray-300 leading-relaxed mb-6">Automatic daily backups with 99.9% uptime guarantee. Your data
+              is safely stored and easily recoverable.</p>
+            <div class="flex items-center text-sm text-indigo-400 font-medium">
+              <span>Learn more</span>
+              <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Stats Section -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-16">
+        <div class="text-center">
+          <div class="text-4xl font-bold text-green-400 mb-2">99.9%</div>
+          <div class="text-gray-300">Uptime Guarantee</div>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl font-bold text-blue-400 mb-2">256-bit</div>
+          <div class="text-gray-300">AES Encryption</div>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl font-bold text-purple-400 mb-2">24/7</div>
+          <div class="text-gray-300">Security Monitoring</div>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl font-bold text-yellow-400 mb-2">100%</div>
+          <div class="text-gray-300">GDPR Compliant</div>
+        </div>
+      </div>
+
+      <!-- Trust Indicators -->
+      <div class="text-center">
+        <div
+          class="inline-flex items-center gap-8 bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-2xl p-8">
+          <div class="text-center">
             <div
-              class="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              class="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>
-            <h3 class="text-2xl font-bold text-white mb-4">End-to-End Encryption</h3>
-            <p class="text-gray-300 leading-relaxed">All your data is encrypted using AES-256 encryption, ensuring
-              maximum security and privacy protection.</p>
+            <h4 class="text-lg font-bold text-white mb-2">SOC 2 Certified</h4>
+            <p class="text-gray-300 text-sm">Industry standard security</p>
           </div>
-        </div>
-
-        <!-- Security Card 2 -->
-        <div
-          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20">
-          <div
-            class="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-cyan-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-          </div>
-          <div class="relative z-10">
+          <div class="text-center">
             <div
-              class="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              class="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            <h3 class="text-2xl font-bold text-white mb-4">Multi-Factor Authentication</h3>
-            <p class="text-gray-300 leading-relaxed">Secure your account with OTP verification and multiple email
-              addresses for enhanced protection.</p>
+            <h4 class="text-lg font-bold text-white mb-2">ISO 27001</h4>
+            <p class="text-gray-300 text-sm">Information security standard</p>
           </div>
-        </div>
-
-        <!-- Security Card 3 -->
-        <div
-          class="group relative p-8 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20">
-          <div
-            class="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-violet-600/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-          </div>
-          <div class="relative z-10">
+          <div class="text-center">
             <div
-              class="w-16 h-16 bg-gradient-to-r from-purple-500 to-violet-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              class="w-16 h-16 bg-gradient-to-r from-purple-500 to-violet-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <h3 class="text-2xl font-bold text-white mb-4">Lightning Fast Performance</h3>
-            <p class="text-gray-300 leading-relaxed">Built with modern technologies for instant loading and seamless
-              user experience across all devices.</p>
+            <h4 class="text-lg font-bold text-white mb-2">Zero Downtime</h4>
+            <p class="text-gray-300 text-sm">99.9% availability guarantee</p>
           </div>
         </div>
       </div>
     </div>
   </section>
-  <!-- Footer -->
-  <footer class="bg-[#181a22] text-gray-400 py-8 mt-10 border-t border-blue-900 text-center text-sm">
-    <div class="mb-2">&copy; <%= new Date().getFullYear() %> ProPlanner. All rights reserved.</div>
-    <div class="mb-2">Made with ❤️ for productivity. | <a href="#security"
-        class="text-blue-400 hover:underline">Security & Privacy</a></div>
-    <div>ProPlanner uses HTTPS, OTP, CSP, and privacy-first design for your safety.</div>
+
+
+  <!-- Enhanced Footer -->
+  <footer
+    class="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-gray-300 py-16 mt-20 border-t border-white/10 overflow-hidden">
+    <!-- Background Elements -->
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(99,102,241,0.05),transparent_50%)]"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(168,85,247,0.05),transparent_50%)]"></div>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-4">
+      <!-- Main Footer Content -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        <!-- Company Info -->
+        <div class="lg:col-span-2">
+          <div class="flex items-center gap-3 mb-6">
+            <svg width="32" height="32" fill="none" viewBox="0 0 32 32" aria-hidden="true">
+              <rect width="32" height="32" rx="8" fill="#6366f1" />
+              <path d="M10 22l6-12 6 12" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+            <span class="text-2xl font-extrabold neon-text tracking-tight">ProPlanner</span>
+          </div>
+          <p class="text-gray-400 leading-relaxed mb-6 max-w-md">
+            The ultimate project management platform designed for modern teams. Boost productivity, streamline
+            workflows, and achieve your goals faster than ever.
+          </p>
+          <div class="flex items-center gap-4">
+            <a href="#"
+              class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center hover:scale-110 transition-transform duration-300">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
+              </svg>
+            </a>
+
+            <a href="#"
+              class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center hover:scale-110 transition-transform duration-300">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z">
+                </path>
+              </svg>
+            </a>
+
+            <a href="#"
+              class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center hover:scale-110 transition-transform duration-300">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Product Links -->
+        <div>
+          <h3 class="text-lg font-bold text-white mb-6">Product</h3>
+          <ul class="space-y-4">
+            <li><a href="#features" class="text-gray-400 hover:text-blue-400 transition-colors">Features</a></li>
+            <li><a href="#security" class="text-gray-400 hover:text-blue-400 transition-colors">Security</a></li>
+          </ul>
+        </div>
+
+        <!-- Company Links -->
+        <div>
+          <h3 class="text-lg font-bold text-white mb-6">Company</h3>
+          <ul class="space-y-4">
+            <li><a href="/about" class="text-gray-400 hover:text-blue-400 transition-colors">About Us</a></li>
+            <li><a href="/contact" class="text-gray-400 hover:text-blue-400 transition-colors">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bottom Section -->
+      <div class="border-t border-white/10 pt-8">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div class="flex items-center gap-6 text-sm">
+            <span>&copy; <%= new Date().getFullYear() %> ProPlanner. All rights reserved.</span>
+            <a href="/privacy" class="text-gray-400 hover:text-blue-400 transition-colors">Privacy Policy</a>
+            <a href="/terms" class="text-gray-400 hover:text-blue-400 transition-colors">Terms of Service</a>
+            <a href="/cookies" class="text-gray-400 hover:text-blue-400 transition-colors">Cookie Policy</a>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 text-sm text-gray-400">
+              <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg>
+              <span>Made with ❤️ for productivity</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </footer>
+
+
   <script src="/js/landing.js" defer></script>
   <!-- Animations for timeline icons -->
   <style>
@@ -516,6 +984,7 @@
       }
     }
   </style>
+
 </body>
 
 </html>
