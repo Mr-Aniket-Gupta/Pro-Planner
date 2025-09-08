@@ -517,6 +517,11 @@ app.get('/contact', (req, res) => {
     res.render('contact');
 });
 
+// Documentation page
+app.get('/documentation', (req, res) => {
+    res.render('documentation');
+});
+
 // Error page
 app.get('/error', (req, res) => {
     res.render('error', { message: req.query.message || 'An error occurred' });

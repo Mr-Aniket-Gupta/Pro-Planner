@@ -59,7 +59,7 @@
         <rect width="32" height="32" rx="8" fill="#6366f1" />
         <path d="M10 22l6-12 6 12" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
-      <span class="text-2xl font-extrabold neon-text tracking-tight">ProPlanner</span>
+      <a href="#hero"><span class="text-2xl font-extrabold neon-text tracking-tight">ProPlanner</span></a>
     </div>
     <!-- Hamburger Button (Mobile) -->
     <button id="navToggle"
@@ -73,6 +73,7 @@
     <div id="navLinks" class="hidden md:flex items-center gap-6 text-white text-lg font-semibold">
       <a href="#features" class="hover:text-blue-400 transition">Features</a>
       <a href="#security" class="hover:text-blue-400 transition">Security</a>
+      <a href="/documentation" class="hover:text-blue-400 transition">Documentation</a>
       <a href="/contact" class="hover:text-blue-400 transition">Contact Us</a>
 
       <% if (isLoggedIn) { %>
@@ -115,7 +116,7 @@
   <div style="height:6rem"></div>
 
   <!-- Hero Section -->
-  <section
+  <section id="hero"
     class="hero-section relative flex flex-col md:flex-row items-center justify-between px-4 md:px-8 py-20 md:py-28 max-w-7xl mx-auto z-10">
     <div class="md:w-1/2 mb-10 md:mb-0 z-10 flex flex-col items-center md:items-start text-center md:text-left">
       <h1

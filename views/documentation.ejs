@@ -1,0 +1,1254 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Guide & Documentation - ProPlanner</title>
+    <meta name="description" content="Step-by-step manual to help you use our platform." />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="/css/theme.css" />
+    <link rel="stylesheet" href="/css/docs.css" />
+    <style>
+        :root {
+            --header-h: 80px;
+            --sidebar-w: 384px;
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-muted: rgba(255, 255, 255, 0.6);
+            --bg-primary: rgba(15, 23, 42, 0.98);
+            --bg-secondary: rgba(30, 41, 59, 0.95);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: "Inter", system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .glass-effect {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .search-highlight {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            padding: 2px 6px;
+            border-radius: 6px;
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .slide-in-left {
+            animation: slideInLeft 0.8s ease-out;
+        }
+
+        .slide-in-right {
+            animation: slideInRight 0.8s ease-out;
+        }
+
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes floating {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(102, 126, 234, 0.8);
+            }
+        }
+
+        .gradient-text {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .sidebar-link {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .sidebar-link:hover::before {
+            left: 100%;
+        }
+
+        .step-number {
+            background: var(--primary-gradient);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-number::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .step-number:hover::before {
+            transform: translateX(100%);
+        }
+
+        .modern-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-card {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+
+<body class="docs-body">
+    <!-- Modern Glassmorphism Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-white/20 shadow-lg"
+        style="height: var(--header-h);">
+        <div class="h-full flex items-center justify-between px-6 lg:px-8">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center pulse-glow"
+                    style="background: var(--primary-gradient);">
+                    <i class="fas fa-book-open text-lg text-white"></i>
+                </div>
+                <div>
+                    <a href="/" class="hover:text-white">
+                        <h1 class="text-lg font-bold text-white">ProPlanner</h1>
+                    </a>
+                    <p class="text-xs text-white/70">User Guide & Documentation</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="/dashboard"
+                    class="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 hover:scale-105"
+                    style="background: var(--accent-gradient); color: white; box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);">
+                    <i class="fas fa-rocket mr-2"></i>Dashboard
+                </a>
+                <button id="mobileMenuToggle"
+                    class="lg:hidden p-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Enhanced Glassmorphism Sidebar -->
+    <aside class="hidden lg:block fixed left-0 h-[calc(100vh-var(--header-h)-2rem)] overflow-y-auto z-40 slide-in-left"
+        style="width: var(--sidebar-w); top: var(--header-h); background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%); backdrop-filter: blur(25px); border-right: 1px solid var(--glass-border); box-shadow: 8px 0 40px rgba(0, 0, 0, 0.15), inset -1px 0 0 rgba(255, 255, 255, 0.1);">
+
+        <!-- Sidebar Header -->
+        <div class="sticky top-0 z-10 p-4 pb-2"
+            style="background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%); backdrop-filter: blur(25px); border-bottom: 1px solid var(--glass-border);">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center pulse-glow"
+                    style="background: var(--accent-gradient); box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);">
+                    <i class="fas fa-list-ul text-white text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Table of Contents</h3>
+                    <p class="text-white/60 text-xs">Navigate through guides</p>
+                </div>
+            </div>
+
+            <!-- Progress Indicator -->
+            <div class="w-full bg-white/10 rounded-full h-1 mb-2">
+                <div id="progressBar" class="h-1 rounded-full transition-all duration-300"
+                    style="background: var(--primary-gradient); width: 0%;"></div>
+            </div>
+        </div>
+
+        <!-- Navigation Content -->
+        <div class="px-4 pb-4">
+            <nav id="sidebarNav" class="space-y-1">
+                <a href="#signup"
+                    class="sidebar-link group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 hover:bg-white/10 text-white/90 hover:text-white relative overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    </div>
+                    <div class="relative w-8 h-8 rounded-md flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-sm"
+                        style="background: var(--primary-gradient); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                        <i class="fas fa-user-plus text-white text-sm"></i>
+                    </div>
+                    <div class="relative flex-1">
+                        <span class="font-semibold text-sm block">Signup</span>
+                        <span class="text-white/60 text-xs">Create your account</span>
+                    </div>
+                    <div
+                        class="relative w-2 h-2 rounded-full bg-white/20 group-hover:bg-white/60 transition-colors duration-300">
+                    </div>
+                </a>
+
+                <a href="#login"
+                    class="sidebar-link group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 hover:bg-white/10 text-white/90 hover:text-white relative overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    </div>
+                    <div class="relative w-8 h-8 rounded-md flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-sm"
+                        style="background: var(--secondary-gradient); box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);">
+                        <i class="fas fa-sign-in-alt text-white text-sm"></i>
+                    </div>
+                    <div class="relative flex-1">
+                        <span class="font-semibold text-sm block">Login</span>
+                        <span class="text-white/60 text-sm">Access your workspace</span>
+                    </div>
+                    <div
+                        class="relative w-2 h-2 rounded-full bg-white/20 group-hover:bg-white/60 transition-colors duration-300">
+                    </div>
+                </a>
+
+                <a href="#add-project"
+                    class="sidebar-link group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 hover:bg-white/10 text-white/90 hover:text-white relative overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    </div>
+                    <div class="relative w-8 h-8 rounded-md flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-sm"
+                        style="background: var(--accent-gradient); box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);">
+                        <i class="fas fa-folder-plus text-white text-sm"></i>
+                    </div>
+                    <div class="relative flex-1">
+                        <span class="font-semibold text-sm block">Add Project</span>
+                        <span class="text-white/60 text-sm">Create new projects</span>
+                    </div>
+                    <div
+                        class="relative w-2 h-2 rounded-full bg-white/20 group-hover:bg-white/60 transition-colors duration-300">
+                    </div>
+                </a>
+
+                <a href="#edit-project"
+                    class="sidebar-link group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 hover:bg-white/10 text-white/90 hover:text-white relative overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    </div>
+                    <div class="relative w-8 h-8 rounded-md flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-sm"
+                        style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); box-shadow: 0 4px 15px rgba(255, 154, 158, 0.3);">
+                        <i class="fas fa-edit text-white text-sm"></i>
+                    </div>
+                    <div class="relative flex-1">
+                        <span class="font-semibold text-sm block">Edit Project</span>
+                        <span class="text-white/60 text-sm">Modify project details</span>
+                    </div>
+                    <div
+                        class="relative w-2 h-2 rounded-full bg-white/20 group-hover:bg-white/60 transition-colors duration-300">
+                    </div>
+                </a>
+
+                <a href="#task-todo"
+                    class="sidebar-link group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 hover:bg-white/10 text-white/90 hover:text-white relative overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    </div>
+                    <div class="relative w-8 h-8 rounded-md flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-sm"
+                        style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); box-shadow: 0 4px 15px rgba(255, 236, 210, 0.3);">
+                        <i class="fas fa-tasks text-white text-sm"></i>
+                    </div>
+                    <div class="relative flex-1">
+                        <span class="font-semibold text-sm block">Task & Todo Notes</span>
+                        <span class="text-white/60 text-sm">Manage your tasks</span>
+                    </div>
+                    <div
+                        class="relative w-2 h-2 rounded-full bg-white/20 group-hover:bg-white/60 transition-colors duration-300">
+                    </div>
+                </a>
+
+                <a href="#project-sharing"
+                    class="sidebar-link group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 hover:bg-white/10 text-white/90 hover:text-white relative overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    </div>
+                    <div class="relative w-8 h-8 rounded-md flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-sm"
+                        style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); box-shadow: 0 4px 15px rgba(168, 237, 234, 0.3);">
+                        <i class="fas fa-share-alt text-white text-sm"></i>
+                    </div>
+                    <div class="relative flex-1">
+                        <span class="font-semibold text-sm block">Project Sharing</span>
+                        <span class="text-white/60 text-sm">Collaborate with team</span>
+                    </div>
+                    <div
+                        class="relative w-2 h-2 rounded-full bg-white/20 group-hover:bg-white/60 transition-colors duration-300">
+                    </div>
+                </a>
+
+                <a href="#settings-sharing"
+                    class="sidebar-link group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 hover:bg-white/10 text-white/90 hover:text-white relative overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    </div>
+                    <div class="relative w-8 h-8 rounded-md flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-sm"
+                        style="background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); box-shadow: 0 4px 15px rgba(210, 153, 194, 0.3);">
+                        <i class="fas fa-cog text-white text-sm"></i>
+                    </div>
+                    <div class="relative flex-1">
+                        <span class="font-semibold text-sm block">Settings & Sharing</span>
+                        <span class="text-white/60 text-sm">Customize preferences</span>
+                    </div>
+                    <div
+                        class="relative w-2 h-2 rounded-full bg-white/20 group-hover:bg-white/60 transition-colors duration-300">
+                    </div>
+                </a>
+
+                <a href="#ai-chat"
+                    class="sidebar-link group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 hover:bg-white/10 text-white/90 hover:text-white relative overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    </div>
+                    <div class="relative w-8 h-8 rounded-md flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-sm"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                        <i class="fas fa-robot text-white text-sm"></i>
+                    </div>
+                    <div class="relative flex-1">
+                        <span class="font-semibold text-sm block">AI & Chatting App</span>
+                        <span class="text-white/60 text-sm">Smart assistance</span>
+                    </div>
+                    <div
+                        class="relative w-2 h-2 rounded-full bg-white/20 group-hover:bg-white/60 transition-colors duration-300">
+                    </div>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="sticky bottom-0 p-4 pt-3 border-t border-white/10"
+            style="background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.98) 100%); backdrop-filter: blur(25px);">
+            <div class="text-center">
+                <p class="text-white/60 text-xs">Made with ❤️ for you</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobileSidebar" class="lg:hidden fixed inset-0 z-50 hidden">
+        <div class="fixed inset-0 bg-black bg-opacity-50" id="mobileSidebarOverlay"></div>
+        <div class="fixed left-0 max-h-[calc(100vh-var(--header-h)-2rem)] w-72 text-white shadow-2xl transform -translate-x-full transition-transform duration-300 overflow-y-auto"
+            style="top: var(--header-h); background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px); border-right: 1px solid rgba(255, 255, 255, 0.15);"
+            id="mobileSidebarContent">
+            <div class="p-4 border-b border-slate-700">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-semibold">Menu</h3>
+                    <button id="closeMobileSidebar" class="p-2 hover:bg-slate-800 rounded-lg">
+                        <i class="fas fa-times text-gray-400"></i>
+                    </button>
+                </div>
+            </div>
+            <nav class="p-4 space-y-1" id="mobileSidebarNav">
+                <!-- Navigation items will be copied here -->
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="lg:ml-96" style="margin-top: var(--header-h);">
+        <!-- Modern Hero Section -->
+        <section class="relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent"></div>
+            <div class="relative max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16 text-center">
+                <div class="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl mb-4 sm:mb-6 shadow-xl floating pulse-glow"
+                    style="background: var(--primary-gradient);">
+                    <i class="fas fa-book-open text-lg sm:text-2xl text-white"></i>
+                </div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4 leading-tight">
+                    User Guide &
+                    <span class="gradient-text">Documentation</span>
+                </h1>
+                <p class="text-base sm:text-lg text-white/90 max-w-3xl mx-auto leading-relaxed mb-4 sm:mb-6 px-2">
+                    Step-by-step manual to help you use our platform effectively and efficiently.
+                </p>
+                <div class="flex flex-wrap justify-center gap-2 sm:gap-4 px-4">
+                    <div
+                        class="px-3 sm:px-6 py-2 sm:py-3 rounded-full glass-effect text-white/90 font-medium text-sm sm:text-base">
+                        <i class="fas fa-rocket mr-1 sm:mr-2"></i>Quick Start Guide
+                    </div>
+                    <div
+                        class="px-3 sm:px-6 py-2 sm:py-3 rounded-full glass-effect text-white/90 font-medium text-sm sm:text-base">
+                        <i class="fas fa-users mr-1 sm:mr-2"></i>Team Collaboration
+                    </div>
+                    <div
+                        class="px-3 sm:px-6 py-2 sm:py-3 rounded-full glass-effect text-white/90 font-medium text-sm sm:text-base">
+                        <i class="fas fa-cog mr-1 sm:mr-2"></i>Advanced Settings
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modern Search Bar -->
+        <div class="relative">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+                <div class="w-full max-w-3xl mx-auto">
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <div class="flex-1 relative">
+                            <div class="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2">
+                                <i class="fas fa-search text-white/60 text-sm sm:text-base"></i>
+                            </div>
+                            <input id="searchInput" type="text" placeholder="Search guides, topics, or steps..."
+                                class="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-white placeholder-white/60 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/20 text-sm sm:text-base"
+                                style="background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border);" />
+                        </div>
+                        <button id="clearSearch"
+                            class="px-3 sm:px-4 py-2.5 sm:py-3 text-white/70 hover:text-white hover:bg-white/10 rounded-lg sm:rounded-xl transition-all duration-300 glass-effect">
+                            <i class="fas fa-times text-sm sm:text-base"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+            <div id="contentArea" class="space-y-8 sm:space-y-12">
+
+                <!-- Modern Signup Section -->
+                <section id="signup" class="fade-in">
+                    <div class="dark-card rounded-2xl sm:rounded-3xl p-6 sm:p-10 shadow-2xl card-hover">
+                        <div class="flex items-start gap-4 sm:gap-6 mb-6 sm:mb-10">
+                            <div class="flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center floating"
+                                style="background: var(--primary-gradient);">
+                                <i class="fas fa-user-plus text-white text-lg sm:text-2xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2 sm:mb-3">Signup</h2>
+                                <p class="text-white/80 text-base sm:text-lg leading-relaxed">Create your account to
+                                    start managing
+                                    your projects
+                                    and tasks efficiently with our modern platform.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid lg:grid-cols-2 gap-6 sm:gap-10">
+                            <div class="space-y-6 sm:space-y-8">
+                                <div class="modern-card rounded-xl sm:rounded-2xl p-4 sm:p-8">
+                                    <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+                                            style="background: var(--accent-gradient);">
+                                            <i class="fas fa-list-ol text-white text-sm"></i>
+                                        </div>
+                                        Step-by-Step Guide
+                                    </h3>
+                                    <div class="space-y-6">
+                                        <div class="flex gap-5">
+                                            <div
+                                                class="flex-shrink-0 w-10 h-10 step-number text-white rounded-xl flex items-center justify-center font-bold text-sm">
+                                                1
+                                            </div>
+                                            <div>
+                                                <h4 class="font-semibold text-gray-900 text-lg">Visit the Signup Page
+                                                </h4>
+                                                <p class="text-gray-600 mt-2">Navigate to the signup page and
+                                                    fill in your basic information including email and password.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-5">
+                                            <div
+                                                class="flex-shrink-0 w-10 h-10 step-number text-white rounded-xl flex items-center justify-center font-bold text-sm">
+                                                2
+                                            </div>
+                                            <div>
+                                                <h4 class="font-semibold text-gray-900 text-lg">Verify Your Email</h4>
+                                                <p class="text-gray-600 mt-2">Check your inbox and click the
+                                                    verification link to activate your account.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-5">
+                                            <div
+                                                class="flex-shrink-0 w-10 h-10 step-number text-white rounded-xl flex items-center justify-center font-bold text-sm">
+                                                3
+                                            </div>
+                                            <div>
+                                                <h4 class="font-semibold text-gray-900 text-lg">Complete Your Profile
+                                                </h4>
+                                                <p class="text-gray-600 mt-2">Add your name, avatar, and other
+                                                    profile details to personalize your experience.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modern-card rounded-2xl p-8">
+                                    <h4 class="font-bold text-gray-900 mb-4 flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+                                            style="background: linear-gradient(135deg, #10b981, #059669);">
+                                            <i class="fas fa-lightbulb text-white text-sm"></i>
+                                        </div>
+                                        Quick Tips
+                                    </h4>
+                                    <ul class="space-y-3 text-gray-700">
+                                        <li class="flex items-start gap-3">
+                                            <div class="w-6 h-6 rounded-full flex items-center justify-center mt-0.5"
+                                                style="background: linear-gradient(135deg, #10b981, #059669);">
+                                                <i class="fas fa-check text-white text-xs"></i>
+                                            </div>
+                                            <span>Use a strong password for better security</span>
+                                        </li>
+                                        <li class="flex items-start gap-3">
+                                            <div class="w-6 h-6 rounded-full flex items-center justify-center mt-0.5"
+                                                style="background: linear-gradient(135deg, #10b981, #059669);">
+                                                <i class="fas fa-check text-white text-xs"></i>
+                                            </div>
+                                            <span>Keep your email address updated for notifications</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="lg:order-first">
+                                <div class="relative group">
+                                    <div class="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                        style="background: var(--primary-gradient); transform: rotate(2deg);"></div>
+                                    <img src="https://colorlib.com/wp/wp-content/uploads/sites/2/free-html5-and-css3-login-forms.jpg"
+                                        alt="Signup Process"
+                                        class="relative w-full rounded-2xl shadow-2xl transition-transform duration-300 group-hover:scale-105" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Login Section -->
+                <section id="login" class="fade-in">
+                    <div class="bg-slate-900 rounded-xl p-4 sm:p-8 shadow-lg">
+                        <div class="flex items-start gap-3 sm:gap-4 mb-6 sm:mb-8">
+                            <div
+                                class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg sm:rounded-xl flex items-center justify-center">
+                                <i class="fas fa-sign-in-alt text-green-600 text-lg sm:text-xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">Login</h2>
+                                <p class="text-slate-300 text-base sm:text-lg">Access your workspace securely with your
+                                    email and
+                                    password credentials.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid lg:grid-cols-2 gap-6 sm:gap-8">
+                            <div class="space-y-4 sm:space-y-6">
+                                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                                    <h3 class="text-lg font-bold text-white mb-4">How to Login</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                1</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Enter Credentials</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Type your registered email
+                                                    address and password in the login form.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                2</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Click Login</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Press the login button to access
+                                                    your dashboard and workspace.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                3</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Access Dashboard</h4>
+                                                <p class="text-slate-300 text-sm mt-1">You will be redirected to your
+                                                    personalized dashboard with all your projects.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <img src="https://colorlib.com/wp/wp-content/uploads/sites/2/free-html5-and-css3-login-forms.jpg"
+                                    alt="Login Process" class="w-full rounded-xl shadow-lg" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Add Project Section -->
+                <section id="add-project" class="fade-in">
+                    <div class="bg-slate-900 rounded-xl p-4 sm:p-8 shadow-lg">
+                        <div class="flex items-start gap-3 sm:gap-4 mb-6 sm:mb-8">
+                            <div
+                                class="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-folder-plus text-blue-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-white mb-2">Add Project</h2>
+                                <p class="text-slate-300 text-lg">Create new projects to organize your tasks and track
+                                    progress effectively.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid lg:grid-cols-2 gap-6 sm:gap-8">
+                            <div class="space-y-4 sm:space-y-6">
+                                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                                    <h3 class="text-lg font-bold text-white mb-4">Creating a Project</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                1</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Click New Project</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Navigate to the Projects section
+                                                    and click the "New Project" button.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                2</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Fill Project Details</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Enter project name, description,
+                                                    category, and set deadlines.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                3</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Save Project</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Click save to create the project
+                                                    and start adding tasks.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <img src="https://colorlib.com/wp/wp-content/uploads/sites/2/free-html5-and-css3-login-forms.jpg"
+                                    alt="Add Project" class="w-full rounded-xl shadow-lg" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Edit Project Section -->
+                <section id="edit-project" class="fade-in">
+                    <div class="bg-slate-900 rounded-xl p-4 sm:p-8 shadow-lg">
+                        <div class="flex items-start gap-3 sm:gap-4 mb-6 sm:mb-8">
+                            <div
+                                class="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-edit text-purple-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-white mb-2">Edit Project</h2>
+                                <p class="text-slate-300 text-lg">Update project details, manage collaborators, and
+                                    modify project settings.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid lg:grid-cols-2 gap-6 sm:gap-8">
+                            <div class="space-y-4 sm:space-y-6">
+                                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                                    <h3 class="text-lg font-bold text-white mb-4">Editing Your Project</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                1</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Select Project</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Choose the project you want to
+                                                    edit from your projects list.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                2</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Click Edit</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Click the edit button to modify
+                                                    project details and settings.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                3</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Save Changes</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Update the information and save
+                                                    your changes.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <img src="https://colorlib.com/wp/wp-content/uploads/sites/2/free-html5-and-css3-login-forms.jpg"
+                                    alt="Edit Project" class="w-full rounded-xl shadow-lg" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Task & Todo Notes Section -->
+                <section id="task-todo" class="fade-in">
+                    <div class="bg-slate-900 rounded-xl p-4 sm:p-8 shadow-lg">
+                        <div class="flex items-start gap-3 sm:gap-4 mb-6 sm:mb-8">
+                            <div
+                                class="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-tasks text-orange-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-white mb-2">Task & Todo Notes</h2>
+                                <p class="text-slate-300 text-lg">Create, manage, and track tasks with due dates,
+                                    priorities, and detailed notes.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid lg:grid-cols-2 gap-6 sm:gap-8">
+                            <div class="space-y-4 sm:space-y-6">
+                                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                                    <h3 class="text-lg font-bold text-white mb-4">Managing Tasks</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                1</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Add New Task</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Click "Add Task" within your
+                                                    project to create a new task.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                2</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Set Details</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Add title, description, due date,
+                                                    and priority level.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-orange-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                3</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Add Notes</h4>
+                                                <p class="text-slate-0 text-sm mt-1">Use the notes section for
+                                                    checklists, reminders, and additional details.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <img src="https://colorlib.com/wp/wp-content/uploads/sites/2/free-html5-and-css3-login-forms.jpg"
+                                    alt="Task Management" class="w-full rounded-xl shadow-lg" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Project Sharing Section -->
+                <section id="project-sharing" class="fade-in">
+                    <div class="bg-slate-900 rounded-xl p-4 sm:p-8 shadow-lg">
+                        <div class="flex items-start gap-3 sm:gap-4 mb-6 sm:mb-8">
+                            <div
+                                class="flex-shrink-0 w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-share-alt text-teal-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-white mb-2">Project Sharing</h2>
+                                <p class="text-slate-300 text-lg">Invite team members, set permissions, and collaborate
+                                    in real-time on projects.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid lg:grid-cols-2 gap-6 sm:gap-8">
+                            <div class="space-y-4 sm:space-y-6">
+                                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                                    <h3 class="text-lg font-bold text-white mb-4">Sharing Projects</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-teal-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                1</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Open Share Settings</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Navigate to the project and click
+                                                    on the "Share" tab.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-teal-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                2</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Invite Members</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Enter email addresses and select
+                                                    appropriate roles for each member.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-teal-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                3</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Send Invitations</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Send invites and monitor pending
+                                                    invitations in the dashboard.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <img src="https://colorlib.com/wp/wp-content/uploads/sites/2/free-html5-and-css3-login-forms.jpg"
+                                    alt="Project Sharing" class="w-full rounded-xl shadow-lg" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings & Sharing Section -->
+                <section id="settings-sharing" class="fade-in">
+                    <div class="bg-slate-900 rounded-xl p-4 sm:p-8 shadow-lg">
+                        <div class="flex items-start gap-3 sm:gap-4 mb-6 sm:mb-8">
+                            <div
+                                class="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-cog text-gray-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-white mb-2">Settings & Sharing</h2>
+                                <p class="text-slate-300 text-lg">Customize your account preferences, notifications, and
+                                    workspace sharing rules.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid lg:grid-cols-2 gap-6 sm:gap-8">
+                            <div class="space-y-4 sm:space-y-6">
+                                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                                    <h3 class="text-lg font-bold text-white mb-4">Account Settings</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                1</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Access Settings</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Click on your avatar and select
+                                                    "Settings" from the dropdown menu.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                2</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Configure Preferences</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Review and adjust notifications,
+                                                    theme, and security options.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                3</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Save Changes</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Apply your changes and customize
+                                                    your workspace experience.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <img src="https://colorlib.com/wp/wp-content/uploads/sites/2/free-html5-and-css3-login-forms.jpg"
+                                    alt="Settings" class="w-full rounded-xl shadow-lg" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- AI & Chatting App Section -->
+                <section id="ai-chat" class="fade-in">
+                    <div class="bg-slate-900 rounded-xl p-4 sm:p-8 shadow-lg">
+                        <div class="flex items-start gap-3 sm:gap-4 mb-6 sm:mb-8">
+                            <div
+                                class="flex-shrink-0 w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-robot text-pink-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-white mb-2">AI & Chatting App</h2>
+                                <p class="text-slate-300 text-lg">Leverage AI assistants and team chat to streamline
+                                    your workflow and boost productivity.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid lg:grid-cols-2 gap-6 sm:gap-8">
+                            <div class="space-y-4 sm:space-y-6">
+                                <div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                                    <h3 class="text-lg font-bold text-white mb-4">Using AI Features</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-pink-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                1</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Open AI Panel</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Access the AI assistant from the
+                                                    sidebar or dashboard.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-pink-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                2</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Ask Questions</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Use natural language to ask
+                                                    questions or generate tasks and content.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <div
+                                                class="flex-shrink-0 w-8 h-8 bg-pink-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                3</div>
+                                            <div>
+                                                <h4 class="font-medium text-white">Team Collaboration</h4>
+                                                <p class="text-slate-300 text-sm mt-1">Use the chat app to communicate
+                                                    and collaborate with your team members.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <img src="https://colorlib.com/wp/wp-content/uploads/sites/2/free-html5-and-css3-login-forms.jpg"
+                                    alt="AI & Chat" class="w-full rounded-xl shadow-lg" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modern Footer -->
+    <footer class="relative mt-12 sm:mt-16" style="margin-top: calc(3rem + var(--header-h));">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+        <div class="relative max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl mb-3 sm:mb-4 floating"
+                    style="background: var(--accent-gradient);">
+                    <i class="fas fa-headset text-white text-base sm:text-lg"></i>
+                </div>
+                <h3 class="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">Need more help?</h3>
+                <p class="text-white/80 mb-4 sm:mb-6 max-w-xl mx-auto text-sm sm:text-base px-2">Our support team is
+                    here to assist you with any questions or issues.</p>
+                <a href="/contact"
+                    class="inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 hover:scale-105 text-sm sm:text-base"
+                    style="background: var(--primary-gradient); color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                    <i class="fas fa-headset"></i>
+                    Contact Support
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Mobile sidebar functionality
+        const mobileMenuToggle = document.getElementById("mobileMenuToggle");
+        const mobileSidebar = document.getElementById("mobileSidebar");
+        const closeMobileSidebar = document.getElementById("closeMobileSidebar");
+        const mobileSidebarOverlay = document.getElementById("mobileSidebarOverlay");
+        const mobileSidebarContent = document.getElementById("mobileSidebarContent");
+
+        // Copy desktop navigation to mobile
+        const desktopNav = document.getElementById("sidebarNav").innerHTML;
+        document.getElementById("mobileSidebarNav").innerHTML = desktopNav;
+
+        function openMobileSidebar() {
+            mobileSidebar.classList.remove("hidden");
+            setTimeout(() => {
+                mobileSidebarContent.classList.remove("-translate-x-full");
+            }, 10);
+        }
+
+        function closeMobileSidebarFunc() {
+            mobileSidebarContent.classList.add("-translate-x-full");
+            setTimeout(() => {
+                mobileSidebar.classList.add("hidden");
+            }, 300);
+        }
+
+        mobileMenuToggle?.addEventListener("click", openMobileSidebar);
+        closeMobileSidebar?.addEventListener("click", closeMobileSidebarFunc);
+        mobileSidebarOverlay?.addEventListener("click", closeMobileSidebarFunc);
+
+        // Search and filter functionality
+        const searchInput = document.getElementById("searchInput");
+        const clearSearch = document.getElementById("clearSearch");
+        const contentArea = document.getElementById("contentArea");
+        const sections = contentArea.querySelectorAll("section");
+        const sidebarLinks = document.querySelectorAll(".sidebar-link");
+
+        function highlightText(text, query) {
+            if (!query) return text;
+            const regex = new RegExp(`(${query})`, "gi");
+            return text.replace(regex, '<span class="search-highlight">$1</span>');
+        }
+
+        function filterContent(query) {
+            const normalizedQuery = query.toLowerCase().trim();
+
+            sections.forEach(section => {
+                const sectionText = section.innerText.toLowerCase();
+                const shouldShow = !normalizedQuery || sectionText.includes(normalizedQuery);
+
+                section.style.display = shouldShow ? "block" : "none";
+
+                if (shouldShow && normalizedQuery) {
+                    // Highlight matching text in headings
+                    const headings = section.querySelectorAll("h2, h3, h4");
+                    headings.forEach(heading => {
+                        const originalText = heading.textContent;
+                        heading.innerHTML = highlightText(originalText, normalizedQuery);
+                    });
+                } else {
+                    // Remove highlights
+                    const highlightedElements = section.querySelectorAll(".search-highlight");
+                    highlightedElements.forEach(el => {
+                        el.outerHTML = el.textContent;
+                    });
+                }
+            });
+
+            // Update sidebar links
+            sidebarLinks.forEach(link => {
+                const href = link.getAttribute("href");
+                const targetSection = document.querySelector(href);
+                const isVisible = targetSection && targetSection.style.display !== "none";
+
+                if (normalizedQuery) {
+                    link.classList.toggle("bg-indigo-600", isVisible);
+                    link.classList.toggle("text-white", isVisible);
+                    link.classList.toggle("bg-slate-800", !isVisible);
+                } else {
+                    link.classList.remove("bg-indigo-600", "text-white");
+                    link.classList.add("bg-slate-800");
+                }
+            });
+        }
+
+        searchInput?.addEventListener("input", (e) => {
+            filterContent(e.target.value);
+        });
+
+        clearSearch?.addEventListener("click", () => {
+            searchInput.value = "";
+            filterContent("");
+            searchInput.focus();
+        });
+
+        // Scroll spy for active section highlighting
+        const observerOptions = {
+            rootMargin: "-20% 0px -60% 0px",
+            threshold: 0
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    const activeLink = document.querySelector(`.sidebar-link[href="#${id}"]`);
+
+                    // Remove active class from all links
+                    sidebarLinks.forEach(link => {
+                        link.classList.remove("bg-indigo-600", "text-white");
+                        link.classList.add("bg-slate-800");
+                    });
+
+                    // Add active class to current link
+                    if (activeLink) {
+                        activeLink.classList.remove("bg-slate-800");
+                        activeLink.classList.add("bg-indigo-600", "text-white");
+                    }
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener("click", function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute("href"));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+                    // Close mobile sidebar if open
+                    if (!mobileSidebar.classList.contains("hidden")) {
+                        closeMobileSidebarFunc();
+                    }
+                }
+            });
+        });
+
+        // Add fade-in animation on scroll
+        const fadeInObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add("fade-in");
+                }
+            });
+        }, { threshold: 0.1 });
+
+        sections.forEach(section => {
+            fadeInObserver.observe(section);
+        });
+
+        // Progress bar functionality
+        const progressBar = document.getElementById('progressBar');
+        const totalSections = sections.length;
+        let currentSection = 0;
+
+        const progressObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const sectionIndex = Array.from(sections).indexOf(entry.target);
+                    currentSection = sectionIndex;
+                    const progress = ((sectionIndex + 1) / totalSections) * 100;
+                    progressBar.style.width = `${progress}%`;
+                }
+            });
+        }, {
+            rootMargin: '-20% 0px -60% 0px',
+            threshold: 0.1
+        });
+
+        sections.forEach(section => {
+            progressObserver.observe(section);
+        });
+    </script>
+</body>
+
+</html>
