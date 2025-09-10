@@ -4,6 +4,13 @@
 
 यह एक modern SaaS-style documentation page है जो ProPlanner के लिए बनाया गया है। यह dark theme, gradient design, और card-based layout का उपयोग करता है।
 
+### Quick Links
+
+- Documentation route: http://localhost:3000/documentation
+- Template: views/documentation.ejs
+- Styles: public/css/docs.css
+- Script: public/js/docs.js
+
 ## Features
 
 ### 🎨 Design Features

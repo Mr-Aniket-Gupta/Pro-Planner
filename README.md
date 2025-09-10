@@ -13,18 +13,18 @@
 
 **A full-stack project management platform with real-time collaboration, AI-powered features, and automated reminders**
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Available-brightgreen?style=for-the-badge)](https://your-demo-link.com)
-[![Documentation](https://img.shields.io/badge/Documentation-Complete-blue?style=for-the-badge)](https://your-docs-link.com)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Available-brightgreen?style=for-the-badge)](https://pro-planner.onrender.com)
+[![Documentation](https://img.shields.io/badge/Documentation-In%20App-blue?style=for-the-badge)](http://localhost:3000/documentation)
 [![License](https://img.shields.io/badge/License-ISC-blue?style=for-the-badge)](LICENSE)
 [![Contributions](https://img.shields.io/badge/Contributions-Welcome-green?style=for-the-badge)](CONTRIBUTING.md)
 
 ### 📊 Project Statistics
 
-![GitHub stars](https://img.shields.io/github/stars/yourusername/proplanner?style=social)
-![GitHub forks](https://img.shields.io/github/forks/yourusername/proplanner?style=social)
-![GitHub issues](https://img.shields.io/github/issues/yourusername/proplanner)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/yourusername/proplanner)
-![GitHub license](https://img.shields.io/github/license/yourusername/proplanner)
+![GitHub stars](https://img.shields.io/github/stars/aniket-gupta-2005-12-31/Pro-Planner?style=social)
+![GitHub forks](https://img.shields.io/github/forks/aniket-gupta-2005-12-31/Pro-Planner?style=social)
+![GitHub issues](https://img.shields.io/github/issues/aniket-gupta-2005-12-31/Pro-Planner)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/aniket-gupta-2005-12-31/Pro-Planner)
+![GitHub license](https://img.shields.io/github/license/aniket-gupta-2005-12-31/Pro-Planner)
 
 ### 🎯 Quick Start
 
@@ -36,7 +36,7 @@ git clone https://github.com/aniket-gupta-2005-12-31/Pro-Planner.git
 npm install
 
 # Set up environment variables
-cp .env
+# Create a .env file in the project root and fill values from the table below
 
 # Start the application
 npm start
@@ -45,7 +45,7 @@ npm start
 node server.js
 ```
 
-**Access the application at:** `https://localhost:3000`
+**Access the application at:** `http://localhost:3000`
 
 **Project Demo:** `https://pro-planner.onrender.com`
 
@@ -201,7 +201,7 @@ ProPlanner is a comprehensive project management platform that helps teams and i
 
 <div align="center">
 
-![Response Time](https://img.shields.io/badge/Response%20Time-<100ms-green?style=for-the-badge)
+![Response Time](https://img.shields.io/badge/Response%20Time-%3C100ms-green?style=for-the-badge)
 ![Uptime](https://img.shields.io/badge/Uptime-99.9%25-blue?style=for-the-badge)
 ![Concurrent Users](https://img.shields.io/badge/Concurrent%20Users-1000+-orange?style=for-the-badge)
 ![Data Sync](https://img.shields.io/badge/Data%20Sync-Real--time-purple?style=for-the-badge)
@@ -857,8 +857,8 @@ sequenceDiagram
 
 ### Step 1: Clone the Repository
 ```bash
-git clone https://github.com/yourusername/proplanner.git
-cd proplanner
+git clone https://github.com/aniket-gupta-2005-12-31/Pro-Planner.git
+cd Pro-Planner
 ```
 
 ### Step 2: Install Dependencies
@@ -888,8 +888,8 @@ EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
 EMAIL_SERVICE=gmail
 
-# Google AI Configuration
-GOOGLE_AI_API_KEY=your-google-ai-api-key
+# Google AI / Gemini Configuration
+GEMINI_API_KEY=your-gemini-api-key
 
 # Optional: Production Settings
 COMPRESSION_ENABLED=true
@@ -972,7 +972,7 @@ docker run -p 3000:3000 proplanner
 | `SESSION_SECRET` | Session encryption secret | Yes | - | High |
 | `EMAIL_USER` | Gmail username for notifications | Yes | - | Medium |
 | `EMAIL_PASS` | Gmail app password | Yes | - | High |
-| `GOOGLE_AI_API_KEY` | Google AI API key | No | - | High |
+| `GEMINI_API_KEY` | Google Gemini API key | No | - | High |
 | `NODE_ENV` | Environment mode (dev/prod) | No | development | Low |
 | `COMPRESSION_ENABLED` | Enable response compression | No | true | Low |
 | `CORS_ORIGIN` | Allowed CORS origins | No | http://localhost:3000 | Medium |
@@ -990,7 +990,7 @@ JWT_SECRET=your-super-secret-jwt-key-here-development
 SESSION_SECRET=your-session-secret-key-development
 EMAIL_USER=dev@yourcompany.com
 EMAIL_PASS=your-app-password
-GOOGLE_AI_API_KEY=your-google-ai-api-key
+GEMINI_API_KEY=your-gemini-api-key
 COMPRESSION_ENABLED=false
 LOG_LEVEL=debug
 ```
@@ -1004,7 +1004,7 @@ JWT_SECRET=your-super-secret-jwt-key-here-production
 SESSION_SECRET=your-session-secret-key-production
 EMAIL_USER=notifications@yourcompany.com
 EMAIL_PASS=your-app-password
-GOOGLE_AI_API_KEY=your-google-ai-api-key
+GEMINI_API_KEY=your-gemini-api-key
 COMPRESSION_ENABLED=true
 CORS_ORIGIN=https://yourdomain.com
 LOG_LEVEL=error
@@ -1152,19 +1152,19 @@ We welcome contributions from the community! See our [Contributing Guidelines](C
 
 **Made with ❤️ by the ProPlanner Team**
 
-[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?style=for-the-badge&logo=github)](https://github.com/yourusername/proplanner)
-[![Issues](https://img.shields.io/badge/Issues-Report-red?style=for-the-badge&logo=github)](https://github.com/yourusername/proplanner/issues)
-[![Pull Requests](https://img.shields.io/badge/PRs-Welcome-green?style=for-the-badge&logo=github)](https://github.com/yourusername/proplanner/pulls)
-[![Discussions](https://img.shields.io/badge/Discussions-Community-orange?style=for-the-badge&logo=github)](https://github.com/yourusername/proplanner/discussions)
-[![Wiki](https://img.shields.io/badge/Wiki-Documentation-blue?style=for-the-badge&logo=github)](https://github.com/yourusername/proplanner/wiki)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?style=for-the-badge&logo=github)](https://github.com/aniket-gupta-2005-12-31/Pro-Planner)
+[![Issues](https://img.shields.io/badge/Issues-Report-red?style=for-the-badge&logo=github)](https://github.com/aniket-gupta-2005-12-31/Pro-Planner/issues)
+[![Pull Requests](https://img.shields.io/badge/PRs-Welcome-green?style=for-the-badge&logo=github)](https://github.com/aniket-gupta-2005-12-31/Pro-Planner/pulls)
+[![Discussions](https://img.shields.io/badge/Discussions-Community-orange?style=for-the-badge&logo=github)](https://github.com/aniket-gupta-2005-12-31/Pro-Planner/discussions)
+[![Wiki](https://img.shields.io/badge/Wiki-Documentation-blue?style=for-the-badge&logo=github)](https://github.com/aniket-gupta-2005-12-31/Pro-Planner/wiki)
 
 ### 📊 Project Statistics
 
-![GitHub stars](https://img.shields.io/github/stars/yourusername/proplanner?style=social)
-![GitHub forks](https://img.shields.io/github/forks/yourusername/proplanner?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/yourusername/proplanner?style=social)
-![GitHub last commit](https://img.shields.io/github/last-commit/yourusername/proplanner)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/y/yourusername/proplanner)
+![GitHub stars](https://img.shields.io/github/stars/aniket-gupta-2005-12-31/Pro-Planner?style=social)
+![GitHub forks](https://img.shields.io/github/forks/aniket-gupta-2005-12-31/Pro-Planner?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/aniket-gupta-2005-12-31/Pro-Planner?style=social)
+![GitHub last commit](https://img.shields.io/github/last-commit/aniket-gupta-2005-12-31/Pro-Planner)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/y/aniket-gupta-2005-12-31/Pro-Planner)
 
 ### 🌟 Support the Project
 

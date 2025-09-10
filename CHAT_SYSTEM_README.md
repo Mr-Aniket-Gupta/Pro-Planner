@@ -22,6 +22,8 @@
 - **Message History**: Persistent chat history within session
 - **Typing Indicators**: Shows when someone is typing (future enhancement)
 - **Message Timestamps**: Each message shows exact time
+ - **Message Deletion**: Delete own messages with real-time sync
+ - **Bulk Delete**: Select and delete multiple own messages at once
 
 ### 📱 Responsive Design
 - **Mobile Optimized**: Full-screen chat on mobile devices
@@ -56,15 +58,24 @@ class ChatSystem {
 }
 ```
 
-### Backend API Endpoints
-- `GET /api/userdata/current-user` - Get current user info
+### REST API Endpoints
+- `GET /api/userdata/current-user` - Get current user info for chat
 - `GET /api/userdata/friends` - Get friends list for chat
-- WebSocket events for real-time messaging
+- `GET /api/messages/history?withUserId=<id>&cursor=<ms>&limit=<n>` - Paginated conversation history
+- `GET /api/messages/unread-counts` - Unread counts grouped by sender
+- `DELETE /api/messages/:messageId` - Delete a message you sent
 
 ### Socket.IO Events
-- `register` - Register user with socket
-- `chat:send` - Send message to friend
-- `chat:message` - Receive incoming message
+- `register` - Register the current userId with the socket
+- `chat:send` - Send a message to a friend `{ to, text, clientId }`
+- `chat:message` - Receive an incoming or echo message `{ id|clientId, from, to, text, ts }`
+- `chat:bulk` - Receive unread messages on connect (bulk sync)
+- `chat:unreadCounts` - Receive unread counts per sender `[ { _id: senderId, count } ]`
+- `chat:read` - Mark messages in a conversation as read `{ withUserId }`
+- `chat:deleteMessage` - Request deletion of a message `{ messageId }`
+- `chat:messageDeleted` - Broadcast after a message is deleted `{ messageId, fromUserId, toUserId }`
+- `chat:deleteSuccess` - Acknowledgement to the requester on successful delete `{ messageId }`
+- `chat:deleteError` - Error acknowledgement to the requester `{ message }`
 
 ### CSS Features
 - **Modern Design**: LinkedIn-inspired UI with gradients and shadows
@@ -136,7 +147,7 @@ const io = new Server(server, {
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 14+ 
+- Node.js 18+ 
 - MongoDB
 - Socket.IO client library
 
@@ -145,6 +156,11 @@ const io = new Server(server, {
 2. Set up environment variables
 3. Start the server: `npm start`
 4. Access chat via floating button on dashboard
+
+### Integration Notes
+- Ensure a button with id `openFriendChatBtn` exists on pages where chat should be available.
+- The script `public/js/chat.js` initializes automatically on `DOMContentLoaded` and binds to the button.
+- Socket.IO client is served by the app; ensure the layout includes the Socket.IO client script.
 
 ### Usage
 1. **Open Friends List**: Click the chat button (💬) in bottom-right
