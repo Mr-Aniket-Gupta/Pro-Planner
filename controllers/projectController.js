@@ -37,7 +37,15 @@ exports.getNotificationCounts = async (req, res) => {
 // Create a new project
 exports.createProject = async (req, res) => {
     try {
+        console.log('Creating project with data:', req.body); // Debug log
+        console.log('User ID from session:', req.session.userId); // Debug log
+        
         const { name, desc, basic, advanced, completed, deadline, notes, isPublic } = req.body;
+        
+        if (!name || !desc) {
+            return res.status(400).json({ error: 'Project name and description are required' });
+        }
+        
         const project = new Project({
             name,
             desc,
@@ -49,9 +57,13 @@ exports.createProject = async (req, res) => {
             notes,
             isPublic: isPublic || false
         });
-        await project.save();
-        res.status(201).json(project);
+        
+        const savedProject = await project.save();
+        console.log('Project saved successfully:', savedProject._id); // Debug log
+        
+        res.status(201).json(savedProject);
     } catch (err) {
+        console.error('Create project error:', err); // Debug log
         res.status(500).json({ error: 'Failed to create project' });
     }
 };

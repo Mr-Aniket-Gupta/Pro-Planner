@@ -107,12 +107,29 @@ function updateDoughnutChart() {
     });
 }
 
-// --- Daily Activity Line Chart Data ---
+// --- Enhanced Daily Activity Line Chart Data ---
 function getDailyActivityData(days = 30) {
-    if (!activityFeedArr) return { dateLabels: [], activityCounts: [], movingAvg: [] };
+    if (!activityFeedArr || activityFeedArr.length === 0) {
+        // Return empty data with proper structure
+        const today = new Date();
+        const dateLabels = [];
+        const activityCounts = [];
+        for (let i = days - 1; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yy = String(d.getFullYear()).slice(-2);
+            dateLabels.push(`${dd}/${mm}/${yy}`);
+            activityCounts.push(0);
+        }
+        return { dateLabels, activityCounts, movingAvg: new Array(days).fill(0) };
+    }
+    
     const today = new Date();
     const dateLabels = [];
     const activityCounts = [];
+    
     for (let i = days - 1; i >= 0; i--) {
         const d = new Date(today);
         d.setDate(today.getDate() - i);
@@ -121,13 +138,19 @@ function getDailyActivityData(days = 30) {
         const yy = String(d.getFullYear()).slice(-2);
         const label = `${dd}/${mm}/${yy}`;
         dateLabels.push(label);
+        
+        // Count activities for this specific date
         const count = activityFeedArr.filter(a => {
             const atime = new Date(a.time);
-            return atime.getDate() === d.getDate() && atime.getMonth() === d.getMonth() && atime.getFullYear() === d.getFullYear();
+            return atime.getDate() === d.getDate() && 
+                   atime.getMonth() === d.getMonth() && 
+                   atime.getFullYear() === d.getFullYear();
         }).length;
+        
         activityCounts.push(count);
     }
-    // 7-day moving average for trend
+    
+    // Enhanced 7-day moving average calculation
     const windowSize = 7;
     const movingAvg = activityCounts.map((_, idx, arr) => {
         const start = Math.max(0, idx - windowSize + 1);
@@ -135,6 +158,7 @@ function getDailyActivityData(days = 30) {
         const sum = slice.reduce((s, v) => s + v, 0);
         return Number((sum / slice.length).toFixed(2));
     });
+    
     return { dateLabels, activityCounts, movingAvg };
 }
 // --- Line Chart Render ---
@@ -200,13 +224,25 @@ function updateLineChart() {
             scales: {
                 x: {
                     ticks: { autoSkip: true, maxTicksLimit: 6, font: { size: 10 } },
-                    grid: { display: false }
+                    grid: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Date',
+                        font: { size: 12, weight: 'bold' },
+                        color: '#64748b'
+                    }
                 },
                 y: {
                     beginAtZero: true,
                     suggestedMax: Math.max(5, Math.ceil(Math.max(...activityCounts, 0) * 1.2)),
                     ticks: { stepSize: 1, font: { size: 10 } },
-                    grid: { color: 'rgba(203,213,225,0.4)' }
+                    grid: { color: 'rgba(203,213,225,0.4)' },
+                    title: {
+                        display: true,
+                        text: 'Activities',
+                        font: { size: 12, weight: 'bold' },
+                        color: '#64748b'
+                    }
                 }
             },
             layout: { padding: { top: 4, right: 8, bottom: 4, left: 8 } }

@@ -13,6 +13,140 @@ let currentOtpEmail = '';
 let otpTimerInterval = null;
 let otpTimeLeft = 120;
 
+// Tooltip Portal Management
+let currentTooltip = null;
+
+function createTooltipPortal(text, element) {
+    // Remove existing tooltip if any
+    if (currentTooltip) {
+        currentTooltip.remove();
+        currentTooltip = null;
+    }
+
+    // Don't show tooltip if text is empty or same as displayed text
+    if (!text || text.trim() === '') return null;
+    
+    // Check if text is actually truncated
+    const computedStyle = window.getComputedStyle(element);
+    if (computedStyle.textOverflow !== 'ellipsis' && computedStyle.overflow !== 'hidden') {
+        return null; // Text is not truncated, no need for tooltip
+    }
+
+    // Create tooltip element
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tooltip-portal';
+    tooltip.textContent = text;
+    
+    // Add to document body
+    document.body.appendChild(tooltip);
+    
+    // Get element position
+    const rect = element.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    
+    // Position tooltip above the element
+    const tooltipTop = rect.top + scrollTop - tooltip.offsetHeight - 10;
+    const tooltipLeft = rect.left + scrollLeft + (rect.width / 2) - (tooltip.offsetWidth / 2);
+    
+    // Ensure tooltip stays within viewport
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    let finalLeft = tooltipLeft;
+    let finalTop = tooltipTop;
+    
+    // Adjust horizontal position if tooltip goes off screen
+    if (finalLeft < 10) {
+        finalLeft = 10;
+    } else if (finalLeft + tooltip.offsetWidth > viewportWidth - 10) {
+        finalLeft = viewportWidth - tooltip.offsetWidth - 10;
+    }
+    
+    // Adjust vertical position if tooltip goes off screen
+    if (finalTop < 10) {
+        finalTop = rect.bottom + scrollTop + 10;
+        // Change arrow direction
+        tooltip.style.setProperty('--arrow-direction', 'bottom');
+    }
+    
+    // Set position
+    tooltip.style.left = finalLeft + 'px';
+    tooltip.style.top = finalTop + 'px';
+    
+    // Show tooltip with animation
+    setTimeout(() => {
+        tooltip.classList.add('show');
+    }, 10);
+    
+    currentTooltip = tooltip;
+    return tooltip;
+}
+
+function removeTooltipPortal() {
+    if (currentTooltip) {
+        currentTooltip.classList.remove('show');
+        setTimeout(() => {
+            if (currentTooltip) {
+                currentTooltip.remove();
+                currentTooltip = null;
+            }
+        }, 200);
+    }
+}
+
+// Enhanced tooltip event handlers
+function setupTooltipHandlers() {
+    // Handle project list tooltips
+    document.addEventListener('mouseover', function(e) {
+        const element = e.target.closest('#projectList .truncate[title]');
+        if (element && element.title) {
+            createTooltipPortal(element.title, element);
+        }
+    });
+    
+    document.addEventListener('mouseout', function(e) {
+        const element = e.target.closest('#projectList .truncate[title]');
+        if (element) {
+            removeTooltipPortal();
+        }
+    });
+    
+    // Handle task list tooltips
+    document.addEventListener('mouseover', function(e) {
+        const element = e.target.closest('#taskList .truncate[title]');
+        if (element && element.title) {
+            createTooltipPortal(element.title, element);
+        }
+    });
+    
+    document.addEventListener('mouseout', function(e) {
+        const element = e.target.closest('#taskList .truncate[title]');
+        if (element) {
+            removeTooltipPortal();
+        }
+    });
+    
+    // Handle sidebar todo tooltips
+    document.addEventListener('mouseover', function(e) {
+        const element = e.target.closest('#sidebarTodoList .truncate[title]');
+        if (element && element.title) {
+            createTooltipPortal(element.title, element);
+        }
+    });
+    
+    document.addEventListener('mouseout', function(e) {
+        const element = e.target.closest('#sidebarTodoList .truncate[title]');
+        if (element) {
+            removeTooltipPortal();
+        }
+    });
+    
+    // Clean up tooltips on scroll and resize
+    window.addEventListener('scroll', removeTooltipPortal);
+    window.addEventListener('resize', removeTooltipPortal);
+}
+
 // Toast instance for consistent notifications
 const Toast = Swal.mixin({
   toast: true,
@@ -32,20 +166,29 @@ function renderProjectList() {
     const projectListEl = document.getElementById('projectList');
     projectListEl.innerHTML = '';
     if (projects.length === 0) {
-        document.getElementById('emptyProjectState').style.display = '';
+        document.getElementById('emptyProjectState').style.display = 'flex';
+        // Hide scrollbar when no projects
+        projectListEl.style.overflowY = 'hidden';
+        projectListEl.classList.add('no-scrollbar');
+        projectListEl.classList.remove('has-scrollbar');
     } else {
         document.getElementById('emptyProjectState').style.display = 'none';
         projects.forEach((project, idx) => {
             const linked = isProjectLinked(project._id);
             const projectLink = getProjectSocialLink(project._id);
             let sharedLabel = project.isShared ? `<span class='ml-2 px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold'>Shared</span>` : '';
-            let linkedIcon = linked ? `<span class="ml-1 text-green-500" title="Linked in Social Links"></span>` : '';
+            let linkedIcon = linked ? `<span class="ml-1 text-green-500 flex-shrink-0" title="Linked in Social Links">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </span>` : '';
 
             // Show URL icon only if project has a saved URL
             let urlIcon = '';
             if (projectLink && projectLink.url && projectLink.url.trim()) {
-                urlIcon = `<a href="${projectLink.url}" target="_blank" class="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" title="Open Project URL (${projectLink.url})" onclick="event.stopPropagation();">
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+                urlIcon = `<a href="${projectLink.url}" target="_blank" class="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex-shrink-0" title="Open Project URL (${projectLink.url})" onclick="event.stopPropagation();">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24">
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="2"/>
                         <polyline points="15,3 21,3 21,9" stroke="currentColor" stroke-width="2"/>
                         <line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="2"/>
@@ -56,16 +199,45 @@ function renderProjectList() {
             const li = document.createElement('li');
             li.className = 'flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 rounded-xl px-4 py-2 hover:bg-blue-100 dark:hover:bg-blue-800/30 cursor-pointer transition';
             li.innerHTML = `
-                <span class="font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
-                  ${project.name}${sharedLabel}${!project.isShared && !project.isPublic ? ' <span style=\'color:#e02424;font-weight:bold\'>*</span>' : ''}
+                <span class="font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2 min-w-0 flex-1">
+                  <span class="truncate cursor-help" title="${project.name}" data-tooltip="${project.name}">${project.name}</span>${sharedLabel}${!project.isShared && !project.isPublic ? ' <span style=\'color:#e02424;font-weight:bold\'>*</span>' : ''}
                   ${linkedIcon}${urlIcon}
                 </span>
-                <div class="flex gap-2">
-                  <button onclick="selectProjectById('${project._id}')" class="ml-2 text-blue-400 hover:text-blue-600" title="Select"><svg width="18" height="18" fill="none" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" stroke="#3B82F6" stroke-width="1.5"/><path d="M6 9l2 2 4-4" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/></svg></button>
-                  ${project.isShared ? '' : `<button onclick="deleteProject(${idx})" class="ml-2 text-red-400 hover:text-red-600" title="Delete"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="12" rx="2" stroke="#ef4444" stroke-width="2"/><path d="M10 11v4M14 11v4" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="#ef4444" stroke-width="2"/></svg></button>`}
+                <div class="flex gap-1 items-center flex-shrink-0">
+                  <button onclick="selectProjectById('${project._id}')" class="text-blue-400 hover:text-blue-600 p-1 rounded transition" title="Select">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 18 18">
+                      <circle cx="9" cy="9" r="8" stroke="#3B82F6" stroke-width="1.5"/>
+                      <path d="M6 9l2 2 4-4" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                  ${project.isShared ? '' : `<button onclick="deleteProject(${idx})" class="text-red-400 hover:text-red-600 p-1 rounded transition" title="Delete">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24">
+                      <rect x="5" y="7" width="14" height="12" rx="2" stroke="#ef4444" stroke-width="2"/>
+                      <path d="M10 11v4M14 11v4" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="#ef4444" stroke-width="2"/>
+                    </svg>
+                  </button>`}
                 </div>`;
             projectListEl.appendChild(li);
         });
+        
+        // Enhanced scrollbar control - always allow scrolling but hide scrollbar when not needed
+        setTimeout(() => {
+            const containerHeight = projectListEl.clientHeight;
+            const contentHeight = projectListEl.scrollHeight;
+            
+            // Always enable scrolling for better UX
+            projectListEl.style.overflowY = 'auto';
+            
+            // Add/remove scrollbar visibility class based on content
+            if (contentHeight > containerHeight) {
+                projectListEl.classList.add('has-scrollbar');
+                projectListEl.classList.remove('no-scrollbar');
+            } else {
+                projectListEl.classList.add('no-scrollbar');
+                projectListEl.classList.remove('has-scrollbar');
+            }
+        }, 10);
     }
 }
 
@@ -356,16 +528,63 @@ function editProject() {
 
 // Project add/edit form submit event
 // Project ko add ya update karta hai
-document.getElementById('projectFormEl').addEventListener('submit', async function (e) {
+const projectForm = document.getElementById('projectFormEl');
+if (!projectForm) {
+    console.error('Project form element not found!');
+} else {
+    console.log('Project form element found, adding event listener');
+}
+
+// Add both form submit and button click event listeners
+projectForm.addEventListener('submit', handleProjectFormSubmit);
+document.addEventListener('click', function(e) {
+    if (e.target && e.target.form === projectForm && e.target.type === 'submit') {
+        console.log('Submit button clicked directly');
+        e.preventDefault();
+        handleProjectFormSubmit(e);
+    }
+});
+
+async function handleProjectFormSubmit(e) {
     e.preventDefault();
-    const name = document.getElementById('projectName').value;
-    const desc = document.getElementById('projectDescInput').value;
-    const basic = Array.from(document.querySelectorAll('.basic-input')).map(i => i.value).filter(Boolean);
-    const advanced = Array.from(document.querySelectorAll('.advanced-input')).map(i => i.value).filter(Boolean);
-    // Quick Notes are now handled in project overview, not in add/edit form
-    const notes = '';
-    const isPublic = !document.getElementById('projectIsPrivate').checked;
-    if (document.getElementById('projectModalTitle').innerText === 'Edit Project' && selectedProjectIndex !== null) {
+    console.log('Form submit event triggered'); // Debug log
+    
+    // Prevent duplicate submissions
+    const submitBtn = e.target.querySelector('button[type="submit"]') || e.target;
+    console.log('Submit button found:', submitBtn); // Debug log
+    if (submitBtn.disabled) {
+        console.log('Submit button is disabled, returning'); // Debug log
+        return;
+    }
+    
+    // Disable submit button to prevent duplicate submissions
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+    
+    try {
+        const name = document.getElementById('projectName').value.trim();
+        const desc = document.getElementById('projectDescInput').value.trim();
+        const basic = Array.from(document.querySelectorAll('.basic-input')).map(i => i.value).filter(Boolean);
+        const advanced = Array.from(document.querySelectorAll('.advanced-input')).map(i => i.value).filter(Boolean);
+        // Quick Notes are now handled in project overview, not in add/edit form
+        const notes = '';
+        const isPublic = !document.getElementById('projectIsPrivate').checked;
+        
+        // Validate required fields
+        if (!name) {
+            showAlert({ icon: 'warning', title: 'Validation Error', text: 'Project name is required!' });
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Project';
+            return;
+        }
+        if (!desc) {
+            showAlert({ icon: 'warning', title: 'Validation Error', text: 'Project description is required!' });
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Project';
+            return;
+        }
+        
+        if (document.getElementById('projectModalTitle').innerText === 'Edit Project' && selectedProjectIndex !== null) {
         const projectId = projects[selectedProjectIndex]._id;
         const oldProject = projects[selectedProjectIndex];
         let updateData = { name, desc, basic, advanced, notes };
@@ -395,12 +614,24 @@ document.getElementById('projectFormEl').addEventListener('submit', async functi
         } catch (err) {
             showAlert({ icon: 'error', title: 'Error', text: 'Failed to update project!' });
         }
-    } else {
-        await addProject({ name, desc, basic, advanced, notes, isPublic });
+        } else {
+            // Add new project
+            console.log('About to add project with data:', { name, desc, basic, advanced, notes, isPublic });
+            const result = await addProject({ name, desc, basic, advanced, notes, isPublic });
+            console.log('Add project result:', result);
+            await fetchProjects();
+        }
+        
+        closeProjectForm();
+    } catch (error) {
+        console.error('Error saving project:', error);
+        showAlert({ icon: 'error', title: 'Error', text: 'Failed to save project!' });
+    } finally {
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save Project';
     }
-    await fetchProjects();
-    closeProjectForm();
-});
+}
 
 // Project select/update par default tasks fetch ho (pehle jaisa)
 async function origSelectProject(idx) {
@@ -450,18 +681,18 @@ function renderTasks(filter = '', tag = '', priority = '') {
     }
     filtered.forEach((task, index) => {
         const li = document.createElement('li');
-        li.className = 'flex items-center justify-between bg-blue-50 rounded-xl px-4 py-2 shadow-sm';
+        li.className = 'flex items-center justify-between bg-blue-50 rounded-xl px-2 sm:px-4 py-2 shadow-sm gap-2';
         let taskBtns = '';
         // Disable task update for read-only users
         if (!(project.isShared && access === 'read' && !isOwner)) {
             taskBtns = `
-              <button onclick="editTask(${index})" class="text-yellow-400 hover:text-yellow-500 transition rounded-lg px-2" title="Edit">✏️</button>
-              <button onclick="deleteTask(${index})" class="text-red-400 hover:text-red-500 transition rounded-lg px-2" title="Delete">✖</button>
+              <button onclick="editTask(${index})" class="text-yellow-400 hover:text-yellow-500 transition rounded-lg p-1 sm:px-2 w-6 h-6 sm:w-auto sm:h-auto flex items-center justify-center" title="Edit">✏️</button>
+              <button onclick="deleteTask(${index})" class="text-red-400 hover:text-red-500 transition rounded-lg p-1 sm:px-2 w-6 h-6 sm:w-auto sm:h-auto flex items-center justify-center" title="Delete">✖</button>
             `;
         } else {
             taskBtns = `
-              <button disabled class="text-yellow-200 cursor-not-allowed rounded-lg px-2" title="You cannot edit (read access)">✏️</button>
-              <button disabled class="text-red-200 cursor-not-allowed rounded-lg px-2" title="You cannot delete (read access)">✖</button>
+              <button disabled class="text-yellow-200 cursor-not-allowed rounded-lg p-1 sm:px-2 w-6 h-6 sm:w-auto sm:h-auto flex items-center justify-center" title="You cannot edit (read access)">✏️</button>
+              <button disabled class="text-red-200 cursor-not-allowed rounded-lg p-1 sm:px-2 w-6 h-6 sm:w-auto sm:h-auto flex items-center justify-center" title="You cannot delete (read access)">✖</button>
             `;
         }
         // Priority badge styling
@@ -473,17 +704,24 @@ function renderTasks(filter = '', tag = '', priority = '') {
                 'Low': 'bg-green-100 text-green-700 border-green-200'
             };
             const colorClass = priorityColors[task.priority] || 'bg-gray-100 text-gray-700 border-gray-200';
-            priorityBadge = `<span class="text-xs px-2 py-1 rounded-full border ${colorClass} ml-2">${task.priority}</span>`;
+            // Responsive priority badge - smaller on mobile
+            priorityBadge = `<span class="text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full border ${colorClass} ml-1 sm:ml-2 flex-shrink-0">${task.priority}</span>`;
         }
 
+        // Truncate task text if too long (similar to project list)
+        const maxTaskTextLength = 50; // Adjust based on your needs
+        const truncatedTaskText = task.text.length > maxTaskTextLength 
+            ? task.text.substring(0, maxTaskTextLength) + '...' 
+            : task.text;
+
         li.innerHTML = `
-            <div class="flex items-center gap-2">
-              <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})" class="accent-blue-500" ${(project.isShared && access === 'read' && !isOwner) ? 'disabled' : ''}>
-              <span class="${task.completed ? 'line-through text-gray-400' : 'text-gray-700 font-medium'}">${task.text}</span>
-              <span class="text-xs text-blue-400 ml-2">[${task.tag}]</span>
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+              <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})" class="accent-blue-500 flex-shrink-0" ${(project.isShared && access === 'read' && !isOwner) ? 'disabled' : ''}>
+              <span class="${task.completed ? 'line-through text-gray-400' : 'text-gray-700 font-medium'} min-w-0 flex-1 truncate cursor-help" title="${task.text}" data-tooltip="${task.text}">${truncatedTaskText}</span>
+              <span class="text-xs text-blue-400 ml-1 sm:ml-2 flex-shrink-0 hidden sm:inline">[${task.tag}]</span>
               ${priorityBadge}
             </div>
-            <div class="flex gap-2">
+            <div class="flex gap-1 flex-shrink-0">
               ${taskBtns}
             </div>
           `;
@@ -730,6 +968,9 @@ function renderCalendar() {
 }
 // DOMContentLoaded par initial data fetch, render, aur setup karta hai
 document.addEventListener('DOMContentLoaded', async function () {
+    // Initialize tooltip handlers
+    setupTooltipHandlers();
+    
     await fetchProjects();
     updateSummaryCards();
     if (projects.length > 0) {
@@ -746,6 +987,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         renderCalendar();
     }
     fetchUserData();
+    // Load activity data from localStorage
+    loadActivityFromStorage();
+    
     // Start polling for real-time updates
     setInterval(pollForProjectUpdates, 15000); // Poll every 15 seconds
 });
@@ -870,7 +1114,13 @@ function renderSidebarTodos() {
     sidebarTodos.forEach((todo, idx) => {
         const li = document.createElement('li');
         li.className = 'flex items-center justify-between bg-blue-50 rounded-xl px-3 py-2';
-        li.innerHTML = `<span class="${todo.done ? 'line-through text-gray-400' : 'text-gray-700 font-medium'}">${todo.text}</span>
+        // Truncate todo text if too long
+        const maxTodoTextLength = 40;
+        const truncatedTodoText = todo.text.length > maxTodoTextLength 
+            ? todo.text.substring(0, maxTodoTextLength) + '...' 
+            : todo.text;
+
+        li.innerHTML = `<span class="${todo.done ? 'line-through text-gray-400' : 'text-gray-700 font-medium'} truncate cursor-help" title="${todo.text}" data-tooltip="${todo.text}">${truncatedTodoText}</span>
       <div class="flex gap-2">
         <button onclick="toggleSidebarTodo(${idx})" class="text-green-500 hover:text-green-700" title="Done">✔</button>
         <button onclick="deleteSidebarTodo(${idx})" class="text-red-400 hover:text-red-600" title="Delete">✖</button>
@@ -980,21 +1230,43 @@ async function fetchProjects() {
     }
 }
 async function addProject(project) {
-    window.showLoader();
     try {
+        console.log('Adding project:', project); // Debug log
+        
         const res = await fetch('/api/projects', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(project)
         });
-        if (!res.ok) throw new Error('Project add failed');
-        showAlert({ icon: 'success', title: 'Success', text: 'Project added!' });
+        
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP ${res.status}: Project add failed`);
+        }
+        
+        const savedProject = await res.json();
+        console.log('Project saved successfully:', savedProject); // Debug log
+        
+        // Show success toast
+        showAlert({ 
+            icon: 'success', 
+            title: 'Project Created! 🎉', 
+            text: `"${project.name}" has been created successfully!`,
+            timer: 3000,
+            showConfirmButton: false
+        });
+        
         addActivityFeed(`Project "${project.name}" created successfully`, 'project');
-        await fetchProjects();
+        
+        return savedProject;
     } catch (err) {
-        showAlert({ icon: 'error', title: 'Error', text: 'Failed to add project!' });
-    } finally {
-        window.hideLoader();
+        console.error('Add project error:', err);
+        showAlert({ 
+            icon: 'error', 
+            title: 'Failed to Create Project', 
+            text: err.message || 'Failed to add project!' 
+        });
+        throw err; // Re-throw to let caller handle
     }
 }
 // Project update (edit)
@@ -1615,11 +1887,56 @@ function updateUpcomingDeadlines() {
         ul.appendChild(li);
     });
 }
-// Activity feed update/add karta hai
+// Enhanced Activity feed update/add karta hai with real-time chart updates
 function addActivityFeed(msg, type = 'info') {
-    activityFeedArr.unshift({ msg, time: new Date(), type });
-    if (activityFeedArr.length > 20) activityFeedArr.pop();
+    const activityEntry = { 
+        msg, 
+        time: new Date(), 
+        type,
+        date: new Date().toDateString() // Add date for easier filtering
+    };
+    activityFeedArr.unshift(activityEntry);
+    if (activityFeedArr.length > 50) activityFeedArr.pop(); // Keep more entries for better chart data
+    
     updateActivityFeed();
+    
+    // Update line chart in real-time
+    if (typeof updateLineChart === 'function') {
+        setTimeout(() => {
+            updateLineChart();
+        }, 100); // Small delay to ensure data is processed
+    }
+    
+    // Save activity to localStorage for persistence
+    saveActivityToStorage();
+}
+
+// Save activity data to localStorage
+function saveActivityToStorage() {
+    try {
+        localStorage.setItem('proplanner_activity_feed', JSON.stringify(activityFeedArr));
+    } catch (error) {
+        console.warn('Could not save activity to localStorage:', error);
+    }
+}
+
+// Load activity data from localStorage
+function loadActivityFromStorage() {
+    try {
+        const stored = localStorage.getItem('proplanner_activity_feed');
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            // Convert date strings back to Date objects
+            activityFeedArr = parsed.map(activity => ({
+                ...activity,
+                time: new Date(activity.time),
+                date: activity.date || new Date(activity.time).toDateString()
+            }));
+        }
+    } catch (error) {
+        console.warn('Could not load activity from localStorage:', error);
+        activityFeedArr = [];
+    }
 }
 
 // Helper function to format relative time
@@ -2207,6 +2524,83 @@ document.addEventListener('DOMContentLoaded', function () {
             showProjectForm();
         });
     }
+    
+    // Direct save button handler as backup
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.textContent === 'Save Project' && e.target.type === 'submit') {
+            console.log('Direct save button click detected');
+            e.preventDefault();
+            handleProjectFormSubmit(e);
+        }
+    });
+    
+    // Test function for debugging
+    window.testProjectSave = async function() {
+        console.log('Testing project save...');
+        try {
+            const testProject = {
+                name: 'Test Project',
+                desc: 'This is a test project',
+                basic: ['Test basic requirement'],
+                advanced: ['Test advanced feature'],
+                notes: '',
+                isPublic: true
+            };
+            const result = await addProject(testProject);
+            console.log('Test project save result:', result);
+        } catch (error) {
+            console.error('Test project save error:', error);
+        }
+    };
+    
+    // Test function for generating sample activity data
+    window.generateSampleActivity = function() {
+        console.log('Generating sample activity data...');
+        const today = new Date();
+        
+        // Generate activities for the last 7 days
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            
+            // Generate 0-5 random activities per day
+            const activityCount = Math.floor(Math.random() * 6);
+            
+            for (let j = 0; j < activityCount; j++) {
+                const activityTime = new Date(date);
+                activityTime.setHours(Math.floor(Math.random() * 24));
+                activityTime.setMinutes(Math.floor(Math.random() * 60));
+                
+                const activities = [
+                    'Project created',
+                    'Task completed',
+                    'Task added',
+                    'Project updated',
+                    'Notes saved',
+                    'Deadline set',
+                    'Todo completed',
+                    'Project shared'
+                ];
+                
+                const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+                addActivityFeed(`Sample: ${randomActivity}`, 'info');
+            }
+        }
+        
+        console.log('Sample activity data generated!');
+    };
+    
+    // Handle window resize for responsive project list
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            // Re-render project list to adjust scrollbar
+            if (projects.length > 0) {
+                renderProjectList();
+            }
+        }, 150);
+    });
 
     // Mark complete button
     const markCompleteBtn = document.getElementById('markCompleteBtn');

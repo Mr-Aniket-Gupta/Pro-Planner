@@ -264,8 +264,60 @@ body {
 }
 
 /* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Hide scrollbar when not needed */
+.custom-scrollbar:not(:hover)::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+/* Enhanced scrollbar for project list */
+#projectList.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+#projectList.custom-scrollbar:hover {
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+#projectList.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+#projectList.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 2px;
+  transition: background 0.3s ease;
+}
+
+#projectList.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+#projectList.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 .dark-theme .custom-scrollbar::-webkit-scrollbar {
-  background: #23232a !important;
+  background: transparent !important;
 }
 
 .dark-theme .custom-scrollbar::-webkit-scrollbar-thumb {
@@ -275,6 +327,265 @@ body {
 
 .dark-theme .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #2563eb !important;
+}
+
+.dark-theme .custom-scrollbar:not(:hover)::-webkit-scrollbar-thumb {
+  background: transparent !important;
+}
+
+/* Dark theme enhanced scrollbar for project list */
+.dark-theme #projectList.custom-scrollbar {
+  scrollbar-color: transparent transparent;
+}
+
+.dark-theme #projectList.custom-scrollbar:hover {
+  scrollbar-color: #374151 transparent;
+}
+
+.dark-theme #projectList.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent !important;
+}
+
+.dark-theme #projectList.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #374151 !important;
+}
+
+.dark-theme #projectList.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #2563eb !important;
+}
+
+/* Scrollbar visibility control */
+#projectList.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+#projectList.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#projectList.has-scrollbar::-webkit-scrollbar {
+  display: block;
+}
+
+#projectList.has-scrollbar {
+  scrollbar-width: thin;
+}
+
+/* Responsive Design for Project List */
+@media (max-width: 768px) {
+  /* Mobile: Full height project list */
+  #projectList {
+    max-height: calc(100vh - 200px);
+    min-height: 200px;
+  }
+  
+  /* Mobile: Larger touch targets */
+  #projectList li {
+    min-height: 48px;
+    padding: 0.75rem 1rem;
+  }
+  
+  /* Mobile: Better scrollbar visibility */
+  #projectList.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  #projectList.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+  
+  /* Dark theme mobile scrollbar */
+  .dark-theme #projectList.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #374151 !important;
+  }
+  
+  .dark-theme #projectList.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: #2563eb !important;
+  }
+}
+
+@media (min-width: 769px) {
+  /* Desktop: Constrained height */
+  #projectList {
+    max-height: calc(100vh - 300px);
+    min-height: 300px;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 1024px) {
+  #projectList {
+    max-height: calc(100vh - 250px);
+    min-height: 250px;
+  }
+}
+
+/* Task List Responsive Styles */
+@media (max-width: 640px) {
+  /* Mobile task list adjustments */
+  #taskList li {
+    padding: 0.5rem 0.75rem;
+    gap: 0.5rem;
+  }
+  
+  /* Smaller task text on mobile */
+  #taskList .truncate {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  
+  /* Compact priority badges on mobile */
+  #taskList .priority-badge {
+    font-size: 0.625rem;
+    padding: 0.125rem 0.375rem;
+  }
+  
+  /* Smaller action buttons on mobile */
+  #taskList button {
+    min-width: 1.5rem;
+    min-height: 1.5rem;
+  }
+}
+
+/* Task list hover effects */
+#taskList li:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+/* Task text truncation with tooltip */
+#taskList .truncate {
+  max-width: 200px;
+}
+
+@media (min-width: 640px) {
+  #taskList .truncate {
+    max-width: 300px;
+  }
+}
+
+@media (min-width: 768px) {
+  #taskList .truncate {
+    max-width: 400px;
+  }
+}
+
+@media (min-width: 1024px) {
+  #taskList .truncate {
+    max-width: 500px;
+  }
+}
+
+/* Dark theme support for task list */
+.dark-theme #taskList li {
+  background-color: rgba(30, 58, 138, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.dark-theme #taskList li:hover {
+  background-color: rgba(30, 58, 138, 0.2);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.dark-theme #taskList .truncate {
+  color: #e2e8f0;
+}
+
+.dark-theme #taskList .line-through {
+  color: #64748b;
+}
+
+.dark-theme #taskList button {
+  color: #94a3b8;
+}
+
+.dark-theme #taskList button:hover {
+  color: #cbd5e1;
+}
+
+/* Enhanced Tooltip Styles for Task List */
+#taskList .truncate[title] {
+  position: relative;
+}
+
+/* Enhanced Tooltip Styles for Project List */
+#projectList .truncate[title] {
+  position: relative;
+}
+
+/* Portal tooltip styles - rendered to document.body */
+.tooltip-portal {
+  position: fixed;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  z-index: 99999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  max-width: 300px;
+  word-wrap: break-word;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.4;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.tooltip-portal.show {
+  opacity: 1;
+}
+
+.tooltip-portal::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+/* Arrow pointing up when tooltip is below element */
+.tooltip-portal[style*="--arrow-direction: bottom"]::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: rgba(0, 0, 0, 0.9);
+}
+
+/* Dark theme tooltip portal */
+.dark-theme .tooltip-portal {
+  background-color: rgba(30, 41, 59, 0.95);
+  color: #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .tooltip-portal::after {
+  border-top-color: rgba(30, 41, 59, 0.95);
+}
+
+.dark-theme .tooltip-portal[style*="--arrow-direction: bottom"]::after {
+  border-top-color: transparent;
+  border-bottom-color: rgba(30, 41, 59, 0.95);
+}
+
+/* Mobile tooltip adjustments for project list */
+@media (max-width: 640px) {
+  .tooltip-portal {
+    font-size: 12px;
+    padding: 6px 10px;
+    max-width: 250px;
+  }
+}
+
+/* Enhanced Tooltip Styles for Sidebar Todos */
+#sidebarTodoList .truncate[title] {
+  position: relative;
 }
 
 /* ======= Project Details Dark Theme ======= */

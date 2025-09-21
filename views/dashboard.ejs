@@ -81,8 +81,9 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Projects Card -->
             <section
-                class="bg-white rounded-2xl shadow-xl p-6 flex flex-col gap-4 border border-blue-100 transition-all duration-300 hover:shadow-2xl">
-                <div class="flex items-center justify-between mb-3">
+                class="bg-white rounded-2xl shadow-xl p-6 flex flex-col border border-blue-100 transition-all duration-300 hover:shadow-2xl h-full">
+                <!-- Header Section -->
+                <div class="flex items-center justify-between mb-4 flex-shrink-0">
                     <h2 class="text-xl font-extrabold text-blue-700 flex items-center gap-2 tracking-tight">
                         <svg width="22" height="22" fill="none" viewBox="0 0 22 22">
                             <rect width="22" height="22" rx="6" fill="#DBEAFE" />
@@ -100,18 +101,23 @@
                         </svg>
                     </button>
                 </div>
-                <!-- Project Search Bar -->
-                <div class="mb-2">
+                
+                <!-- Search Section -->
+                <div class="mb-4 flex-shrink-0">
                     <input type="text" id="projectSearch" placeholder="Search projects by name or tag..."
                         class="w-full border border-blue-200 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 text-blue-700 placeholder-blue-300 transition" />
                 </div>
-                <ul id="projectList" class="space-y-2 max-h-64 overflow-y-auto pr-1 custom-scrollbar"></ul>
-                <div id="emptyProjectState" class="text-center text-blue-300 py-8">
-                    <svg class="mx-auto mb-2" width="44" height="44" fill="none" stroke="currentColor">
-                        <circle cx="22" cy="22" r="20" stroke-width="2" />
-                        <path d="M12 22h20M22 12v20" stroke-width="2" />
-                    </svg>
-                    <div class="font-semibold">No projects yet</div>
+                
+                <!-- Projects List Container -->
+                <div class="flex-1 min-h-0 relative">
+                    <ul id="projectList" class="space-y-2 h-full overflow-y-auto pr-1 custom-scrollbar"></ul>
+                    <div id="emptyProjectState" class="absolute inset-0 flex flex-col items-center justify-center text-center text-blue-300">
+                        <svg class="mx-auto mb-2" width="44" height="44" fill="none" stroke="currentColor">
+                            <circle cx="22" cy="22" r="20" stroke-width="2" />
+                            <path d="M12 22h20M22 12v20" stroke-width="2" />
+                        </svg>
+                        <div class="font-semibold">No projects yet</div>
+                    </div>
                 </div>
             </section>
             <!-- Project Details Card -->
