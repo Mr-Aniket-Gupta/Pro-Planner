@@ -42,24 +42,24 @@ io.on('connection', (socket) => {
                 console.warn('No userId provided for registration');
                 return;
             }
-        socket.userId = userId;
-        const set = userIdToSockets.get(userId) || new Set();
-        set.add(socket);
-        userIdToSockets.set(userId, set);
-        socket.emit('registered', { ok: true });
+            socket.userId = userId;
+            const set = userIdToSockets.get(userId) || new Set();
+            set.add(socket);
+            userIdToSockets.set(userId, set);
+            socket.emit('registered', { ok: true });
 
-        // Send unread messages in bulk and unread counts when a user connects
-        try {
-            const unread = await Message.find({ to: new mongoose.Types.ObjectId(userId), read: false }).sort({ ts: 1 }).limit(500);
-            if (unread.length) socket.emit('chat:bulk', unread);
-            const counts = await Message.aggregate([
-                { $match: { to: new mongoose.Types.ObjectId(userId), read: false } },
-                { $group: { _id: '$from', count: { $sum: 1 } } }
-            ]);
-            socket.emit('chat:unreadCounts', counts);
-        } catch (e) {
-            console.error('register unread sync error', e);
-        }
+            // Send unread messages in bulk and unread counts when a user connects
+            try {
+                const unread = await Message.find({ to: new mongoose.Types.ObjectId(userId), read: false }).sort({ ts: 1 }).limit(500);
+                if (unread.length) socket.emit('chat:bulk', unread);
+                const counts = await Message.aggregate([
+                    { $match: { to: new mongoose.Types.ObjectId(userId), read: false } },
+                    { $group: { _id: '$from', count: { $sum: 1 } } }
+                ]);
+                socket.emit('chat:unreadCounts', counts);
+            } catch (e) {
+                console.error('register unread sync error', e);
+            }
         } catch (error) {
             console.error('Error during socket registration:', error);
         }
@@ -257,16 +257,16 @@ const OTP_RESET_TIME = 60 * 60 * 1000; // 1 hour in milliseconds
 function checkOtpRateLimit(email) {
     const now = Date.now();
     const userLimit = otpRateLimit.get(email);
-    
+
     if (!userLimit || now > userLimit.resetTime) {
         otpRateLimit.set(email, { count: 1, resetTime: now + OTP_RESET_TIME });
         return true;
     }
-    
+
     if (userLimit.count >= MAX_OTP_REQUESTS) {
         return false;
     }
-    
+
     userLimit.count++;
     return true;
 }
@@ -297,20 +297,20 @@ app.get('/auth', (req, res) => res.render('auth'));
 app.post('/signup', async (req, res) => {
     try {
         const { name, email, password, confirmPassword } = req.body;
-        
+
         // Input validation
         if (!name || !email || !password || !confirmPassword) {
             return res.status(400).send('All fields are required');
         }
-        
+
         if (password.length < 6) {
             return res.status(400).send('Password must be at least 6 characters long');
         }
-        
+
         if (password !== confirmPassword) {
             return res.status(400).send('Passwords do not match');
         }
-        
+
         // Basic email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
@@ -320,43 +320,43 @@ app.post('/signup', async (req, res) => {
         const existingUser = await User.findOne({ 'emails.email': email });
         if (existingUser) return res.status(400).send('Email already exists');
 
-    if (email === 'admin@gmail.com') {
-        try {
-            const hashed = await bcrypt.hash(password, 10);
-            const newUser = new User({
-                name,
-                password: hashed,
-                emails: [{ email, verified: true, isPrimary: true, addedAt: new Date() }]
-            });
-            await newUser.save();
-            req.session.userId = newUser._id;
-            return res.send('Signup successful!');
-        } catch (userError) {
-            console.error('Error creating admin user:', userError);
-            return res.status(500).send('Failed to create user. Please try again.');
+        if (email === 'admin@gmail.com') {
+            try {
+                const hashed = await bcrypt.hash(password, 10);
+                const newUser = new User({
+                    name,
+                    password: hashed,
+                    emails: [{ email, verified: true, isPrimary: true, addedAt: new Date() }]
+                });
+                await newUser.save();
+                req.session.userId = newUser._id;
+                return res.send('Signup successful!');
+            } catch (userError) {
+                console.error('Error creating admin user:', userError);
+                return res.status(500).send('Failed to create user. Please try again.');
+            }
         }
-    }
 
-    // Check rate limit
-    if (!checkOtpRateLimit(email)) {
-        return res.status(429).send('Too many OTP requests. Please try again later.');
-    }
-    
-    const otp = generateOTP();
-    otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000, data: { name, email, password } };
-    
-    try {
-        await transporter.sendMail({
-            from: process.env.SMTP_USER || 'aniketgupta721910@gmail.com',
-            to: email,
-            subject: 'ProPlanner Signup OTP',
-            text: `Your OTP for ProPlanner signup is: ${otp}\nThis OTP is valid for 5 minutes.`
-        });
-        res.send('OTP sent to your email. Please verify.');
-    } catch (emailError) {
-        console.error('Failed to send signup OTP:', emailError);
-        res.status(500).send('Failed to send OTP. Please try again.');
-    }
+        // Check rate limit
+        if (!checkOtpRateLimit(email)) {
+            return res.status(429).send('Too many OTP requests. Please try again later.');
+        }
+
+        const otp = generateOTP();
+        otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000, data: { name, email, password } };
+
+        try {
+            await transporter.sendMail({
+                from: process.env.SMTP_USER || 'aniketgupta721910@gmail.com',
+                to: email,
+                subject: 'ProPlanner Signup OTP',
+                text: `Your OTP for ProPlanner signup is: ${otp}\nThis OTP is valid for 5 minutes.`
+            });
+            res.send('OTP sent to your email. Please verify.');
+        } catch (emailError) {
+            console.error('Failed to send signup OTP:', emailError);
+            res.status(500).send('Failed to send OTP. Please try again.');
+        }
     } catch (error) {
         console.error('Error during signup:', error);
         res.status(500).send('Failed to process signup. Please try again.');
@@ -367,11 +367,11 @@ app.post('/signup', async (req, res) => {
 app.post('/verify-signup-otp', async (req, res) => {
     try {
         const { email, otp } = req.body;
-        
+
         if (!email || !otp) {
             return res.status(400).send('Email and OTP are required');
         }
-        
+
         const record = otpStore[email];
         if (!record || record.otp !== otp || record.expiresAt < Date.now()) {
             return res.status(400).send('Invalid or expired OTP');
@@ -397,11 +397,11 @@ app.post('/verify-signup-otp', async (req, res) => {
 app.post('/login', async (req, res) => {
     try {
         const { email, password, remember } = req.body;
-        
+
         if (!email || !password) {
             return res.status(400).json({ error: 'Email and password are required' });
         }
-        
+
         const user = await User.findOne({ 'emails.email': email, 'emails.verified': true });
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({ error: 'Invalid email or password' });
@@ -421,10 +421,10 @@ app.post('/login', async (req, res) => {
         if (!checkOtpRateLimit(email)) {
             return res.status(429).json({ error: 'Too many OTP requests. Please try again later.' });
         }
-        
+
         const otp = generateOTP();
         otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000, data: { userId: user._id, remember } };
-        
+
         try {
             await transporter.sendMail({
                 from: process.env.SMTP_USER || 'aniketgupta721910@gmail.com',
@@ -447,11 +447,11 @@ app.post('/login', async (req, res) => {
 app.post('/verify-login-otp', async (req, res) => {
     try {
         const { email, otp } = req.body;
-        
+
         if (!email || !otp) {
             return res.status(400).json({ error: 'Email and OTP are required' });
         }
-        
+
         const record = otpStore[email];
         if (!record || record.otp !== otp || record.expiresAt < Date.now()) {
             return res.status(400).json({ error: 'Invalid or expired OTP' });
@@ -475,11 +475,11 @@ app.post('/verify-login-otp', async (req, res) => {
 app.post('/auto-login', async (req, res) => {
     try {
         const { token } = req.body;
-        
+
         if (!token) {
             return res.status(400).json({ error: 'Token is required' });
         }
-        
+
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretjwtkey');
         const user = await User.findById(decoded.userId);
         if (!user) return res.status(401).json({ error: 'Invalid token' });
@@ -543,7 +543,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // Verify transporter configuration
-transporter.verify(function(error, success) {
+transporter.verify(function (error, success) {
     if (error) {
         console.error('Email transporter verification failed:', error);
     } else {
@@ -564,7 +564,7 @@ cron.schedule('09 17 * * *', async () => {
 
         const users = await User.find({});
         console.log(`Found ${users.length} users for task reminders`);
-        
+
         for (const user of users) {
             const projects = await Project.find({ userId: user._id, completed: false });
             let emailContent = `Hello ${user.name || ''},\n\nHere are your projects and tasks with deadlines today:\n`;
