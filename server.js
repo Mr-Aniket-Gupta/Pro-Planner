@@ -10,7 +10,6 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const fetch = require('node-fetch');
 const http = require('http');
-const { Server } = require('socket.io');
 const MongoStore = require('connect-mongo');
 
 const User = require('./models/User');
@@ -22,11 +21,17 @@ const projectRoutes = require('./routes/projectRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const userDataRoutes = require('./routes/userDataRoutes');
 const messagesRoutes = require('./routes/messages');
+const aiRoutes = require('./routes/aiRoutes');
 
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
+
+const { Server } = require('socket.io');
 const io = new Server(server, { cors: { origin: '*' } });
+
+// Attach socket.io to app for access in routes
+app.set('io', io);
 
 // In-memory map of userId -> Set of sockets for real-time chat
 const userIdToSockets = new Map();
@@ -209,8 +214,7 @@ io.on('connection', (socket) => {
     });
 });
 
-// Export socket instance for use in other files
-module.exports.io = io;
+// Socket.io instance is now available via app.get('io') in routes
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI)
@@ -532,6 +536,7 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/userdata', userDataRoutes);
 app.use('/api/messages', messagesRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Email transporter configuration
 const transporter = nodemailer.createTransport({

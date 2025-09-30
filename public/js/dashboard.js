@@ -431,6 +431,9 @@ function openProjectAddModal() {
     document.getElementById('projectModal').classList.remove('hidden');
     document.getElementById('projectModalTitle').innerText = 'Add New Project';
 
+    // Set access control for AI generation (always allow for new projects)
+    window.currentProjectAccess = 'write';
+
     // Clear the form
     document.getElementById('projectFormEl').reset();
     document.getElementById('projectName').value = '';
@@ -459,6 +462,9 @@ function openProjectAddModal() {
         projectQuickNotes.blur(); // Remove focus from Quick Notes
     }
 
+    // Update Generate button states (always enabled for new projects)
+    updateGenerateButtonStates('write');
+
     // Focus on project name input instead
     setTimeout(() => {
         const projectNameInput = document.getElementById('projectName');
@@ -471,6 +477,10 @@ function openProjectAddModal() {
 function openProjectEditModal(p, access, isOwner, isSharedEdit) {
     document.getElementById('projectModal').classList.remove('hidden');
     document.getElementById('projectModalTitle').innerText = 'Edit Project';
+    
+    // Set access control for AI generation
+    window.currentProjectAccess = access;
+    
     const basicDiv = document.getElementById('basicInputs');
     const advDiv = document.getElementById('advancedInputs');
     basicDiv.innerHTML = '';
@@ -495,6 +505,9 @@ function openProjectEditModal(p, access, isOwner, isSharedEdit) {
         projectQuickNotes.value = p.notes || '';
         projectQuickNotes.blur(); // Remove focus from Quick Notes
     }
+
+    // Update Generate button states based on access
+    updateGenerateButtonStates(access);
 
     // Focus on project name input instead
     setTimeout(() => {
@@ -1008,6 +1021,160 @@ function addAdvancedInput(val = '') {
     div.className = 'flex gap-2';
     div.innerHTML = `<input type="text" class="w-full border border-blue-100 p-3 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 advanced-input" placeholder="Advanced Feature" value="${val}"><button type="button" onclick="this.parentNode.remove()" class="text-red-400 hover:text-red-600 px-2 transition-colors">✖</button>`;
     document.getElementById('advancedInputs').appendChild(div);
+}
+
+// AI Generation Functions
+async function generateBasicRequirements() {
+    const generateBtn = document.getElementById('generateBasicBtn');
+    const projectName = document.getElementById('projectName').value.trim();
+    const projectDesc = document.getElementById('projectDescInput').value.trim();
+    
+    if (!projectName || !projectDesc) {
+        showAlert({ icon: 'warning', title: 'Missing Information', text: 'Please enter project name and description first!' });
+        return;
+    }
+    
+    // Check access control
+    if (!hasEditAccess()) {
+        showAlert({ icon: 'warning', title: 'Access Denied', text: 'You do not have permission to generate content for this project.' });
+        return;
+    }
+    
+    generateBtn.disabled = true;
+    generateBtn.textContent = 'Generating...';
+    
+    try {
+        const response = await fetch('/api/ai/generate-requirements', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                projectName,
+                projectDesc,
+                type: 'basic'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to generate requirements');
+        }
+        
+        const data = await response.json();
+        if (data.basicRequirements && data.basicRequirements.length > 0) {
+            // Add generated requirements to existing inputs
+            data.basicRequirements.forEach(req => {
+                if (req.trim()) {
+                    addBasicInput(req.trim());
+                }
+            });
+            showAlert({ icon: 'success', title: 'Generated!', text: `Added ${data.basicRequirements.length} basic requirements.` });
+        } else {
+            showAlert({ icon: 'info', title: 'No Suggestions', text: 'AI could not generate specific requirements for this project.' });
+        }
+    } catch (error) {
+        console.error('Error generating basic requirements:', error);
+        showAlert({ icon: 'error', title: 'Generation Failed', text: 'Could not generate suggestions. Please try again.' });
+    } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate';
+    }
+}
+
+async function generateAdvancedFeatures() {
+    const generateBtn = document.getElementById('generateAdvancedBtn');
+    const projectName = document.getElementById('projectName').value.trim();
+    const projectDesc = document.getElementById('projectDescInput').value.trim();
+    
+    if (!projectName || !projectDesc) {
+        showAlert({ icon: 'warning', title: 'Missing Information', text: 'Please enter project name and description first!' });
+        return;
+    }
+    
+    // Check access control
+    if (!hasEditAccess()) {
+        showAlert({ icon: 'warning', title: 'Access Denied', text: 'You do not have permission to generate content for this project.' });
+        return;
+    }
+    
+    generateBtn.disabled = true;
+    generateBtn.textContent = 'Generating...';
+    
+    try {
+        const response = await fetch('/api/ai/generate-requirements', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                projectName,
+                projectDesc,
+                type: 'advanced'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to generate features');
+        }
+        
+        const data = await response.json();
+        if (data.advancedFeatures && data.advancedFeatures.length > 0) {
+            // Add generated features to existing inputs
+            data.advancedFeatures.forEach(feature => {
+                if (feature.trim()) {
+                    addAdvancedInput(feature.trim());
+                }
+            });
+            showAlert({ icon: 'success', title: 'Generated!', text: `Added ${data.advancedFeatures.length} advanced features.` });
+        } else {
+            showAlert({ icon: 'info', title: 'No Suggestions', text: 'AI could not generate specific features for this project.' });
+        }
+    } catch (error) {
+        console.error('Error generating advanced features:', error);
+        showAlert({ icon: 'error', title: 'Generation Failed', text: 'Could not generate suggestions. Please try again.' });
+    } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate';
+    }
+}
+
+// Access control function
+function hasEditAccess() {
+    // Check if this is a new project (always allow)
+    const modalTitle = document.getElementById('projectModalTitle').textContent;
+    if (modalTitle === 'Add New Project') {
+        return true;
+    }
+    
+    // For edit mode, check if user has edit access
+    // This would need to be set when opening the modal
+    return window.currentProjectAccess !== 'read';
+}
+
+// Update Generate button states based on access level
+function updateGenerateButtonStates(access) {
+    const generateBasicBtn = document.getElementById('generateBasicBtn');
+    const generateAdvancedBtn = document.getElementById('generateAdvancedBtn');
+    
+    const hasAccess = access === 'write' || access === 'both';
+    
+    if (generateBasicBtn) {
+        generateBasicBtn.disabled = !hasAccess;
+        if (!hasAccess) {
+            generateBasicBtn.style.opacity = '0.5';
+            generateBasicBtn.title = 'You need edit access to generate content';
+        } else {
+            generateBasicBtn.style.opacity = '1';
+            generateBasicBtn.title = 'Generate AI-powered basic requirements';
+        }
+    }
+    
+    if (generateAdvancedBtn) {
+        generateAdvancedBtn.disabled = !hasAccess;
+        if (!hasAccess) {
+            generateAdvancedBtn.style.opacity = '0.5';
+            generateAdvancedBtn.title = 'You need edit access to generate content';
+        } else {
+            generateAdvancedBtn.style.opacity = '1';
+            generateAdvancedBtn.title = 'Generate AI-powered advanced features';
+        }
+    }
 }
 // Utility: Convert any error-like value into a readable string
 function toReadableMessage(value) {

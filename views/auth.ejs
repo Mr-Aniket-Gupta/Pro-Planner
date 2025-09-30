@@ -15,21 +15,29 @@
 </head>
 
 <body>
+  <!-- Loader overlay (shows on top of all content) -->
   <div id="universalLoader" class="loader-overlay" style="display:none;">
     <div class="loader-spinner"></div>
   </div>
+
+  <!-- Login Form -->
   <div class="auth-container">
+    <!-- 3D Model -->
     <div class="auth-3d">
       <model-viewer src="https://modelviewer.dev/shared-assets/models/Astronaut.glb" alt="3D Model" auto-rotate
         camera-controls style="width: 200px; height: 200px; margin:auto;" background="transparent"></model-viewer>
     </div>
+
+    <!-- Form -->
     <div class="auth-form">
+      <!-- Tabs -->
       <div class="flex justify-center mb-4">
         <button class="tab-btn px-4 py-2 rounded-l-xl font-semibold text-blue-600 bg-blue-100 active" id="loginTab"
           onclick="showTab('login')">Login</button>
         <button class="tab-btn px-4 py-2 rounded-r-xl font-semibold text-blue-600 bg-blue-100" id="signupTab"
           onclick="showTab('signup')">Sign Up</button>
       </div>
+
       <!-- Login Form -->
       <form id="loginForm" class="space-y-4">
         <h2 class="text-2xl font-bold text-blue-600 mb-2 text-center">Login</h2>
@@ -62,6 +70,7 @@
           <a href="#" class="text-blue-500 hover:underline" onclick="showTab('signup'); return false;">Sign Up</a>
         </div>
       </form>
+
       <!-- Login OTP Form -->
       <form id="loginOtpForm" class="space-y-4 hidden">
         <h2 class="text-2xl font-bold text-blue-600 mb-2 text-center">Login OTP</h2>
@@ -72,6 +81,7 @@
           class="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white px-4 py-2 rounded-xl font-semibold shadow hover:from-blue-500 hover:to-blue-700 transition">Verify
           OTP</button>
       </form>
+
       <!-- Signup Form -->
       <form id="signupForm" class="space-y-4 hidden">
         <h2 class="text-2xl font-bold text-blue-600 mb-2 text-center">Sign Up</h2>
@@ -118,6 +128,7 @@
           <a href="#" class="text-blue-500 hover:underline" onclick="showTab('login'); return false;">Login</a>
         </div>
       </form>
+
       <!-- Signup OTP Form -->
       <form id="signupOtpForm" class="space-y-4 hidden">
         <h2 class="text-2xl font-bold text-blue-600 mb-2 text-center">Signup OTP</h2>
@@ -140,6 +151,7 @@
           Back to Landing Page
         </a>
       </div>
+
     </div>
   </div>
 

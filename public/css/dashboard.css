@@ -2326,3 +2326,39 @@ input:checked+.slider:before {
 .dark-theme .drag-mode-enabled:hover {
     background-color: #1e40af !important;
 }
+
+/* Friend Projects Modal Scrollbar Styles */
+.friend-projects-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.friend-projects-scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.friend-projects-scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.friend-projects-scrollable::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.friend-projects-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark theme scrollbar for friend projects */
+.dark-theme .friend-projects-scrollable {
+  scrollbar-color: #374151 transparent;
+}
+
+.dark-theme .friend-projects-scrollable::-webkit-scrollbar-thumb {
+  background: #374151;
+}
+
+.dark-theme .friend-projects-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}

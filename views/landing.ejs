@@ -39,14 +39,19 @@
 </head>
 
 <body>
+  <!-- Loader overlay (shows on top of all content) -->
   <div id="universalLoader" class="loader-overlay" style="display:none;">
     <div class="loader-spinner"></div>
   </div>
 
+  <!-- Stars background effect -->
   <canvas id="stars-bg" class="fixed inset-0 w-full h-full z-0 pointer-events-none"></canvas>
-  <canvas id="matter-bg"></canvas>
+
+  <!-- Background Animations -->
   <div class="bg-animated"></div>
 
+  <!-- Matter background effect -->
+  <canvas id="matter-bg"></canvas>
 
   <!-- Neon Cursor Trail -->
   <div id="cursorTrail"></div>
@@ -54,6 +59,7 @@
 
   <!-- Navbar -->
   <nav class="navbar-glass flex justify-between items-center px-4 md:px-8 py-4 mx-auto max-w-7xl relative z-20">
+    <!-- Logo -->
     <div class="flex items-center gap-2">
       <svg width="32" height="32" fill="none" viewBox="0 0 32 32" aria-hidden="true">
         <rect width="32" height="32" rx="8" fill="#6366f1" />
@@ -61,6 +67,7 @@
       </svg>
       <a href="#hero"><span class="text-2xl font-extrabold neon-text tracking-tight">ProPlanner</span></a>
     </div>
+
     <!-- Hamburger Button (Mobile) -->
     <button id="navToggle"
       class="md:hidden flex items-center justify-center p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -69,6 +76,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
       </svg>
     </button>
+
     <!-- Nav Links (Desktop) -->
     <div id="navLinks" class="hidden md:flex items-center gap-6 text-white text-lg font-semibold">
       <a href="#features" class="hover:text-blue-400 transition">Features</a>
@@ -82,6 +90,7 @@
           <a href="/auth" class="glow-btn px-6 py-2 ml-4"><span>Login / Signup</span></a>
           <% } %>
     </div>
+
     <!-- Mobile Nav Drawer -->
     <div id="mobileNav" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 z-40 flex md:hidden"
       style="display:none;">
@@ -112,12 +121,13 @@
     </div>
   </nav>
 
-
+  <!-- Spacer -->
   <div style="height:6rem"></div>
 
   <!-- Hero Section -->
   <section id="hero"
     class="hero-section relative flex flex-col md:flex-row items-center justify-between px-4 md:px-8 py-20 md:py-28 max-w-7xl mx-auto z-10">
+    <!-- Hero Section -->
     <div class="md:w-1/2 mb-10 md:mb-0 z-10 flex flex-col items-center md:items-start text-center md:text-left">
       <h1
         class="text-4xl md:text-5xl font-extrabold mb-6 leading-tight bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent drop-shadow-lg">
@@ -145,6 +155,8 @@
         <span>Get Started Now</span>
       </a>
     </div>
+
+    <!-- 3D Model -->
     <div class="md:w-1/2 flex flex-col items-center justify-center z-10 relative mt-10 md:mt-0">
       <model-viewer src="https://modelviewer.dev/shared-assets/models/Astronaut.glb" alt="3D Astronaut" auto-rotate
         camera-controls
@@ -156,6 +168,8 @@
         Meet your AI Project Buddy!
       </div>
     </div>
+
+    <!-- Section Glow -->
     <div class="section-glow" style="top:0;"></div>
   </section>
 

@@ -357,7 +357,7 @@ async function showFriendPublicProjectsModal(friendId) {
                 <h2 class="text-xl font-bold text-blue-600 mb-4 flex items-center gap-2">
                     Friend's Public Projects
                 </h2>
-                <div id="friendProjectsList" class="space-y-2"></div>
+                <div id="friendProjectsList" class="space-y-2 friend-projects-scrollable" style="max-height: 400px; overflow-y: auto;"></div>
             </div>
         `;
     modal.classList.remove('hidden');
@@ -568,49 +568,73 @@ async function renderSharedWithMeSection() {
             const accessText = accessType === 'write' || accessType === 'both' ? 'Read & Write' : 'Read Only';
             const accessColorClass = accessType === 'write' || accessType === 'both' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800';
             const desc = proj.description || proj.desc || 'No description provided.';
+            // Truncate description to 2 lines
+            const truncatedDesc = desc.length > 80 ? desc.substring(0, 80) + '...' : desc;
             return `
-                <div class="flex items-center justify-between bg-white rounded-xl shadow-md p-4 border border-gray-200 hover:border-blue-400 transition-all">
-                <div>
-                            <div class="font-bold text-blue-800 text-lg">${proj.name}</div>
-                        <div class="text-gray-600 text-sm mt-1">${desc}</div>
-                        <span class="inline-block mt-2 px-2 py-1 rounded-full font-bold text-xs ${accessColorClass}">${accessText}</span>
+                <div class="bg-white rounded-xl shadow-md p-4 border border-gray-200 hover:border-blue-400 transition-all">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1 mr-4">
+                            <div class="font-bold text-blue-800 text-lg mb-2">${proj.name}</div>
+                            <div class="text-gray-600 text-sm mb-3 leading-relaxed">${truncatedDesc}</div>
+                            <span class="inline-block px-2 py-1 rounded-full font-bold text-xs ${accessColorClass}">${accessText}</span>
+                        </div>
+                        <button class="viewDetailsBtn bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition text-sm whitespace-nowrap" 
+                                data-projectid="${proj._id}" 
+                                data-name="${proj.name}" 
+                                data-desc="${desc}">View Details</button>
                     </div>
-                    <button class="viewDetailsBtn bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition text-sm" data-projectid="${proj._id}" data-name="${proj.name}" data-desc="${desc}">View Details</button>
                 </div>
             `;
         }).join('');
         // Attach View Details button logic
         Array.from(listDiv.getElementsByClassName('viewDetailsBtn')).forEach(btn => {
             btn.addEventListener('click', function () {
-                const name = btn.getAttribute('data-name');
-                const desc = btn.getAttribute('data-desc');
-                let modal = document.getElementById('sharedProjectSimpleModal');
-                if (!modal) {
-                    modal = document.createElement('div');
-                    modal.id = 'sharedProjectSimpleModal';
-                    modal.className = 'fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50';
-                    document.body.appendChild(modal);
-                }
-                modal.innerHTML = `
-                    <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg relative flex flex-col" style="max-height:90vh;">
-                        <button id="closeSharedProjectSimpleModalBtn" class="absolute top-3 right-3 text-gray-400 hover:text-blue-500">
-                            <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                <path d="M6 6l12 12M6 18L18 6" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" />
-                            </svg>
-                        </button>
-                        <h2 class="text-xl font-bold text-blue-600 mb-2 flex items-center gap-2">${name}</h2>
-                        <div class="text-gray-700 text-base mb-2">${desc}</div>
-                    </div>
-                `;
-                document.getElementById('closeSharedProjectSimpleModalBtn').onclick = function () {
-                    modal.classList.add('hidden');
-                };
-                modal.classList.remove('hidden');
+                const projectId = btn.getAttribute('data-projectid');
+                const projectName = btn.getAttribute('data-name');
+                const projectDesc = btn.getAttribute('data-desc');
+                showSimpleProjectModal(projectName, projectDesc);
             });
         });
     } catch (err) {
         listDiv.innerHTML = `<div class="text-red-500 text-center">${err.message || 'Failed to load shared projects.'}</div>`;
     }
+}
+
+// --- Show Simple Project Modal (No API calls) ---
+function showSimpleProjectModal(projectName, projectDesc) {
+    let modal = document.getElementById('simpleProjectModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'simpleProjectModal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50';
+        document.body.appendChild(modal);
+    }
+    
+    modal.innerHTML = `
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-lg relative flex flex-col" style="max-height:90vh;">
+            <button id="closeSimpleProjectModalBtn" class="absolute top-3 right-3 text-gray-400 hover:text-blue-500">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path d="M6 6l12 12M6 18L18 6" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+            <h2 class="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-4">${projectName}</h2>
+            <div class="text-gray-700 dark:text-gray-300 text-base leading-relaxed">${projectDesc}</div>
+        </div>
+    `;
+    
+    // Close modal functionality
+    document.getElementById('closeSimpleProjectModalBtn').onclick = function () {
+        modal.classList.add('hidden');
+    };
+    
+    // Close modal when clicking outside
+    modal.onclick = function (e) {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    };
+    
+    modal.classList.remove('hidden');
 }
 
 // --- Show Shared Project Details Modal (Ensured all fields are present) ---

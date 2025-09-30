@@ -24,10 +24,14 @@
 <body class="dark-theme min-h-screen relative">
     <canvas id="stars-bg" class="fixed inset-0 w-full h-full z-0 pointer-events-none"></canvas>
     <!-- <canvas id="matter-bg" style="display:none;"></canvas> -->
+
+    <!-- Background Animations -->
     <div class="bg-animated"></div>
     <div id="cursorTrail"></div>
+
     <!-- Navbar (landing style) -->
     <nav class="navbar-glass flex justify-between items-center px-4 md:px-8 py-4 mx-auto max-w-7xl relative z-20">
+        <!-- Logo -->
         <div class="flex items-center gap-2">
             <svg width="32" height="32" fill="none" viewBox="0 0 32 32" aria-hidden="true">
                 <rect width="32" height="32" rx="8" fill="#6366f1" />
@@ -36,6 +40,8 @@
             </svg>
             <span class="text-2xl font-extrabold neon-text tracking-tight">ProPlanner</span>
         </div>
+
+        <!-- Hamburger Button (Mobile) -->
         <button id="navToggle"
             class="md:hidden flex items-center justify-center p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             aria-label="Open Menu">
@@ -43,10 +49,14 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
         </button>
+
+        <!-- Nav Links (Desktop) -->
         <div id="navLinks" class="hidden md:flex items-center gap-6 text-white text-lg font-semibold">
             <a href="/" class="hover:text-blue-400 transition">Home</a>
             <a href="/contact" class="hover:text-blue-400 transition underline">Contact</a>
         </div>
+
+        <!-- Mobile Nav Drawer -->
         <div id="mobileNav" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 z-40 flex md:hidden"
             style="display:none;">
             <div
@@ -67,11 +77,16 @@
             <div class="flex-1" onclick="closeMobileNav()"></div>
         </div>
     </nav>
+
+    <!-- Hero Section (split layout) -->
     <div style="height:6rem"></div>
+
+    <!-- Main Content -->
     <main class="max-w-5xl mx-auto px-2 py-4 flex flex-col gap-12 relative z-10">
         <!-- Hero Section (split layout) -->
         <section class="flex flex-col md:flex-row items-center justify-between gap-10 modern-card mb-0">
             <div class="flex-1 text-center md:text-left">
+                <!-- Hero Section (split layout) -->
                 <h1 class="modern-title">Contact ProPlanner</h1>
                 <span class="gradient-underline"></span>
                 <p class="modern-sub">Have a question, suggestion, or need help with project planning and productivity?
@@ -79,6 +94,8 @@
                 <a href="#contactform" class="modern-btn mt-2 inline-block shadow hover:scale-105 transition">Get in
                     Touch</a>
             </div>
+
+            <!-- Modern SVG Illustration -->
             <div class="flex-1 flex items-center justify-center mt-8 md:mt-0">
                 <!-- Modern SVG Illustration -->
                 <svg width="240" height="160" viewBox="0 0 260 180" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -136,8 +153,10 @@
 
         <!-- Contact Split Section -->
         <section id="contactform" class="contact-split">
+            <!-- Contact Info Card -->
             <div class="contact-info-card">
                 <div class="modern-section-title mb-4">Contact Information</div>
+
                 <div class="contact-info-list">
                     <div class="contact-info-item"><span class="contact-info-icon"><svg width="22" height="22"
                                 fill="none" viewBox="0 0 24 24">
@@ -159,6 +178,8 @@
                             </svg></span> 123, Pro Street, Mumbai, India</div>
                 </div>
             </div>
+
+            <!-- Contact Form Card -->
             <div class="contact-form-card">
                 <div class="modern-section-title mb-4">Send a Message</div>
                 <form>
@@ -184,6 +205,7 @@
                     <div class="faq-a">ProPlanner is a modern project and task management platform with dashboards,
                         analytics, AI assistant, and more.</div>
                 </div>
+
                 <div class="faq-accordion">
                     <div class="faq-q" onclick="this.parentNode.classList.toggle('faq-open')">
                         <span>Is my data secure?</span>
@@ -194,6 +216,7 @@
                     <div class="faq-a">Yes, your data is completely secure and private. We follow industry-standard
                         security practices.</div>
                 </div>
+
                 <div class="faq-accordion">
                     <div class="faq-q" onclick="this.parentNode.classList.toggle('faq-open')">
                         <span>How many projects can I create in ProPlanner?</span>
@@ -203,6 +226,7 @@
                     </div>
                     <div class="faq-a">You can create unlimited projects and tasks. There is no limit!</div>
                 </div>
+
                 <div class="faq-accordion">
                     <div class="faq-q" onclick="this.parentNode.classList.toggle('faq-open')">
                         <span>How does the AI Assistant help?</span>
@@ -213,6 +237,7 @@
                     <div class="faq-a">The AI Assistant answers your questions, guides you in managing projects and
                         tasks, and gives productivity tips.</div>
                 </div>
+
                 <div class="faq-accordion">
                     <div class="faq-q" onclick="this.parentNode.classList.toggle('faq-open')">
                         <span>Is ProPlanner mobile-friendly?</span>

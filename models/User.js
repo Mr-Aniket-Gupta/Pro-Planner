@@ -11,8 +11,7 @@ const EmailSchema = new mongoose.Schema({
   isPrimary: { type: Boolean, default: false }
 });
 
-// Add index for better query performance
-EmailSchema.index({ email: 1 });
+// Note: unique: true automatically creates an index, so no need for additional index
 
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },

@@ -104,7 +104,7 @@ router.delete('/:messageId', async (req, res) => {
         await Message.findByIdAndDelete(message._id);
 
         // Emit socket event to notify other users about message deletion
-        const io = require('../server').io;
+        const io = req.app.get('io');
         if (io) {
             io.emit('chat:messageDeleted', {
                 messageId: messageId,

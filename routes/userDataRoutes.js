@@ -110,7 +110,7 @@ router.post('/ai/chat', async (req, res) => {
         if (projectContext) {
             contextPrompt += `\n\nProject Context: ${projectContext}`;
         }
-        const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBKZCqmoC9WBlEFBXbeOyeMg7vf-DEtvHo";
+        const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBKZCqmoC9WBlEFBXbeOyeMg7vf-DEtvHo";
         const requestBody = {
             contents: [{
                 parts: [{ text: contextPrompt }]
@@ -164,6 +164,7 @@ router.post('/ai/voice-to-text', async (req, res) => {
         });
     }
 });
+
 
 // Connection system
 router.post('/search-users', userDataController.searchUsers);

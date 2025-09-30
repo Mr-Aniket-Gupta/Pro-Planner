@@ -1,6 +1,5 @@
 const Project = require('../models/Project');
 const User = require('../models/User');
-const { io } = require('../server');
 
 // Get notification counts for projects
 exports.getNotificationCounts = async (req, res) => {
@@ -373,7 +372,11 @@ exports.changeProjectAccess = async (req, res) => {
             project.sharedWith.push({ user: userId, access });
         }
         await project.save();
-        io.emit('project-access-changed', { projectId, userId, access });
+        // Emit socket event if available
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('project-access-changed', { projectId, userId, access });
+        }
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Failed to change access' });
