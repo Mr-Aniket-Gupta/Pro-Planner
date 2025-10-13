@@ -404,6 +404,23 @@ npm run dev
 - **Solution**: Restart server and clear browser cache
 - **Debug**: Monitor WebSocket connections
 
+### 🤖 AI Assistant Integration Notes
+
+- If clicking the AI button does not open the modal:
+  - Ensure `/js/ai.js` loads without syntax errors in DevTools console.
+  - We namespace voice variables to avoid collisions: `window._aiRecognition`, `window._aiIsRecording`.
+  - Verify handlers exist: `openAiBotModal`, `closeAiBotModal`, and that `#aiBotBtn` is present.
+
+### Common Errors
+
+- "Identifier 'recognition' has already been declared"
+  - Cause: Multiple globals named `recognition` across scripts.
+  - Fix: Use the namespaced properties provided by `ai.js`.
+
+- "sendAiMessage is not defined"
+  - Cause: `ai.js` failed to evaluate; functions weren’t registered on `window`.
+  - Fix: Resolve earlier syntax errors; then reload the page.
+
 ### 🛠️ Debug Mode
 Enable debug logging for detailed information:
 ```javascript

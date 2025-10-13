@@ -409,6 +409,18 @@ app.get('/documentation', (req, res) => {
 - **Alt Text**: Descriptive alt text for all images
 - **ARIA Labels**: Proper ARIA labeling for interactive elements
 
+## 🔄 Recent UI/UX Updates
+
+- Global smooth scrolling enabled for better navigation.
+- Scrollable containers constrained to avoid page overflow in dashboard lists and feeds.
+- AI Assistant modal open/close handlers and voice input initialization hardened.
+
+## 🐛 Troubleshooting (Docs page)
+
+- Modal or smooth scroll not working:
+  - Confirm `/css/theme.css` is loaded and `html { scroll-behavior: smooth; }` is present.
+  - Check console for CSS/JS 404s; verify `docs.js` is included at the end of the page.
+
 ### 🔧 Accessibility Tools
 - **Skip Links**: Quick navigation to main content
 - **Focus Management**: Proper focus handling

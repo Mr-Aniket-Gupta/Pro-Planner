@@ -177,12 +177,7 @@ function renderProjectList() {
             const linked = isProjectLinked(project._id);
             const projectLink = getProjectSocialLink(project._id);
             let sharedLabel = project.isShared ? `<span class='ml-2 px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold'>Shared</span>` : '';
-            let linkedIcon = linked ? `<span class="ml-1 text-green-500 flex-shrink-0" title="Linked in Social Links">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2"/>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2"/>
-                </svg>
-            </span>` : '';
+            let linkedIcon = linked ? `<span class="ml-1 text-green-500 flex-shrink-0" title="Linked in Social Links"></span>` : '';
 
             // Show URL icon only if project has a saved URL
             let urlIcon = '';

@@ -77,6 +77,11 @@ body {
   overflow-x: hidden;
 }
 
+/* Smooth scrolling across the app for better UX */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--color-bg);
   color: var(--color-text);
@@ -165,6 +170,33 @@ canvas#lineChart {
   background: var(--color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
+}
+
+/* Constrain common lists to prevent page overflow */
+#taskList,
+#sidebarTodoList,
+#activityFeed,
+#upcomingDeadlines {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 1024px) {
+  #taskList,
+  #sidebarTodoList,
+  #activityFeed,
+  #upcomingDeadlines {
+    max-height: 45vh;
+  }
+}
+
+@media (max-width: 768px) {
+  #taskList,
+  #sidebarTodoList,
+  #activityFeed,
+  #upcomingDeadlines {
+    max-height: 50vh;
+  }
 }
 
 /* Subtle separators */

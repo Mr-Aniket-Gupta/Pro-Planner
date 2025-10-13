@@ -1114,6 +1114,22 @@ ProPlanner provides comprehensive documentation to help users and developers und
 - **Real-time Features**: Socket.IO implementation details
 - **Deployment Guide**: Production deployment instructions
 
+### 🔄 Recent Updates
+
+- Smooth scrolling enabled globally for improved UX.
+- Constrained scrollable lists (`#taskList`, `#sidebarTodoList`, `#activityFeed`, `#upcomingDeadlines`) to prevent page overflow.
+- AI Assistant modal: fixed initialization and close handlers; voice recognition variables are namespaced to avoid global collisions.
+
+### 🐛 Troubleshooting
+
+- Error: "Identifier 'recognition' has already been declared"
+  - Cause: multiple scripts defining a global `recognition` variable.
+  - Fix: `public/js/ai.js` now uses `window._aiRecognition` and `window._aiIsRecording`.
+
+- Error: "sendAiMessage is not defined"
+  - Cause: a prior parse error prevented `ai.js` from loading.
+  - Fix: resolve the `recognition` collision, then hard-refresh the dashboard.
+
 ---
 
 ## 🎨 Contributing

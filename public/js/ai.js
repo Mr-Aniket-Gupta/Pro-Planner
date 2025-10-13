@@ -1,23 +1,23 @@
-// Initialize Web Speech API for voice input
-let recognition = (typeof recognition !== 'undefined') ? recognition : null;
-let isRecording = (typeof isRecording !== 'undefined') ? isRecording : false;
+// Initialize Web Speech API for voice input (namespaced to avoid globals clash)
+window._aiRecognition = (typeof window._aiRecognition !== 'undefined') ? window._aiRecognition : null;
+window._aiIsRecording = (typeof window._aiIsRecording !== 'undefined') ? window._aiIsRecording : false;
 function initializeAIBot() {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.continuous = false;
-        recognition.interimResults = false;
+        window._aiRecognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        window._aiRecognition.continuous = false;
+        window._aiRecognition.interimResults = false;
         // Support both Hindi and English dynamically
-        recognition.lang = (window._aiSpeechLang || 'en-US');
-        recognition.maxAlternatives = 1;
+        window._aiRecognition.lang = (window._aiSpeechLang || 'en-US');
+        window._aiRecognition.maxAlternatives = 1;
 
-        recognition.onresult = function (event) {
+        window._aiRecognition.onresult = function (event) {
             const transcript = event.results[0][0].transcript;
             const input = document.getElementById('aiMessageInput');
             if (input) input.value = transcript;
             stopVoiceRecording();
         };
 
-        recognition.onerror = function (event) {
+        window._aiRecognition.onerror = function (event) {
             console.error('Speech recognition error:', event.error);
             // Handle specific errors more gracefully
             if (event.error === 'no-speech') {
@@ -37,7 +37,7 @@ function initializeAIBot() {
             stopVoiceRecording();
         };
 
-        recognition.onend = function () {
+        window._aiRecognition.onend = function () {
             stopVoiceRecording();
         };
     }
@@ -45,16 +45,16 @@ function initializeAIBot() {
 
 // Toggles voice input on/off
 function toggleVoiceInput() {
-    if (typeof isRecording === 'undefined') {
+    if (typeof window._aiIsRecording === 'undefined') {
         console.error('isRecording variable not initialized');
         return;
     }
-    isRecording ? stopVoiceRecording() : startVoiceRecording();
+    window._aiIsRecording ? stopVoiceRecording() : startVoiceRecording();
 }
 
 // Starts recording user voice input
 function startVoiceRecording() {
-    if (!recognition) {
+    if (!window._aiRecognition) {
         console.error('Recognition not available');
         showAlert({ icon: 'error', title: 'Not Supported', text: 'Voice recognition is not supported in your browser.' });
         return;
@@ -79,13 +79,13 @@ function startVoiceRecording() {
         try {
             const langSelect = document.getElementById('aiLanguageSelect');
             const preferred = langSelect ? langSelect.value : null;
-            if (preferred === 'hi') recognition.lang = 'hi-IN';
-            else if (preferred === 'en') recognition.lang = 'en-US';
-            else recognition.lang = (window._aiSpeechLang || 'en-US');
+            if (preferred === 'hi') window._aiRecognition.lang = 'hi-IN';
+            else if (preferred === 'en') window._aiRecognition.lang = 'en-US';
+            else window._aiRecognition.lang = (window._aiSpeechLang || 'en-US');
         } catch (_) { }
 
-        recognition.start();
-        isRecording = true;
+        window._aiRecognition.start();
+        window._aiIsRecording = true;
 
         // Update UI to show recording status
         const micIcon = document.getElementById('micIcon');
@@ -107,8 +107,8 @@ function startVoiceRecording() {
 
         // Auto-stop if no speech within X seconds
         window._voiceInactivityTimer = setTimeout(() => {
-            if (isRecording) {
-                recognition.stop();
+            if (window._aiIsRecording) {
+                window._aiRecognition.stop();
                 showAlert && showAlert({ icon: 'warning', title: 'No Speech Detected', text: "We couldn't hear you. Please try speaking again." });
             }
         }, window._voiceMaxWaitMs || 6000);
@@ -120,8 +120,8 @@ function startVoiceRecording() {
 
 // Stops the voice recording and resets UI
 function stopVoiceRecording() {
-    if (recognition && isRecording) recognition.stop();
-    isRecording = false;
+    if (window._aiRecognition && window._aiIsRecording) window._aiRecognition.stop();
+    window._aiIsRecording = false;
     if (window._voiceInactivityTimer) {
         clearTimeout(window._voiceInactivityTimer);
         window._voiceInactivityTimer = null;
@@ -150,6 +150,16 @@ function openAiBotModal() {
     }
 }
 window.openAiBotModal = openAiBotModal;
+
+// Close AI Bot modal
+function closeAiBotModal() {
+    const modal = document.getElementById('aiBotModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+}
+window.closeAiBotModal = closeAiBotModal;
 
 // Global ai typing controller for interruptible animation
 let aiTypewriterController = { abort: false };
@@ -462,6 +472,22 @@ document.addEventListener('DOMContentLoaded', function () {
     if (aiBotBtn && !aiBotBtn.hasAttribute('data-listener-added')) {
         aiBotBtn.addEventListener('click', openAiBotModal);
         aiBotBtn.setAttribute('data-listener-added', 'true');
+    }
+
+    // Close button inside AI modal
+    const closeAiBtn = document.getElementById('closeAiBotModalBtn');
+    if (closeAiBtn && !closeAiBtn.hasAttribute('data-listener-added')) {
+        closeAiBtn.addEventListener('click', closeAiBotModal);
+        closeAiBtn.setAttribute('data-listener-added', 'true');
+    }
+
+    // Optional: click outside to close
+    const aiModal = document.getElementById('aiBotModal');
+    if (aiModal && !aiModal.hasAttribute('data-listener-added')) {
+        aiModal.addEventListener('click', function (e) {
+            if (e.target === aiModal) closeAiBotModal();
+        });
+        aiModal.setAttribute('data-listener-added', 'true');
     }
 
     const settingsBtn = document.getElementById('settingsBtn');
