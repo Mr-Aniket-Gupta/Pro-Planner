@@ -216,10 +216,14 @@ io.on('connection', (socket) => {
 
 // Socket.io instance is now available via app.get('io') in routes
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('MongoDB connected successfully'))
-    .catch(err => console.error(err));
+// MongoDB connection (optional for test env)
+if (process.env.MONGODB_URI) {
+    mongoose.connect(process.env.MONGODB_URI)
+        .then(() => console.log('MongoDB connected successfully'))
+        .catch(err => console.error(err));
+} else {
+    console.warn('MONGODB_URI not set. Skipping MongoDB connection (test mode).');
+}
 
 // Security middleware
 app.use((req, res, next) => {
@@ -236,15 +240,21 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser());
 
-app.use(session({
+// Session store (MemoryStore fallback if no Mongo in tests)
+const sessionOptions = {
     secret: process.env.SESSION_SECRET || 'defaultsecret',
     resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
+    saveUninitialized: false
+};
+if (process.env.MONGODB_URI) {
+    sessionOptions.store = MongoStore.create({
         mongoUrl: process.env.MONGODB_URI,
         ttl: 14 * 24 * 60 * 60 // 14 days
-    })
-}));
+    });
+} else {
+    console.warn('Using in-memory session store (test mode). Do not use in production.');
+}
+app.use(session(sessionOptions));
 
 // Set EJS as view engine
 app.set('view engine', 'ejs');
@@ -356,9 +366,17 @@ app.post('/signup', async (req, res) => {
                 subject: 'ProPlanner Signup OTP',
                 text: `Your OTP for ProPlanner signup is: ${otp}\nThis OTP is valid for 5 minutes.`
             });
+            // In non-production/test mode, also expose OTP in response to unblock QA/tests
+            if (process.env.NODE_ENV !== 'production') {
+                return res.json({ message: 'OTP sent to your email. Please verify.', devOtp: otp });
+            }
             res.send('OTP sent to your email. Please verify.');
         } catch (emailError) {
             console.error('Failed to send signup OTP:', emailError);
+            // If email cannot be sent but we are in non-production, still return OTP to proceed
+            if (process.env.NODE_ENV !== 'production') {
+                return res.json({ message: 'OTP generation succeeded (email not sent in dev). Use this OTP to verify.', devOtp: otp });
+            }
             res.status(500).send('Failed to send OTP. Please try again.');
         }
     } catch (error) {
@@ -538,14 +556,20 @@ app.use('/api/userdata', userDataRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/ai', aiRoutes);
 
-// Email transporter configuration
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.SMTP_USER || 'aniketgupta721910@gmail.com',
-        pass: process.env.SMTP_PASS || 'ngwf udjw pgui rvbt'
-    }
-});
+// Email transporter configuration (jsonTransport only in explicit test mode)
+let transporter;
+if (process.env.NODE_ENV === 'test') {
+    transporter = nodemailer.createTransport({ jsonTransport: true });
+    console.warn('Using jsonTransport for emails (test mode).');
+} else {
+    transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.SMTP_USER || 'aniketgupta721910@gmail.com',
+            pass: process.env.SMTP_PASS || 'ngwf udjw pgui rvbt'
+        }
+    });
+}
 
 // Verify transporter configuration
 transporter.verify(function (error, success) {

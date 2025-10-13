@@ -1,4 +1,6 @@
 // Initialize Web Speech API for voice input
+let recognition = (typeof recognition !== 'undefined') ? recognition : null;
+let isRecording = (typeof isRecording !== 'undefined') ? isRecording : false;
 function initializeAIBot() {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
