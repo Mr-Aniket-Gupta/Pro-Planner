@@ -5,6 +5,7 @@ const taskSchema = new mongoose.Schema({
     tag: { type: String, default: 'General' },
     completed: { type: Boolean, default: false },
     created: { type: Date, default: Date.now },
+    completedAt: { type: Date, default: null },
     dueDate: { type: Date },
     isPublic: {
         type: Boolean,

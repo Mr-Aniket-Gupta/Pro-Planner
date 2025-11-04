@@ -1,5 +1,7 @@
 const Project = require('../models/Project');
 const User = require('../models/User');
+const mongoose = require('mongoose');
+const Task = require('../models/task');
 
 // Get notification counts for projects
 exports.getNotificationCounts = async (req, res) => {
@@ -38,13 +40,13 @@ exports.createProject = async (req, res) => {
     try {
         console.log('Creating project with data:', req.body); // Debug log
         console.log('User ID from session:', req.session.userId); // Debug log
-        
+
         const { name, desc, basic, advanced, completed, deadline, notes, isPublic } = req.body;
-        
+
         if (!name || !desc) {
             return res.status(400).json({ error: 'Project name and description are required' });
         }
-        
+
         const project = new Project({
             name,
             desc,
@@ -56,10 +58,10 @@ exports.createProject = async (req, res) => {
             notes,
             isPublic: isPublic || false
         });
-        
+
         const savedProject = await project.save();
         console.log('Project saved successfully:', savedProject._id); // Debug log
-        
+
         res.status(201).json(savedProject);
     } catch (err) {
         console.error('Create project error:', err); // Debug log
@@ -111,14 +113,47 @@ exports.updateProject = async (req, res) => {
     }
 };
 
-// Delete a project by ID
+// Delete a project by ID (owner only) with cascading cleanup
 exports.deleteProject = async (req, res) => {
+    const { projectId } = req.params;
     try {
-        const project = await Project.findByIdAndDelete(req.params.projectId);
+        const project = await Project.findById(projectId);
         if (!project) return res.status(404).json({ error: 'Project not found' });
-        res.json({ message: 'Project deleted successfully' });
+
+        const userId = req.session.userId;
+        if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+        if (project.userId.toString() !== userId.toString()) {
+            return res.status(403).json({ error: 'Only owner can delete this project' });
+        }
+
+        const session = await mongoose.startSession();
+        try {
+            await session.withTransaction(async () => {
+                // 1) Delete all tasks linked to this project
+                await Task.deleteMany({ projectId: project._id }).session(session);
+
+                // 2) Remove related social links embedded in users (type 'project')
+                await User.updateMany(
+                    { 'socialLinks.projectId': project._id },
+                    { $pull: { socialLinks: { projectId: project._id } } }
+                ).session(session);
+
+                // 3) Remove any pending/approved project access requests referencing this project
+                await User.updateMany(
+                    { 'projectAccessRequests.project': project._id },
+                    { $pull: { projectAccessRequests: { project: project._id } } }
+                ).session(session);
+
+                // 4) Finally delete the project
+                await Project.deleteOne({ _id: project._id }).session(session);
+            });
+        } finally {
+            session.endSession();
+        }
+
+        return res.json({ message: 'Project and related data deleted successfully' });
     } catch (err) {
-        res.status(500).json({ error: 'Failed to delete project' });
+        return res.status(500).json({ error: 'Failed to delete project' });
     }
 };
 

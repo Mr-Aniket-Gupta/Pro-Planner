@@ -72,7 +72,10 @@ exports.updateTask = async (req, res) => {
         if (!isOwner && (sharedAccess !== 'write' && sharedAccess !== 'both')) {
             return res.status(403).json({ error: 'No permission to update this task' });
         }
-        if (completed !== undefined) task.completed = completed;
+        if (completed !== undefined) {
+            task.completed = completed;
+            task.completedAt = completed ? new Date() : null;
+        }
         if (text !== undefined) task.text = text;
         if (tag !== undefined) task.tag = tag;
         if (dueDate !== undefined) task.dueDate = dueDate;

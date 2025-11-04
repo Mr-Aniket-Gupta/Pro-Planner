@@ -173,7 +173,11 @@ canvas#lineChart {
 }
 
 /* Constrain common lists to prevent page overflow */
-#taskList,
+#taskList{
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
 #sidebarTodoList,
 #activityFeed,
 #upcomingDeadlines {
